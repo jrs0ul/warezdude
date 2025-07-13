@@ -1,8 +1,6 @@
 #ifndef USEFULL_H
 #define USEFULL_H
 
-#include <windows.h>
-#include <d3dx9.h>
 
 
 //apvalina floata

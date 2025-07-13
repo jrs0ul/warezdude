@@ -2,8 +2,6 @@
 #define MAP_H
 
 
-
-#include <windows.h>
 #include "DArray.h"
 #include "dude.h"
 #include "Decal.h"
@@ -32,15 +30,14 @@ public:
  int misionItems; //kiek bus flopiku,cd,captive
  int goods; //kiek mape bus ammo,medi,timer
  int enemyCount;
- 
 
- POINT start;
- POINT exit;
+ Vector3D start;
+ Vector3D exit;
 
  CMap(){ tiles=0; width=0; height=0;
          timeToComplete=0;
-		 misionItems=0;
-		 goods=0;
+         misionItems=0;
+         goods=0;
          enemyCount=0;
  }
 
@@ -54,7 +51,7 @@ public:
  void fadeDecals();
 
 private:
-	void arangeItems();
+    void arangeItems();
 
 };
 

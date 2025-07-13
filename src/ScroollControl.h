@@ -1,7 +1,6 @@
 #ifndef SCROLL_CONTROL_H
 #define SCROLL_CONTROL_H
 #include "ActiveControl.h"
-#include "Picture3D.h"
 
 class ScroollControl:public ActiveControl{
 public:

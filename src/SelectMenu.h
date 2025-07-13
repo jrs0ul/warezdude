@@ -3,7 +3,6 @@
 
 #include <cstring>
 #include "ActiveControl.h"
-#include "Picture3d.h"
 
 struct Smenu{
   char opt[20][30];

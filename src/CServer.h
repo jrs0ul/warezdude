@@ -7,36 +7,41 @@
 */
 
 
-#include <winsock2.h>
+#ifdef _WIN32
+    #include <winsock2.h>
+#else
+    #include <sys/socket.h>
+#endif
+
 #include "DArray.h"
 
 class CServer{
-	WSADATA wsaData;
-	DArray<SOCKET> clientSocks; //klientu socketai
-	DArray<sockaddr_in> clientAddreses; // klientu adresai
-	SOCKET serverSock;	  //serverio socketas
-	unsigned _clientCount; //kiek atviru kliento socketu
-	bool isServerRunning; //ar serveris veikia
-	
+    WSADATA wsaData;
+    DArray<SOCKET> clientSocks; //klientu socketai
+    DArray<sockaddr_in> clientAddreses; // klientu adresai
+    SOCKET serverSock;    //serverio socketas
+    unsigned _clientCount; //kiek atviru kliento socketu
+    bool isServerRunning; //ar serveris veikia
+    
 public:
-	//konstruktorius
-	CServer(){  _clientCount=0; isServerRunning=false;}
-	//grazina prisijungusiu klientu skaiciu
-	unsigned clientCount(){return _clientCount;}
-	//grazina serverio busena online/offline
-	bool serverState(){return isServerRunning;}
-	//isjungia serveri
-	void shutDown();
-	//ijungia serveri
-	bool launch(int port);
-	//laukia kliento ir leidzia jam prisijungti
-	int waitForClient();
-	//gauna duomenis
-	int getData(int clientIndex, char* buf);
-	//siuncia duomenis
-	void sendData(unsigned clientIndex, const char* data, int len);
-	//panaikina norima klienta
-	void removeClient(unsigned index);
+    //konstruktorius
+    CServer(){  _clientCount=0; isServerRunning=false;}
+    //grazina prisijungusiu klientu skaiciu
+    unsigned clientCount(){return _clientCount;}
+    //grazina serverio busena online/offline
+    bool serverState(){return isServerRunning;}
+    //isjungia serveri
+    void shutDown();
+    //ijungia serveri
+    bool launch(int port);
+    //laukia kliento ir leidzia jam prisijungti
+    int waitForClient();
+    //gauna duomenis
+    int getData(int clientIndex, char* buf);
+    //siuncia duomenis
+    void sendData(unsigned clientIndex, const char* data, int len);
+    //panaikina norima klienta
+    void removeClient(unsigned index);
 };
 
 

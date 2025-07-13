@@ -1,7 +1,6 @@
 #ifndef _WRITE_TEXT_H
 #define _WRITE_TEXT_H
 
-#include "Picture3d.h"
 
 
 void WriteText(unsigned int x,unsigned int y,LPD3DXSPRITE& spraitas, Picture* font, const char* s,float alpha=1.0f,

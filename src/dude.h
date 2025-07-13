@@ -1,10 +1,7 @@
 #ifndef DUDE_H
 #define DUDE_H
 
-#include <windows.h>
 #include "DArray.h"
-#include "renderer3d.h"
-#include "picture3d.h"
 #include "BulletContainer.h"
 
 
