@@ -1,0 +1,47 @@
+#ifndef	_SELECTMENIU_H_
+#define _SELECTMENIU_H_
+
+#include <cstring>
+#include "ActiveControl.h"
+#include "Picture3d.h"
+
+struct Smenu{
+  char opt[20][30];
+  unsigned char pics[20];
+  unsigned char ids[20];
+  unsigned char count;
+  Smenu(){memset(pics,0,20); memset(ids,0,20);}
+ };
+
+//--------------------------------------
+
+
+
+
+
+ class SelectMeniu:public ActiveControl{ //selecto objectas
+ public:
+  char title[30];  //antraste
+  Smenu selection;   //meniu
+  unsigned int width;        //plotis
+  unsigned int height;       //aukstis
+  unsigned char defstate;     //defaultine opcija
+  unsigned char state;        //parinkta tuo metu opcija
+  
+  bool selected;  //jau viskas pasirinkta, enter paspaustas
+  bool canceled;  //ar menu atshauktas
+  unsigned char pressedkey;
+   
+
+  //priskiriam data dx,dy:lango metrikos dst:defstate
+  void init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel, unsigned char dst,unsigned int dheight=0);
+  //numusa userio atlikta pasirinkima
+  void reset();
+  //jei keyus i virsu apcia tai keiciasi ir state
+  void getInput(unsigned char key);
+  //nupaisom
+  void draw( Picture& rod,  Picture* font,  LPD3DXSPRITE& spraitas,LPDIRECT3DDEVICE9& device, Picture* icons=0,float r=1.0f,float b=1.0f,float g=1.0f);
+ 
+ };
+
+#endif

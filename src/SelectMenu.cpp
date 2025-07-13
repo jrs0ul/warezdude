@@ -1,0 +1,136 @@
+#include "WriteText.h"
+#include "SelectMenu.h"
+
+
+
+
+
+void SelectMeniu::init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel, unsigned char dst,unsigned int dheight){
+ x=dx;
+ y=dy;
+ strcpy(title,dt);
+ for (int i=0;i<dsel.count;i++)
+  strcpy(selection.opt[i],dsel.opt[i]);
+ selection.count=dsel.count;
+
+ if ((strlen(title)==0)
+  ||(strlen(selection.opt[0])>strlen(title)))
+   width=(int)strlen(selection.opt[0])*11+70;
+  else
+   width=(int)strlen(title)*11+70;
+ 
+ memcpy(selection.pics,dsel.pics,20);
+
+ if (dheight==0)
+  height=selection.count*20+50; 
+ else
+  height=dheight;
+
+ defstate=dst;
+ state=defstate;
+ selected=false; //dar nieko neisirinkom
+ canceled=false;
+ deactivate();
+ pressedkey=0;
+}
+//--------------------------------------------
+void SelectMeniu::reset(){
+ state=defstate;
+ selected=false;
+ canceled=false;
+}
+//--------------------------------------------
+void SelectMeniu::getInput(unsigned char key){
+ if (key!=pressedkey){
+  //cia tam kad parinktu kai mygtuka atleidi
+  if (pressedkey==13) {
+   if (selection.count)
+    selected=true;      //enter
+  }
+
+  if (pressedkey==27) {
+   canceled=true;      //esc
+  }
+
+  if (selection.count){
+   switch(key){
+    case 38:if (state>0) //up
+        state--;
+       else
+        state=selection.count-1;
+	   break;
+
+    case 40:if (state<selection.count-1)  //down
+        state++;
+       else
+        state=0;
+	    break;
+
+    default: pressedkey=0;
+   }
+  }
+
+
+  pressedkey=key;
+ }
+
+}
+//--------------------------------------------
+void SelectMeniu::draw(Picture& rod, Picture* font, LPD3DXSPRITE& spraitas,LPDIRECT3DDEVICE9& device,Picture* icons,
+					   float r,float g,float b){
+  
+ 
+  unsigned newcount=0;
+  unsigned start=0;
+  int half=(((height-28)/20)/2);
+  unsigned tmpheight=height;
+  if (selection.count*20+28>tmpheight){
+   if (((tmpheight-28)/20)+state/half>selection.count)
+	newcount=selection.count;
+   else
+    newcount=((height-28)/20)+state/half;
+   start=state/half;
+  }
+  else newcount=selection.count;
+ 
+  if ((icons)&&(((newcount-start)*icons->info.Height)+28>tmpheight))
+	  height=(newcount-start)*icons->info.Height+40;
+
+  //DrawBlock(device,spraitas,x,y,width,height,0,0,200);
+  WriteText(x+12,y+2,spraitas,font,title,1.0f,1.0f,1.0f,0,0,0); 
+  WriteText(x+10,y+4,spraitas,font,title); 
+  
+
+	  for (int i=start;i< newcount;i++){
+		  if (icons){
+			  icons->Blt(spraitas,x+16,y+28+((i-start)*icons->info.Height),selection.pics[i]);
+		   WriteText(x+20+icons->info.Height,y+28+((i-start)*icons->info.Height),spraitas,font,selection.opt[i],1.0f,1.2f,1.2f,0,0,0);
+		   WriteText(x+20+icons->info.Height,y+28+((i-start)*icons->info.Height),spraitas,font,selection.opt[i]);
+		   
+	      }
+		  else{
+		   WriteText(x+34,y+26+((i-start)*20),spraitas,font,selection.opt[i],1.0f,1.0f,1.0f,0,0,0);
+		   WriteText(x+32,y+28+((i-start)*20),spraitas,font,selection.opt[i]);
+		   
+		  }
+	  }
+  
+
+ if (start>0)
+  rod.Blt(spraitas,x+width-18,y+3,1);
+ if (newcount<selection.count)
+  rod.Blt(spraitas,x+width-18,y+height-19,2);
+
+ //coolframe(x,y,width,height,frm,spraitas);
+  
+ int space=20;
+ if (icons)
+  space=icons->info.Height;
+  
+ if ((rand()%100)%10==0) 
+  rod.Blt(spraitas,x+3,y+28+((state-start)*space));
+ else
+  rod.Blt(spraitas,x+5,y+28+((state-start)*space));
+
+}
+

@@ -1,0 +1,37 @@
+18
+logo.jpg
+256 512 
+tileset.bmp
+32 32
+monstar.tga
+32 32
+monster.tga
+32 32
+cop.tga
+32 32
+human.tga
+32 32
+bullet.tga
+16 16
+Items.tga
+32 32
+digits.tga
+32 16 
+Icons.tga
+32 32
+charai.tga
+16 16
+nitems.tga
+32 32
+mini.bmp
+4 4
+nofate.jpg
+256 512 
+end.jpg
+256 512
+blood.tga
+32 32
+title.tga
+128 256
+pointer.tga
+16 16
