@@ -14,6 +14,7 @@
 #include "WriteText.h"
 #include "Usefull.h"
 #include "TextureLoader.h"
+#include "Matrix.h"
 
 
 
@@ -23,28 +24,13 @@ const int slime=35;
 
 const unsigned NetPort=666;
 
-Renderer3D render; //rendereris(D3D)
-
-//inputs
-XInput input;
 
 OggPlayer music;
 
 CBulletContainer bulbox; 
 
-LPDIRECTSOUND8 pSound=0; 
-LPDIRECTSOUND3DLISTENER8 listiner=0;
-
-
-
-WNDCLASSEX windowsclass;
-HWND hwndMain;
-HINSTANCE hinstanceMain;
-
-
 
 PicsContainer pics;
-Gabalas* smotai; // wav samplai
 unsigned int imgCount=0;
 unsigned int maxwavs=0;
 
@@ -208,67 +194,13 @@ void DeleteAudio(){
 
 
 //----------------------------------
-HRESULT InitAudio()
+bool Game::InitAudio()
 {
-    
 
-    //dsoundas
-    if (SUCCEEDED(DirectSoundCreate8( NULL, &pSound, NULL ))){
+    SoundSystem::getInstance()->init(0);
+    SoundSystem::getInstance()->loadFiles("sfx/", "list.txt");
 
-        if (SUCCEEDED(pSound->SetCooperativeLevel( hwndMain,  DSSCL_PRIORITY))){
-
-            
-
-            GetListener(pSound,&listiner);
-
-        
-            //loadinam wavus 
-
-            FILE* list;
-
-            char** mas=0;
-            char buf[255];
-            list=fopen("sfx/list.txt","rt");
-
-            if (list){
-                fscanf(list,"%u",&maxwavs);
-                if (maxwavs){
-                    smotai = new Gabalas[maxwavs];
-                    fgetc(list);
-                    char c=0;
-                    int a;
-
-                    mas=new char * [maxwavs];
-                    for (unsigned int i=0; i<maxwavs; i++){
-                        mas[i]=new char[255];
-                        a=0;
-                        while((c!='\n')&&(c!=EOF)){
-                            c=fgetc(list); 
-                            if ((c!='\n')&&(c!=EOF))
-                                mas[i][a]=c;
-                            else 
-                                mas[i][a]='\0';
-                            a++;
-                        }
-                        sprintf(buf,"sfx/%s",mas[i]);
-
-                        smotai[i].open(pSound,buf,true);
-                        smotai[i].setVolume(sys.soundFXVolume);
-                        c=0;
-                    }
-                }
-                fclose(list);
-                for (unsigned int i=0; i<maxwavs; i++)
-                    delete []mas[i];
-                delete []mas;
-            }
-
-        }
-    }
-
-
-
-    return 0;
+    return true;
 }
 
 //----------------------------------------
@@ -672,7 +604,8 @@ void DrawNum(int x, int y,int num){
 
 }
 //-------------------------------
-void SendItemCreation(float x, float y, int value, unsigned int clientIndex){
+void Game::SendItemCreation(float x, float y, int value, unsigned int clientIndex)
+{
 
     char buferis[256];
     int index=0;
@@ -692,7 +625,8 @@ void SendItemCreation(float x, float y, int value, unsigned int clientIndex){
 
 
 //---------------------------
-void KillPlayer(int index){
+void Game::KillPlayer(int index)
+{
     mapas.mons[mapas.enemyCount+index].shot=true;
     mapas.mons[mapas.enemyCount+index].frame=mapas.mons[mapas.enemyCount+index].weaponCount*4;
     AdaptSoundPos(2,mapas.mons[mapas.enemyCount+index].x,mapas.mons[mapas.enemyCount+index].y);
@@ -755,7 +689,8 @@ void KillEnemy(int ID){
 
 //--------------------
 //jei kulka pataike i kazka
-bool OnHit(Bullet& bul){
+bool Game::OnHit(Bullet& bul)
+{
 
     int dmg=1;
     if (bul.isMine)
@@ -791,7 +726,8 @@ bool OnHit(Bullet& bul){
 
 //---------------------------
 //nupaiso kiek turi gyvybiu soviniu etc
-void DrawStats(){
+void Game::DrawStats()
+{
 
     pics.images[9].Blt(render.spraitas,30,435,2,0.6f);
     DrawNum(58,440,mapas.mons[mapas.enemyCount].hp);
@@ -850,7 +786,6 @@ void Game::MoveDude(){
 
     if ((Keys[0])||(Keys[1])||(Keys[2])||(Keys[3])){
         int dirx,diry;
-        unsigned char cid=0;
         float speed=0.0f;
         float sspeed=0.0f;
         if (Keys[1])
@@ -960,7 +895,8 @@ void Game::MoveDude(){
 
     }
 
-    listiner->SetPosition(mapas.mons[mapas.enemyCount].x,0,mapas.mons[mapas.enemyCount].y,DS3D_IMMEDIATE);
+    SoundSystem::getInstance()->setupListener(Vector3D(mapas.mons[mapas.enemyCount].x,0,mapas.mons[mapas.enemyCount].y).v,
+                    Vector3D(mapas.mons[mapas.enemyCount].x,0,mapas.mons[mapas.enemyCount].y).v);
     
 }
 
@@ -1507,33 +1443,40 @@ void Game::SendAtackImpulse(unsigned int clientIndex, int victim, int hp)
 //----------------------------------
 void Game::BeatEnemy(int aID, int damage)
 {
-    if (mapas.mons[aID].canAtack){
+    if (mapas.mons[aID].canAtack)
+    {
         mapas.mons[aID].atack(false,false,&bulbox);
         Vector3D vec = MakeVector(16.0f,0,mapas.mons[aID].angle);
 
-        for (int i=0;i<mapas.mons.count();i++){
+        for (unsigned long i=0; i < mapas.mons.count(); i++)
+        {
 
-            if (mapas.mons[aID].hitIt(mapas.mons[i],vec.x,vec.y,damage)>-1){
+            if (mapas.mons[aID].hitIt(mapas.mons[i],vec.x,vec.y,damage)>-1)
+            {
 
-                
-
-                if (isServer){
+                if (isServer)
+                {
                     //server stuff
-                    for (int a=0;a<serveris.clientCount();a++){
+                    for (int a=0;a<serveris.clientCount();a++)
+                    {
 
                         int z=i;
-                        if (i>=mapas.enemyCount){
+
+                        if (i>=mapas.enemyCount)
+                        {
                             if ((i-mapas.enemyCount-1)<a)
                                 z=i+1;
                             if ((i-mapas.enemyCount-1)==a)
                                 z=mapas.enemyCount;
                         }
-                    
+
                         SendAtackImpulse(a,z,mapas.mons[i].hp);
                     }
                 }
-                if (isClient){//turbut atakavo playeris
-                    
+
+                if (isClient)
+                {//turbut atakavo playeris
+
                     SendClientAtackImpulse(mapas.mons[i].id,mapas.mons[i].hp);
                 }
 
@@ -1751,7 +1694,8 @@ void Game::HandleBullets()
     }   
 }
 //-------------------------------
-void AnimateSlime(){
+void Game::AnimateSlime()
+{
     if (mapas.tiles){
         slimtim++;
         if (slimtim>25){
@@ -1793,10 +1737,17 @@ void Game::LoadFirstMap()
 }
 
 //-------------------------------------
-void ResetVolume(){
-        for (int i=0;i<maxwavs;i++)
-                    smotai[i].setVolume(sys.soundFXVolume);
-                music.setVolume(sys.musicVolume);
+void Game::ResetVolume()
+{
+
+    SoundSystem* ss = SoundSystem::getInstance();
+
+    for (int i=0;i<maxwavs;i++)
+    {
+        ss->setVolume(i, sys.soundFXVolume);
+    }
+
+    music.setVolume(sys.musicVolume);
 }
 
 
@@ -2354,14 +2305,16 @@ void Game::DrawMissionObjectives()
 
 void Game::render(){
 
-    if (render.lpD3DDevice){
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (SUCCEEDED(render.lpD3DDevice->BeginScene())){  
+    FlatMatrix identity;
+    MatrixIdentity(identity.m);
 
-            render.lpD3DDevice->Clear( 0, 0, D3DCLEAR_TARGET,D3DXCOLOR(0,0,0,0), 0, 0 );
-
-            render.spraitas->Begin(D3DXSPRITE_ALPHABLEND);
-
+    FlatMatrix finalM = identity * OrthoMatrix;
+    defaultShader.use();
+    int MatrixID = defaultShader.getUniformID("ModelViewProjection");
+    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, finalM.m);
+    colorShader.use();
 
             if (TitleScreen){
                 DrawTitleScreen();  
@@ -2432,15 +2385,8 @@ void Game::render(){
 
                         }
 
-                        render.spraitas->End();
+                       pics.drawBatch(&colorShader, &defaultShader, 666);
 
-
-                        render.lpD3DDevice->EndScene();
-
-                        render.lpD3DDevice->Present( NULL, NULL, NULL, NULL );  
-
-        }
-    }
 
 
 }
@@ -2469,7 +2415,8 @@ void Game::render(){
 
 //------------------------------------
 
-void QuitApp(){
+void Game::QuitApp()
+{
     if (isServer){
         StopServer();
     }
@@ -2644,7 +2591,8 @@ void Game::SendClientCoords()
     clientas.sendData(coords,cnt);
 }
 //-----------------------------------------
-void SendPlayerInfoToClient(int clientindex){
+void Game::SendPlayerInfoToClient(int clientindex)
+{
     unsigned char z=0;
     for (int i=0;i<mapas.enemyCount+(int)serveris.clientCount()+1;i++){
 
@@ -2688,7 +2636,8 @@ void SendPlayerInfoToClient(int clientindex){
     }
 }
 //--------------------------------------
-void SendData(){
+void Game::SendData()
+{
 
     /*
     float floatas=1023.4563; 
@@ -2751,7 +2700,8 @@ void GetCharData(const char* bufer, int bufersize, int* index ){
     }
 }
 //---------------------------------------------
-void GetMapInfo(const char* bufer, int bufersize, int* index){
+void Game::GetMapInfo(const char* bufer, int bufersize, int* index)
+{
 
     int mapnamelen=0;
     if (bufersize-(*index)>=sizeof(int)){
@@ -2800,7 +2750,8 @@ void GetMapInfo(const char* bufer, int bufersize, int* index){
     }
 }
 //------------------------------------
-void GetMapData(const char* bufer, int bufersize, int* index){
+void Game::GetMapData(const char* bufer, int bufersize, int* index)
+{
 
 
     int moncount=0;
@@ -2874,20 +2825,22 @@ void GetDoorInfo(const char* bufer,int * index, int* dx, int* dy, unsigned char*
         *frame=doorframe;
 }
 //---------------------------------------
-void GetNewItemInfo(char* bufer, int* index){
- float x,y;
- int value;
- memcpy(&x,&bufer[*index],sizeof(float));
- *index+=sizeof(float);
- memcpy(&y,&bufer[*index],sizeof(float));
- *index+=sizeof(float);
- memcpy(&value,&bufer[*index],sizeof(int));
- *index+=sizeof(int);
+void Game::GetNewItemInfo(char* bufer, int* index)
+{
+    float x,y;
+    int value;
+    memcpy(&x,&bufer[*index],sizeof(float));
+    *index+=sizeof(float);
+    memcpy(&y,&bufer[*index],sizeof(float));
+    *index+=sizeof(float);
+    memcpy(&value,&bufer[*index],sizeof(int));
+    *index+=sizeof(int);
 
- mapas.addItem(x,y,value);
+    mapas.addItem(x,y,value);
 }
 //---------------------------------------
-void GetClientAtackImpulse(const char* buf, int * index, int ClientIndex){
+void Game::GetClientAtackImpulse(const char* buf, int * index, int ClientIndex)
+{
  int victim;
  int hp;
  memcpy(&victim,&buf[*index],sizeof(int));
@@ -2926,7 +2879,8 @@ void GetClientAtackImpulse(const char* buf, int * index, int ClientIndex){
 }
 //----------------------------------
 //klientas paima infa apie atka
-void GetAtackImpulse(const char* buf,int* index){
+void Game::GetAtackImpulse(const char* buf,int* index)
+{
  int victim;
  int hp;
  memcpy(&victim,&buf[*index],sizeof(int));
@@ -2939,7 +2893,8 @@ void GetAtackImpulse(const char* buf,int* index){
   
 }
 //---------------------------------
-void GetData(){
+void Game::GetData()
+{
     if (isServer){
 
         char bufer[1024];
@@ -3181,7 +3136,12 @@ void GetData(){
 void Game::init()
 {
 
-    sys.load("config.cfg",false);
+    char buf[1024];
+    sprintf(buf, "%s/settings.cfg", DocumentPath);
+    sys.load(buf);
+
+    sys.write(buf);
+
     LoadKeyData();
 
 
@@ -3191,27 +3151,27 @@ void Game::init()
     strcpy(menu.opt[2],"Options");
     strcpy(menu.opt[3],"Exit");
     menu.count=4;
-    mainmenu.init(0,sys.height-150,"",menu,0);
+    mainmenu.init(0,sys.ScreenHeight-150,"",menu,0);
     mainmenu.activate();
     strcpy(menu.opt[0],"Start server");
     strcpy(menu.opt[1],"Join server");
     menu.count=2;
-    netmenu.init(0,sys.height-100,"Network Game:",menu,0);
+    netmenu.init(0,sys.ScreenHeight-100,"Network Game:",menu,0);
 
     strcpy(menu.opt[0],"Coop");
     strcpy(menu.opt[1],"DeathMatch");
     menu.count=2;
-    netgame.init(0,sys.height-100,"Game Type:",menu,0);
+    netgame.init(0,sys.ScreenHeight-100,"Game Type:",menu,0);
 
     strcpy(menu.opt[0],"Music Volume");
     strcpy(menu.opt[1],"Sound fx Volume");
     menu.count=2;
-    options.init(0,sys.height-100,"Options:",menu,0);
+    options.init(0,sys.ScreenHeight-100,"Options:",menu,0);
 
-    ipedit.init(0,sys.height-100,"Enter Server's IP",20);
+    ipedit.init(0,sys.ScreenHeight-100,"Enter Server's IP",20);
 
-    SfxVolumeC.init(20,sys.height-100,"Sfx Volume:",0,10000,100);
-    MusicVolumeC.init(20,sys.height-100,"Music Volume:",0,10000,100);
+    SfxVolumeC.init(20,sys.ScreenHeight-100,"Sfx Volume:",0,10000,100);
+    MusicVolumeC.init(20,sys.ScreenHeight-100,"Music Volume:",0,10000,100);
 
 
     LoadIntro();

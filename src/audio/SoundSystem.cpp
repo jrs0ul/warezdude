@@ -271,6 +271,11 @@ void SoundSystem::setSoundPos(unsigned int index, float* pos)
 {
 
 }
+//--------------------------------------
+void SoundSystem::setVolume(unsigned int index, int volume)
+{
+}
+
 //---------------------------------------------
 void SoundSystem::stopAll(){
     alSourceStopv(audioInfo.count(),sources);

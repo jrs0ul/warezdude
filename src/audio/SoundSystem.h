@@ -69,6 +69,7 @@ public:
     void loadFiles(const char* BasePath, const char* list);
     void setupListener(float * pos, float * orientation);
     void setSoundPos(unsigned int index, float * pos);
+    void setVolume(unsigned int index, int volume);
     void playsound(unsigned int index, bool loop=false);
     void freeData();
     bool isPlaying(unsigned int index);

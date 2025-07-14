@@ -12,12 +12,12 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-add_executable(easterncity
+add_executable(warezdude3
                     src/mainer.cpp
                     src/Game.cpp
                     )
 
-target_link_libraries(easterncity 
+target_link_libraries(warezdude3 
                         SDL2
                         GL
                         openal

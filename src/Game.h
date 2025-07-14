@@ -32,6 +32,8 @@ class Game
 
     float DT;
     bool Works;
+    char DocumentPath[255];
+
 public:
 
     void init();
@@ -70,4 +72,20 @@ private:
     void LoadFirstMap();
     void TitleMeniuHandle();
     void HandleBullets();
+    void AnimateSlime();
+    void ResetVolume();
+    bool InitAudio();
+    void GetData();
+    void GetClientAtackImpulse(const char* buf, int * index, int ClientIndex);
+    void QuitApp();
+    void SendData();
+    bool OnHit(Bullet& bul);
+    void DrawStats();
+    void SendPlayerInfoToClient(int clientindex);
+    void GetMapInfo(const char* bufer, int bufersize, int* index);
+    void KillPlayer(int index);
+    void GetAtackImpulse(const char* buf,int* index);
+    void SendItemCreation(float x, float y, int value, unsigned int clientIndex);
+    void GetNewItemInfo(char* bufer, int* index);
+    void GetMapData(const char* bufer, int bufersize, int* index);
 };
