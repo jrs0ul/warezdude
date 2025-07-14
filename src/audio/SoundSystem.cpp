@@ -266,6 +266,11 @@ void SoundSystem::setupListener(float * position, float * orientation){
     alListenerf(AL_GAIN, 1.0f);
     alListener3f(AL_ORIENTATION,orientation[0], orientation[2], orientation[1]);
 }
+//------------------------------------
+void SoundSystem::setSoundPos(unsigned int index, float* pos)
+{
+
+}
 //---------------------------------------------
 void SoundSystem::stopAll(){
     alSourceStopv(audioInfo.count(),sources);

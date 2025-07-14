@@ -6,6 +6,6 @@ unsigned long threadID;
 long threadHandle;
 
 public:
-    void create(void* ThreadProc);
+    void create(long int (void*) ThreadProc);
     void close();
 };

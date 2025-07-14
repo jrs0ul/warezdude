@@ -9,9 +9,8 @@ int round(double x);
 bool CirclesColide(float x1,float y1,float radius1, float x2, float y2, float radius2);
 
 
-POINT* Line(int x1, int y1, int x2, int y2, int& count, int gridw);
-
-D3DXVECTOR2 MakeVector(float speedx, float speedy, float _angle );
+Vector3D* Line(int x1, int y1, int x2, int y2, int& count, int gridw);
+Vector3D MakeVector(float speedx, float speedy, float _angle );
 
 
 

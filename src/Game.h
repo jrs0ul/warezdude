@@ -15,18 +15,23 @@
 #include "CClient.h"
 #include "CServer.h"
 #include "map.h"
+#include "Threads.h"
 
 
 
 class Game
 {
-    CServer serveris;
-    CClient clientas;
+    static CServer serveris;
+    static CClient clientas;
 
 
-    CMap mapas;
+    static SystemConfig sys;
+
+    static CMap mapas;
+    ThreadManager threadman;
 
     float DT;
+    bool Works;
 public:
 
     void init();
@@ -36,18 +41,33 @@ public:
 
 private:
     void MoveDude();
-    void SendMapData(int clientIndex);
+    static void SendMapData(int clientIndex);
     void SendWarpMessage();
     void ItemPickup();
     void SendItemCRemove(int itemIndex);
     void GoToLevel(int level, int otherplayer);
     void SendItemSRemove(int ItemIndex, int clientIndex, bool playerTaked);
-    void SendMapInfo(int clientIndex);
+    static void SendMapInfo(int clientIndex);
     void PutExit();
-    long Threadproc(void *param);
+    static long Threadproc(void *param);
     void InitServer();
     void StopServer();
     bool JoinServer(const char* ip, unsigned port);
     void QuitServer();
     void SendServerDoorState(unsigned int clientIndex, int doorx,int doory, unsigned char doorframe);
+    void DoorsInteraction();
+    void SlimeReaction(int index);
+    void SendClientAtackImpulse(int victimID, int hp);
+    void SendClientCoords();
+    void SendClientDoorState(int doorx,int doory, unsigned char doorframe);
+    void AddaptMapView();
+    void DrawMissionObjectives();
+    void MonsterAI(int index);
+    void BeatEnemy(int aID, int damage);
+    void SendAtackImpulse(unsigned int clientIndex, int victim, int hp);
+    void SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine);
+    void findpskxy();
+    void LoadFirstMap();
+    void TitleMeniuHandle();
+    void HandleBullets();
 };

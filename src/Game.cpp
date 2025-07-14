@@ -4,8 +4,6 @@
 #include <cstdio>     //sprinf
 #include <ctime>
 
-#include "SystemConf.h"
-
 
 #include "dude.h"
 #include "maplist.h"
@@ -15,6 +13,7 @@
 #include "ScroollControl.h"
 #include "WriteText.h"
 #include "Usefull.h"
+#include "TextureLoader.h"
 
 
 
@@ -44,7 +43,7 @@ HINSTANCE hinstanceMain;
 
 
 
-PictureContainer pics;
+PicsContainer pics;
 Gabalas* smotai; // wav samplai
 unsigned int imgCount=0;
 unsigned int maxwavs=0;
@@ -68,7 +67,6 @@ bool EndScreen=false;
 bool FirstTime=true;
 int ms=0;
 
-SystemConf sys;
 
 
 MapList mapai;
@@ -146,7 +144,9 @@ bool nextWepPressed=false;
 //==================================================
 void AdaptSoundPos(int soundIndex, float soundx,float soundy){
 
-    smotai[soundIndex].setSoundPos(soundx,0,soundy);
+    SoundSystem* ss = SoundSystem::getInstance();
+    Vector3D v = Vector3D(soundx, 0, soundy);
+    ss->setSoundPos(soundIndex, v.v);
 }
 //-----------------------------------------------------------
 int FPS (void){
@@ -967,29 +967,34 @@ void Game::MoveDude(){
 
 
 //--------------
-void AddaptMapView(){
+void Game::AddaptMapView()
+{
     pushx=0;
     pushy=0;
 
-    if (mapas.width<22){
-        scrx=mapas.width;
-        posx=(sys.width/2-((mapas.width*32)/2))*-1;
+    if (mapas.width < 22)
+    {
+        scrx = mapas.width;
+        posx = (sys.ScreenWidth / 2 - ((mapas.width*32)/2))*-1;
     }
     else{
-        if (mapas.width>22){
-            scrx=sys.width/32+2;
-            posx=16;
+        if (mapas.width > 22){
+            scrx = sys.ScreenWidth / 32 + 2;
+            posx = 16;
         }
     }
 
-    if (mapas.height<17){
-        scry=mapas.height;
-        posy=(sys.height/2-((mapas.height*32)/2))*-1;
+    if (mapas.height < 17)
+    {
+        scry = mapas.height;
+        posy = (sys.ScreenHeight / 2 - ((mapas.height*32)/2))*-1;
     }
-    else{
-        if (mapas.height>17){
-            scry=sys.height/32+2;
-            posy=16;
+    else
+    {
+        if (mapas.height>17)
+        {
+            scry = sys.ScreenHeight / 32 + 2;
+            posy = 16;
         }
     }
 
@@ -999,7 +1004,8 @@ void AddaptMapView(){
 
 //---------------
 
-void findpskxy(){
+void Game::findpskxy()
+{
     UpBorder=0;
     DownBorder=0;
     LeftBorder=0;
@@ -1009,7 +1015,7 @@ void findpskxy(){
     int pusesizx=scrx / 2; //puse matomo ekrano
     int pusesizy=scry / 2;
     //-
-    pskx=round(mapas.mons[mapas.enemyCount].x/32.0f)+pusesizx; //mapas.mons[mapas.monscount]x+puseekrano.x
+    pskx = round(mapas.mons[mapas.enemyCount].x/32.0f)+pusesizx; //mapas.mons[mapas.monscount]x+puseekrano.x
     if (pskx<scrx)
         pskx=scrx;
     if (pskx>mapas.width) 
@@ -1189,21 +1195,21 @@ void Game::ItemPickup()
 
                     if ((item != 6) && (item != 3) && (item != 4))
                     {
-                        ss->setSoundPos(1, mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
+                        AdaptSoundPos(1, mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
                         ss->playsound(1);
                     }
                     else
                     {
                         if (item==6)
                         {//hp up
-                            ss->setSoundPos(6, mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
+                            AdaptSoundPos(6, mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
                             ss->playsound(6);  
                         }
                         else
                         {
                             if (item==3)
                             {
-                                ss->setSoundPos(7,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
+                                AdaptSoundPos(7,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
                                 ss->playsound(7);
                             }
                         }
@@ -1274,7 +1280,8 @@ void Game::ItemPickup()
 //---------------------------------
 //serverio threadas laukiantis prisijungimu
 long Game::Threadproc(void *param){
-    while (!killthread){
+    while (!killthread)
+    {
         int res=serveris.waitForClient();
         if (res){
 
@@ -1283,8 +1290,10 @@ long Game::Threadproc(void *param){
 
             mapas.mons[mapas.mons.count()-1].id=mapas.mons[mapas.mons.count()-2].id+1;
 
-            for (int i=0; i<(int)serveris.clientCount();i++)
+            for (int i=0; i < (int)serveris.clientCount(); i++)
+            {
                 SendMapInfo(i);
+            }
 
             SendMapData(serveris.clientCount()-1);
             //----end
@@ -1302,7 +1311,7 @@ void Game::InitServer()
     killthread=false;
     serveris.launch(NetPort);
 
-    ThreadMan.create(ThreadProc);
+    threadman.create(Threadproc);
 }
 //--------------------------------
 void Game::StopServer()
@@ -1310,7 +1319,7 @@ void Game::StopServer()
     isServer=false;
     killthread=true;
     serveris.shutDown();
-    ThreadMan.close();
+    threadman.close();
 }
 //---------------------------------
 bool Game::JoinServer(const char* ip, unsigned port)
@@ -1333,7 +1342,8 @@ void Game::QuitServer()
 }
 
 //--------------------------------
-void SendClientDoorState(int doorx,int doory, unsigned char doorframe){
+void Game::SendClientDoorState(int doorx,int doory, unsigned char doorframe)
+{
     int index=0;
     char bufer[256];
     bufer[0]='d'; bufer[1]='o'; bufer[2]='r';
@@ -1368,49 +1378,62 @@ void Game::SendServerDoorState(unsigned int clientIndex, int doorx,int doory, un
 
 //--------------------------------
 //viskas kas susije su durimis
-void DoorsInteraction(){
+void Game::DoorsInteraction()
+{
 
-
-    if (door_tim==0){
-        D3DXVECTOR2 vec=MakeVector(20.0f,0,mapas.mons[mapas.enemyCount].angle);
+    if (door_tim == 0)
+    {
+        Vector3D vec = MakeVector(20.0f, 0, mapas.mons[mapas.enemyCount].angle);
 
         int drx=round(((mapas.mons[mapas.enemyCount].x+vec.x)/32.0f));
         int dry=round(((mapas.mons[mapas.enemyCount].y-vec.y)/32.0f));
 
+        SoundSystem* ss = SoundSystem::getInstance();
 
-        if (Keys[6]){ 
+
+        if (Keys[6])
+        {
             if ((mapas.tiles[dry][drx]==67)
                 ||(mapas.tiles[dry][drx]==65)
                 ||(mapas.tiles[dry][drx]==69)
-                ||(mapas.tiles[dry][drx]==71)){// atidarom
-                    mapas.tiles[dry][drx]++;
-                    mapas.colide[dry][drx]=false;
-                    door_tim=1;
-                    AdaptSoundPos(8,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
-                    smotai[8].play();
+                ||(mapas.tiles[dry][drx]==71))
+            {// atidarom
+                mapas.tiles[dry][drx]++;
+                mapas.colide[dry][drx]=false;
+                door_tim = 1;
+                AdaptSoundPos(8, mapas.mons[mapas.enemyCount].x, mapas.mons[mapas.enemyCount].y);
+                ss->playsound(8);
             }
             else                        //uzdarom
                 if ((mapas.tiles[dry][drx]==68)
                     ||(mapas.tiles[dry][drx]==66)
                     ||(mapas.tiles[dry][drx]==70)
                     ||(mapas.tiles[dry][drx]==72)
-                    ){
-                        if (!CirclesColide(mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y,16.0f,drx*32.0f,dry*32.0f,8.0f)){
-                            mapas.tiles[dry][drx]--;
-                            mapas.colide[dry][drx]=true;
-                            door_tim=1;
-                            AdaptSoundPos(9,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
-                            smotai[9].play();
-                        }
-                }
+                    )
+            {
 
-                if (isServer){//isiunciam info visiems klientams
-                    for (unsigned int i=0;i<serveris.clientCount();i++)
-                        SendServerDoorState(i,drx,dry,mapas.tiles[dry][drx]);
+                if (!CirclesColide(mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y,16.0f,drx*32.0f,dry*32.0f,8.0f))
+                {
+                    mapas.tiles[dry][drx]--;
+                    mapas.colide[dry][drx]=true;
+                    door_tim=1;
+                    AdaptSoundPos(9, mapas.mons[mapas.enemyCount].x, mapas.mons[mapas.enemyCount].y);
+                    ss->playsound(9);
                 }
-                if (isClient){//isiunciam infa servui
-                    SendClientDoorState(drx,dry,mapas.tiles[dry][drx]);
+            }
+
+            if (isServer)
+            {//isiunciam info visiems klientams
+                for (unsigned int i=0;i<serveris.clientCount();i++)
+                {
+                    SendServerDoorState(i,drx,dry,mapas.tiles[dry][drx]);
                 }
+            }
+
+            if (isClient)
+            {//isiunciam infa servui
+                SendClientDoorState(drx,dry,mapas.tiles[dry][drx]);
+            }
 
         }
     } else{
@@ -1421,17 +1444,23 @@ void DoorsInteraction(){
 
 }
 //-------
-void SlimeReaction(int index){
+void Game::SlimeReaction(int index)
+{
+
+    const int montileY = round(mapas.mons[index].y/32);
+    const int montileX = round(mapas.mons[index].x/32);
+
     if ((!mapas.mons[index].shot)&&(!mapas.mons[index].spawn)&&(!godmode)
-        &&((mapas.tiles[round(mapas.mons[index].y/32)][round(mapas.mons[index].x/32)]==slime)
-        ||(mapas.tiles[round(mapas.mons[index].y/32)][round(mapas.mons[index].x/32)]==slime+1))&&
+        &&((mapas.tiles[montileY][montileX] == slime)
+        ||(mapas.tiles[montileY][montileX] == slime + 1))&&
         (slimtim==5)){
             mapas.mons[index].hp-=2;
             mapas.mons[index].hit=true;
     }
 }
 //-----------------------------
-void SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine){
+void Game::SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine)
+{
     int index=0;
     char buf[1024];
     buf[0]='s';
@@ -1448,7 +1477,8 @@ void SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine)
     serveris.sendData(clientIndex,buf,index);
 }
 //------------------------------------------
-void SendClientAtackImpulse(int victimID, int hp){
+void Game::SendClientAtackImpulse(int victimID, int hp)
+{
     char buferis[1024];
     int index=0;
     buferis[0]='a'; buferis[1]='t'; buferis[2]='k';
@@ -1460,7 +1490,8 @@ void SendClientAtackImpulse(int victimID, int hp){
     clientas.sendData(buferis,index);
 }
 //----------------------------------------
-void SendAtackImpulse(unsigned int clientIndex, int victim, int hp){
+void Game::SendAtackImpulse(unsigned int clientIndex, int victim, int hp)
+{
     char buferis[1024];
     int index=0;
     
@@ -1474,10 +1505,11 @@ void SendAtackImpulse(unsigned int clientIndex, int victim, int hp){
 }
 
 //----------------------------------
-void BeatEnemy(int aID, int damage){
+void Game::BeatEnemy(int aID, int damage)
+{
     if (mapas.mons[aID].canAtack){
         mapas.mons[aID].atack(false,false,&bulbox);
-        D3DXVECTOR2 vec=MakeVector(16.0f,0,mapas.mons[aID].angle);
+        Vector3D vec = MakeVector(16.0f,0,mapas.mons[aID].angle);
 
         for (int i=0;i<mapas.mons.count();i++){
 
@@ -1523,7 +1555,10 @@ void BeatEnemy(int aID, int damage){
 
 
 //-------------------------
-void MonsterAI(int index){
+void Game::MonsterAI(int index){
+
+    SoundSystem * ss = SoundSystem::getInstance();
+
     int linijosIlgis=0;
 
     int tmpcnt=bulbox.count();
@@ -1576,18 +1611,15 @@ void MonsterAI(int index){
         
         if (victimindex){
             //2 rask spindulio kelia iki pirmojo kolidinancio
-            POINT * line=0;
-
-            line=Line(round(mapas.mons[index].x),round(mapas.mons[index].y),
+            Vector3D * line = Line(round(mapas.mons[index].x),round(mapas.mons[index].y),
                 round(mapas.mons[victimindex].x),round(mapas.mons[victimindex].y),
                 linijosIlgis,32);
 
-            if (linijosIlgis){
-                
-            
+            if (linijosIlgis)
+            {
                 bool colide=false;
                 for(int i=0;i<linijosIlgis;i++){
-                    if (mapas.colide[line[i].y][line[i].x]){
+                    if (mapas.colide[(unsigned)line[i].y][(unsigned)line[i].x]){
                      colide=true;
                      
                      break;
@@ -1656,9 +1688,10 @@ void MonsterAI(int index){
 
         if (mapas.mons[index].hit){
             mapas.mons[index].damageAnim();
-            if (!mapas.mons[index].hit){
+            if (!mapas.mons[index].hit)
+            {
                 AdaptSoundPos(11,mapas.mons[index].x,mapas.mons[index].y);
-                smotai[11].play();
+                ss->playsound(11);
 
                 
             }
@@ -1677,7 +1710,7 @@ void MonsterAI(int index){
                         if (CirclesColide(mapas.items[i].x, mapas.items[i].y, 8.0f, mapas.mons[index].x,mapas.mons[index].y,16.0f)){
                             mapas.mons[index].item=mapas.items[i].value;
                             AdaptSoundPos(5,mapas.items[i].x,mapas.items[i].y);
-                            smotai[5].play();
+                            ss->playsound(5);
                             
                             if (isServer){
                                 for (int a=0;a<serveris.clientCount();a++){
@@ -1696,13 +1729,14 @@ void MonsterAI(int index){
 
     if (bulbox.count()>tmpcnt){
         AdaptSoundPos(0,mapas.mons[index].x,mapas.mons[index].y);
-        smotai[0].play();
+        ss->playsound(0);
     }
 
 }
 //--------------------------------
 //kulku valdymas
-void HandleBullets(){
+void Game::HandleBullets()
+{
 
     for (int i=0;i<bulbox.count();i++){
         bulbox.buls[i].ai(mapas.colide,mapas.width,mapas.height);
@@ -1735,7 +1769,8 @@ void AnimateSlime(){
     }
 }
 //-------------------------------------------------------
-void LoadFirstMap(){
+void Game::LoadFirstMap()
+{
     if (!isClient){
         char firstmap[255];
         mapai.getMapName(0,firstmap);
@@ -1743,8 +1778,8 @@ void LoadFirstMap(){
         if (!mapas.Load(firstmap)){
             mapas.Destroy();
             mapai.Destroy();
-            MessageBox(0,"Can't find first map!","Fatal error",0);
-            sys.shutdown=true;
+            printf("Can't find first map!\n");
+            Works = false;
         }
         goods=mapas.misionItems;
         timeleft=mapas.timeToComplete;
@@ -1766,7 +1801,8 @@ void ResetVolume(){
 
 
 //-------------------------------------------------------------
-void TitleMeniuHandle(){
+void Game::TitleMeniuHandle()
+{
 
     if (mainmenu.active()){
             if (isServer){
@@ -1796,7 +1832,7 @@ void TitleMeniuHandle(){
                     mainmenu.deactivate();
                        }break;
                 case 3:{
-                    sys.shutdown=true;
+                    Works = false;
                     mainmenu.reset();
                        }break;
                 }
@@ -2253,7 +2289,7 @@ void Game::logic(){
 }
 //------------------------------------
 void DrawHelp(){
-    pics.images[13].Blt(render.spraitas,0,0,0,1.0f,1.25f,1.9f);
+    pics.draw(13, 0,0,0,1.0f,1.25f,1.9f);
     WriteText(30,30,render.spraitas,&pics.images[10],"Colect these and...");
     pics.images[11].Blt(render.spraitas,50,50,itmframe);
     pics.images[11].Blt(render.spraitas,100,50,itmframe+4);
@@ -2300,10 +2336,11 @@ void DrawIntro(){
 
 
 //---------------------------
-void DrawMissionObjectives(){
+void Game::DrawMissionObjectives()
+{
     char buf[50];
     if (mapas.misionItems){
-        sprintf(buf,"Collect %d Items",mapas.misionItems);
+        sprintf(buf, "Collect %d Items",mapas.misionItems);
         WriteText(sys.width/2-100,sys.height/2+10,render.spraitas,&pics.images[10],buf,1.0f,1.0f,1.0f,0.0,0.0);
     }
     WriteText(sys.width/2-100,sys.height/2+30,render.spraitas,&pics.images[10],"Locate exit!",1.0f,1.0f,1.0f,0.0,0.0);
@@ -2411,7 +2448,7 @@ void Game::render(){
 
 //------------------------------------
 
-void fullscreenswitch(){
+/*void fullscreenswitch(){
 
     render.destroy();
     pics.deleteContainer();
@@ -2428,7 +2465,7 @@ void fullscreenswitch(){
         InitD3D(); 
         SetWindowPos(hwndMain,0,100,100,sys.width+4,sys.height+25,0);
     }
-}
+}*/
 
 //------------------------------------
 
@@ -2448,7 +2485,7 @@ void QuitApp(){
 
 //-----------------------------------
 
-LRESULT CALLBACK MainWinProc( HWND hwnd,
+/*LRESULT CALLBACK MainWinProc( HWND hwnd,
                              UINT msg,
                              WPARAM wparam,
                              LPARAM lparam)
@@ -2526,7 +2563,7 @@ LRESULT CALLBACK MainWinProc( HWND hwnd,
     }
 
     return DefWindowProc(hwnd, msg,wparam, lparam);
-}
+}*/
 
 
 //-------------------------------
@@ -2581,7 +2618,8 @@ void LoadMap(const char* mapname, int otherplayers){
 }
 //----------------------------------------
 //siuncia kliento info i serva
-void SendClientCoords(){
+void Game::SendClientCoords()
+{
     char coords[1024];
     int cnt=0;
     coords[0]='c'; coords[1]='h'; coords[2]='r';
@@ -3182,6 +3220,8 @@ void Game::init()
 
 
     PlayNewSong("Evil.ogg");
+
+    Works = true;
 
 
 }
