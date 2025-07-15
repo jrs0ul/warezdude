@@ -1,6 +1,7 @@
 #ifndef SCROLL_CONTROL_H
 #define SCROLL_CONTROL_H
 #include "ActiveControl.h"
+#include "TextureLoader.h"
 
 class ScroollControl:public ActiveControl{
 public:
@@ -19,7 +20,7 @@ public:
   //jei keyus i virsu apcia tai keiciasi ir state
   void getInput(unsigned char key);
   //nupaisom
-  void draw( Picture& rod, Picture& bg,  Picture* font,  LPD3DXSPRITE& spraitas,LPDIRECT3DDEVICE9& device);
+  void draw( PicsContainer& pics, unsigned rod, unsigned bg,  unsigned font);
 };
 
 #endif //SCROLL_CONTROL_H

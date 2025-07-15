@@ -16,10 +16,15 @@
 #include "DArray.h"
 
 class CServer{
+
+#ifdef _WIN32
     WSADATA wsaData;
     DArray<SOCKET> clientSocks; //klientu socketai
     DArray<sockaddr_in> clientAddreses; // klientu adresai
     SOCKET serverSock;    //serverio socketas
+#else
+
+#endif
     unsigned _clientCount; //kiek atviru kliento socketu
     bool isServerRunning; //ar serveris veikia
     

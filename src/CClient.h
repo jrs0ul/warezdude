@@ -14,8 +14,12 @@
 #endif
 
 class CClient{
-    SOCKET clientSock;  
+#ifdef _WIN32
+    SOCKET clientSock;
     SOCKADDR_IN _sin;
+#else
+
+#endif
     bool isJoinedServer;
 
 public:

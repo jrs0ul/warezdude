@@ -58,13 +58,13 @@ void SelectMeniu::getInput(unsigned char key){
         state--;
        else
         state=selection.count-1;
-	   break;
+       break;
 
     case 40:if (state<selection.count-1)  //down
         state++;
        else
         state=0;
-	    break;
+        break;
 
     default: pressedkey=0;
    }
@@ -76,8 +76,7 @@ void SelectMeniu::getInput(unsigned char key){
 
 }
 //--------------------------------------------
-void SelectMeniu::draw(Picture& rod, Picture* font, LPD3DXSPRITE& spraitas,LPDIRECT3DDEVICE9& device,Picture* icons,
-					   float r,float g,float b){
+void SelectMeniu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons,float r,float b,float g){
   
  
   unsigned newcount=0;
@@ -86,7 +85,7 @@ void SelectMeniu::draw(Picture& rod, Picture* font, LPD3DXSPRITE& spraitas,LPDIR
   unsigned tmpheight=height;
   if (selection.count*20+28>tmpheight){
    if (((tmpheight-28)/20)+state/half>selection.count)
-	newcount=selection.count;
+    newcount=selection.count;
    else
     newcount=((height-28)/20)+state/half;
    start=state/half;
@@ -94,26 +93,26 @@ void SelectMeniu::draw(Picture& rod, Picture* font, LPD3DXSPRITE& spraitas,LPDIR
   else newcount=selection.count;
  
   if ((icons)&&(((newcount-start)*icons->info.Height)+28>tmpheight))
-	  height=(newcount-start)*icons->info.Height+40;
+      height=(newcount-start)*icons->info.Height+40;
 
   //DrawBlock(device,spraitas,x,y,width,height,0,0,200);
   WriteText(x+12,y+2,spraitas,font,title,1.0f,1.0f,1.0f,0,0,0); 
   WriteText(x+10,y+4,spraitas,font,title); 
   
 
-	  for (int i=start;i< newcount;i++){
-		  if (icons){
-			  icons->Blt(spraitas,x+16,y+28+((i-start)*icons->info.Height),selection.pics[i]);
-		   WriteText(x+20+icons->info.Height,y+28+((i-start)*icons->info.Height),spraitas,font,selection.opt[i],1.0f,1.2f,1.2f,0,0,0);
-		   WriteText(x+20+icons->info.Height,y+28+((i-start)*icons->info.Height),spraitas,font,selection.opt[i]);
-		   
-	      }
-		  else{
-		   WriteText(x+34,y+26+((i-start)*20),spraitas,font,selection.opt[i],1.0f,1.0f,1.0f,0,0,0);
-		   WriteText(x+32,y+28+((i-start)*20),spraitas,font,selection.opt[i]);
-		   
-		  }
-	  }
+      for (int i=start;i< newcount;i++){
+          if (icons){
+              icons->Blt(spraitas,x+16,y+28+((i-start)*icons->info.Height),selection.pics[i]);
+           WriteText(x+20+icons->info.Height,y+28+((i-start)*icons->info.Height),spraitas,font,selection.opt[i],1.0f,1.2f,1.2f,0,0,0);
+           WriteText(x+20+icons->info.Height,y+28+((i-start)*icons->info.Height),spraitas,font,selection.opt[i]);
+           
+          }
+          else{
+           WriteText(x+34,y+26+((i-start)*20),spraitas,font,selection.opt[i],1.0f,1.0f,1.0f,0,0,0);
+           WriteText(x+32,y+28+((i-start)*20),spraitas,font,selection.opt[i]);
+           
+          }
+      }
   
 
  if (start>0)

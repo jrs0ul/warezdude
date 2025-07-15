@@ -18,6 +18,7 @@
 #include "Threads.h"
 
 
+const int GameKeyCount=10;
 
 class Game
 {
@@ -30,9 +31,23 @@ class Game
     static CMap mapas;
     ThreadManager threadman;
 
-    float DT;
-    bool Works;
+
+public:
+    int DebugMode;
+    Vector3D gamepad;
+    float MouseX;
+    float MouseY;
+    unsigned char globalKEY;
+    unsigned char OldKeysKeys[GameKeyCount]; //zaidimo mygtukai
+    unsigned char Keys[GameKeyCount]; //zaidimo mygtukai
     char DocumentPath[255];
+    bool Works;
+    unsigned ScreenWidth;
+    unsigned ScreenHeight;
+    float TimeTicks;
+    float DeltaTime;
+    float DT;
+    float Accumulator;
 
 public:
 
@@ -88,4 +103,13 @@ private:
     void SendItemCreation(float x, float y, int value, unsigned int clientIndex);
     void GetNewItemInfo(char* bufer, int* index);
     void GetMapData(const char* bufer, int bufersize, int* index);
+    void DrawMap(float r,float g, float b);
+    void GetDoorInfo(const char* bufer,int * index, int* dx, int* dy, unsigned char* frame);
+    void KillEnemy(int ID);
+    int FPS();
+    void DrawSomeText();
+    void GetClientCoords(const char* bufer, int * buferindex, unsigned int clientIndex);
+    void GetCharData(const char* bufer, int bufersize, int* index);
+    void DrawMiniMap(int x, int y);
+    void LoadMap(const char* mapname, int otherplayers);
 };

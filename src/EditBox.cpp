@@ -41,7 +41,7 @@ void EditBox::getInput(unsigned char key, unsigned char Gkey){
  }
 }
 //------------------------------------
-void EditBox::draw(LPDIRECT3DDEVICE9& device,LPD3DXSPRITE& ekranas, Picture* font,Picture* remelis){
+void EditBox::draw(PicsContainer& pics, unsigned font, unsigned remelis){
  
  int ilgis;
  if (strlen(title)>maxlength)

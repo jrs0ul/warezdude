@@ -2,6 +2,8 @@
 #define DECAL_H
 
 
+#include "TextureLoader.h"
+
 class Decal{
 public:
     int x,y;
@@ -15,7 +17,7 @@ public:
         r=g=b=1.0f;
         frame=0;
     }
-    void draw(Picture& sprite, Renderer3D& rend,
+    void draw(PicsContainer& pics, unsigned index,
                 int pskx, int scrx, int psky, int scry,
                 int pushx, int posx, int pushy, int posy);
 };

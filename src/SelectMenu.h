@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include "ActiveControl.h"
+#include "TextureLoader.h"
 
 struct Smenu{
   char opt[20][30];
@@ -39,7 +40,7 @@ struct Smenu{
   //jei keyus i virsu apcia tai keiciasi ir state
   void getInput(unsigned char key);
   //nupaisom
-  void draw( Picture& rod,  Picture* font,  LPD3DXSPRITE& spraitas,LPDIRECT3DDEVICE9& device, Picture* icons=0,float r=1.0f,float b=1.0f,float g=1.0f);
+  void draw( PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons=0,float r=1.0f,float b=1.0f,float g=1.0f);
  
  };
 

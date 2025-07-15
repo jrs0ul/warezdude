@@ -2,6 +2,7 @@
 #define _EDITBOX_H_
 
 #include "ActiveControl.h"
+#include "TextureLoader.h"
 
 
 
@@ -15,7 +16,7 @@ class EditBox:public ActiveControl{
   unsigned char pressedKey;
   void init(unsigned int dx, unsigned int dy, const char* dtitl, unsigned char dmaxl);
   void getInput(unsigned char key, unsigned char Gkey);
-  void draw(LPDIRECT3DDEVICE9& device,LPD3DXSPRITE& ekranas, Picture* font,Picture* remelis=0);
+  void draw(PicsContainer& pics, unsigned font, unsigned remelis=0);
   void reset();
  };
 
