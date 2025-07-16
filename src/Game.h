@@ -20,11 +20,11 @@
 
 const int GameKeyCount=10;
 
-CMap mapas;
+static CMap mapas;
+static CServer serveris;
 
 class Game
 {
-    static CServer serveris;
     static CClient clientas;
 
 

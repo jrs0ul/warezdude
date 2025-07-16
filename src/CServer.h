@@ -11,6 +11,7 @@
     #include <winsock2.h>
 #else
     #include <sys/socket.h>
+    #include <netinet/in.h>
 #endif
 
 #include "DArray.h"
@@ -23,6 +24,9 @@ class CServer{
     DArray<sockaddr_in> clientAddreses; // klientu adresai
     SOCKET serverSock;    //serverio socketas
 #else
+    int serverSock;
+    DArray<int> clientSocks;
+    DArray<sockaddr_in> clientAddreses; // klientu adresai
 
 #endif
     unsigned _clientCount; //kiek atviru kliento socketu

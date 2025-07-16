@@ -123,17 +123,19 @@ void SelectMeniu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsign
     {
         if (icons)
         {
-            icons->Blt(spraitas,x+16,y+28+((i-start)*icons->info.Height),selection.pics[i]);
-            WriteText(x + 20 + icons-> info.Height,
-                      y + 28 + ((i-start)*icons->info.Height),
-                      pics, font, selection.opt[i],1.0f,1.2f,1.2f,0,0,0);
-            WriteText(x+20+icons->info.Height,
-                      y+28+((i-start)*icons->info.Height),
-                      pics,font,selection.opt[i]);
+            pics.draw(icons, x+16, y + 28 + ((i - start) * pics.getInfo(icons)->theight), selection.pics[i]);
+            WriteText(x + 20 + pics.getInfo(icons)->theight,
+                      y + 28 + ((i-start) * pics.getInfo(icons)->theight),
+                      pics, font, selection.opt[i], 1.0f,1.2f, COLOR(0,0,0, 1.f));
+
+            WriteText(x + 20 + pics.getInfo(icons)->theight,
+                      y + 28 + ((i-start) * pics.getInfo(icons)->theight),
+                      pics, font, selection.opt[i]);
 
         }
-        else{
-            WriteText(x+34,y+26+((i-start)*20), pics,font,selection.opt[i],1.0f,1.0f,1.0f,0,0,0);
+        else
+        {
+            WriteText(x+34,y+26+((i-start)*20), pics,font,selection.opt[i],1.0f,1.0f, COLOR(0,0,0,1.f));
             WriteText(x+32,y+28+((i-start)*20), pics,font,selection.opt[i]);
 
         }
@@ -141,20 +143,31 @@ void SelectMeniu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsign
 
 
     if (start>0)
-        rod.Blt(spraitas,x+width-18,y+3,1);
+    {
+        pics.draw(rod,x+width-18, y+3, 1);
+    }
+
     if (newcount<selection.count)
-        rod.Blt(spraitas,x+width-18,y+height-19,2);
+    {
+        pics.draw(rod, x + width-18, y+height-19,2);
+    }
 
     //coolframe(x,y,width,height,frm,spraitas);
 
     int space=20;
     if (icons)
-        space=icons->info.Height;
+    {
+        space = pics.getInfo(icons)->theight;
+    }
 
-    if ((rand()%100)%10==0) 
-        rod.Blt(spraitas,x+3,y+28+((state-start)*space));
+    if ((rand()%100)%10 == 0)
+    {
+        pics.draw(rod,x+3,y+28+((state-start)*space));
+    }
     else
-        rod.Blt(spraitas,x+5,y+28+((state-start)*space));
+    {
+        pics.draw(rod,x+5,y+28+((state-start)*space));
+    }
 
 }
 

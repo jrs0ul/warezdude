@@ -21,6 +21,9 @@ add_executable(warezdude3
                     src/SelectMenu.cpp
                     src/gui/Text.cpp
                     src/SysConfig.cpp
+                    src/CServer.cpp
+                    src/Matrix.cpp
+                    src/Usefull.cpp
                     src/TextureLoader.cpp
                     src/SDLVideo.cpp
                     src/ShaderProgram.cpp
