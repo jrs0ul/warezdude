@@ -30,7 +30,7 @@ struct Smenu{
   
   bool selected;  //jau viskas pasirinkta, enter paspaustas
   bool canceled;  //ar menu atshauktas
-  unsigned char pressedkey;
+  unsigned pressedkey;
    
 
   //priskiriam data dx,dy:lango metrikos dst:defstate
@@ -38,7 +38,7 @@ struct Smenu{
   //numusa userio atlikta pasirinkima
   void reset();
   //jei keyus i virsu apcia tai keiciasi ir state
-  void getInput(unsigned char key);
+  void getInput(unsigned key);
   //nupaisom
   void draw( PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons=0,float r=1.0f,float b=1.0f,float g=1.0f);
  

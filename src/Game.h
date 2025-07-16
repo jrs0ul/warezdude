@@ -20,6 +20,8 @@
 
 const int GameKeyCount=10;
 
+CMap mapas;
+
 class Game
 {
     static CServer serveris;
@@ -28,20 +30,29 @@ class Game
 
     static SystemConfig sys;
 
-    static CMap mapas;
     ThreadManager threadman;
+
+    float   OrthoMatrix[16];
+    float   ViewMatrix[16];
+
+    ShaderProgram        defaultShader;
+    ShaderProgram        colorShader;
 
 
 public:
+
+    TouchData   touches;
+
     int DebugMode;
     Vector3D gamepad;
     float MouseX;
     float MouseY;
     unsigned char globalKEY;
-    unsigned char OldKeysKeys[GameKeyCount]; //zaidimo mygtukai
+    unsigned char OldKeys[GameKeyCount]; //zaidimo mygtukai
     unsigned char Keys[GameKeyCount]; //zaidimo mygtukai
     char DocumentPath[255];
     bool Works;
+    bool windowed;
     unsigned ScreenWidth;
     unsigned ScreenHeight;
     float TimeTicks;
@@ -55,16 +66,19 @@ public:
     void render();
     void logic();
     void destroy();
+    void loadConfig();
 
 private:
     void MoveDude();
-    static void SendMapData(int clientIndex);
     void SendWarpMessage();
     void ItemPickup();
     void SendItemCRemove(int itemIndex);
     void GoToLevel(int level, int otherplayer);
     void SendItemSRemove(int ItemIndex, int clientIndex, bool playerTaked);
-    static void SendMapInfo(int clientIndex);
+    //mapo pavadinimas, klientu skaicius
+    static void SendMapInfo(int clientIndex, CMap& map);
+    //monster races amd item positions
+    static void SendMapData(int clientIndex, CMap& map);
     void PutExit();
     static long Threadproc(void *param);
     void InitServer();
@@ -102,7 +116,7 @@ private:
     void GetAtackImpulse(const char* buf,int* index);
     void SendItemCreation(float x, float y, int value, unsigned int clientIndex);
     void GetNewItemInfo(char* bufer, int* index);
-    void GetMapData(const char* bufer, int bufersize, int* index);
+    void GetMapData(const char* bufer, int* index);
     void DrawMap(float r,float g, float b);
     void GetDoorInfo(const char* bufer,int * index, int* dx, int* dy, unsigned char* frame);
     void KillEnemy(int ID);
@@ -112,4 +126,8 @@ private:
     void GetCharData(const char* bufer, int bufersize, int* index);
     void DrawMiniMap(int x, int y);
     void LoadMap(const char* mapname, int otherplayers);
+    void HelpScreenHandle();
+    int PlayerCount();
+    void LoadShader(ShaderProgram* shader, const char* name);
+    
 };

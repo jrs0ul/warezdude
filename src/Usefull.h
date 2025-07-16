@@ -2,6 +2,7 @@
 #define USEFULL_H
 
 
+#include "Vectors.h"
 
 //apvalina floata
 //int round(double x);

@@ -31,6 +31,7 @@
         int ScreenWidth;
         int ScreenHeight;
         int useWindowed;
+        int soundFXVolume;
 
 
         SystemConfig(){

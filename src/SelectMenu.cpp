@@ -1,4 +1,4 @@
-#include "WriteText.h"
+#include "gui/Text.h"
 #include "SelectMenu.h"
 
 
@@ -40,96 +40,121 @@ void SelectMeniu::reset(){
  canceled=false;
 }
 //--------------------------------------------
-void SelectMeniu::getInput(unsigned char key){
- if (key!=pressedkey){
-  //cia tam kad parinktu kai mygtuka atleidi
-  if (pressedkey==13) {
-   if (selection.count)
-    selected=true;      //enter
-  }
+void SelectMeniu::getInput(unsigned key){
 
-  if (pressedkey==27) {
-   canceled=true;      //esc
-  }
+    if (key != pressedkey){
 
-  if (selection.count){
-   switch(key){
-    case 38:if (state>0) //up
-        state--;
-       else
-        state=selection.count-1;
-       break;
+        //printf("%u\n", key);
+        //cia tam kad parinktu kai mygtuka atleidi
+        if (pressedkey == 13) {
+            if (selection.count)
+                selected = true;      //enter
+        }
 
-    case 40:if (state<selection.count-1)  //down
-        state++;
-       else
-        state=0;
-        break;
+        if (pressedkey == 27) {
+            canceled=true;      //esc
+        }
 
-    default: pressedkey=0;
-   }
-  }
+        if (selection.count){
+            switch(key) {
+                case SDLK_UP: 
+                    {
+                        if (state>0) //up{
+                            state--;
+                        else
+                            state = selection.count - 1;
+                    }  break;
+
+                case SDLK_DOWN: 
+                    {
+                        if (state < selection.count - 1)  //down
+                            state++;
+                        else
+                            state = 0;
+                    }
+                    break;
+
+                        default: pressedkey = 0;
+                    }
+
+            }
 
 
-  pressedkey=key;
- }
+            pressedkey = key;
+        }
 
-}
+    }
 //--------------------------------------------
-void SelectMeniu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons,float r,float b,float g){
-  
- 
-  unsigned newcount=0;
-  unsigned start=0;
-  int half=(((height-28)/20)/2);
-  unsigned tmpheight=height;
-  if (selection.count*20+28>tmpheight){
-   if (((tmpheight-28)/20)+state/half>selection.count)
-    newcount=selection.count;
-   else
-    newcount=((height-28)/20)+state/half;
-   start=state/half;
-  }
-  else newcount=selection.count;
- 
-  if ((icons)&&(((newcount-start)*icons->info.Height)+28>tmpheight))
-      height=(newcount-start)*icons->info.Height+40;
+void SelectMeniu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons,float r,float b,float g)
+{
 
-  //DrawBlock(device,spraitas,x,y,width,height,0,0,200);
-  WriteText(x+12,y+2,spraitas,font,title,1.0f,1.0f,1.0f,0,0,0); 
-  WriteText(x+10,y+4,spraitas,font,title); 
-  
+    unsigned newcount=0;
+    unsigned start=0;
+    int half = (((height-28)/20)/2);
+    int tmpheight = height;
 
-      for (int i=start;i< newcount;i++){
-          if (icons){
-              icons->Blt(spraitas,x+16,y+28+((i-start)*icons->info.Height),selection.pics[i]);
-           WriteText(x+20+icons->info.Height,y+28+((i-start)*icons->info.Height),spraitas,font,selection.opt[i],1.0f,1.2f,1.2f,0,0,0);
-           WriteText(x+20+icons->info.Height,y+28+((i-start)*icons->info.Height),spraitas,font,selection.opt[i]);
-           
-          }
-          else{
-           WriteText(x+34,y+26+((i-start)*20),spraitas,font,selection.opt[i],1.0f,1.0f,1.0f,0,0,0);
-           WriteText(x+32,y+28+((i-start)*20),spraitas,font,selection.opt[i]);
-           
-          }
-      }
+    if (selection.count * 20 + 28 > tmpheight)
+    {
+        if (((tmpheight-28)/20)+state/half>selection.count)
+        {
+            newcount=selection.count;
+        }
+        else
+            newcount=((height-28)/20)+state/half;
+
+        start=state/half;
+    }
+    else
+    {
+        newcount=selection.count;
+    }
+
+    if ((icons) && (((newcount - start) * pics.getInfo(icons)->theight) + 28 > (unsigned)tmpheight))
+    {
+        height=(newcount-start) * pics.getInfo(icons)->theight + 40;
+    }
+
+    //DrawBlock(device,spraitas,x,y,width,height,0,0,200);
+    WriteText(x+12, y+2, pics, font, title, 1.0f, 1.0f, COLOR(0,0,0, 1.f)); 
+    WriteText(x+10, y+4, pics, font, title); 
   
 
- if (start>0)
-  rod.Blt(spraitas,x+width-18,y+3,1);
- if (newcount<selection.count)
-  rod.Blt(spraitas,x+width-18,y+height-19,2);
+    for (unsigned i = start; i< newcount; i++)
+    {
+        if (icons)
+        {
+            icons->Blt(spraitas,x+16,y+28+((i-start)*icons->info.Height),selection.pics[i]);
+            WriteText(x + 20 + icons-> info.Height,
+                      y + 28 + ((i-start)*icons->info.Height),
+                      pics, font, selection.opt[i],1.0f,1.2f,1.2f,0,0,0);
+            WriteText(x+20+icons->info.Height,
+                      y+28+((i-start)*icons->info.Height),
+                      pics,font,selection.opt[i]);
 
- //coolframe(x,y,width,height,frm,spraitas);
-  
- int space=20;
- if (icons)
-  space=icons->info.Height;
-  
- if ((rand()%100)%10==0) 
-  rod.Blt(spraitas,x+3,y+28+((state-start)*space));
- else
-  rod.Blt(spraitas,x+5,y+28+((state-start)*space));
+        }
+        else{
+            WriteText(x+34,y+26+((i-start)*20), pics,font,selection.opt[i],1.0f,1.0f,1.0f,0,0,0);
+            WriteText(x+32,y+28+((i-start)*20), pics,font,selection.opt[i]);
+
+        }
+    }
+
+
+    if (start>0)
+        rod.Blt(spraitas,x+width-18,y+3,1);
+    if (newcount<selection.count)
+        rod.Blt(spraitas,x+width-18,y+height-19,2);
+
+    //coolframe(x,y,width,height,frm,spraitas);
+
+    int space=20;
+    if (icons)
+        space=icons->info.Height;
+
+    if ((rand()%100)%10==0) 
+        rod.Blt(spraitas,x+3,y+28+((state-start)*space));
+    else
+        rod.Blt(spraitas,x+5,y+28+((state-start)*space));
 
 }
 

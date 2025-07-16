@@ -7,11 +7,17 @@
 
 //------------------------
 void Dude::heal(){
-    if (hp<100)
-        if (hp>90)
-            hp=100;
+    if (hp < 100)
+    {
+        if (hp > 90)
+        {
+            hp = 100;
+        }
         else
-            hp+=10;
+        {
+            hp += 10;
+        }
+    }
 }
 
 
@@ -62,7 +68,7 @@ void Dude::rotate(float angle){
 void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int mapsizex, int mapsizey,
                 DArray<Dude>& chars,int charcount, int* dirx, int* diry){
 
-    D3DXVECTOR2 vl=MakeVector(walkSpeed,strifeSpeed,angle);
+    Vector3D vl = MakeVector(walkSpeed,strifeSpeed,angle);
 
     float difx=vl.x;//cos(-angle)*speed;
     float dify=vl.y; //sin(angle)*speed;
@@ -71,15 +77,15 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
     float newposy=y-dify;
 
 
-    POINT p1; 
-    POINT p2;
-    POINT p3;
-    POINT p4;
+    Vector3D p1; 
+    Vector3D p2;
+    Vector3D p3;
+    Vector3D p4;
 
-    POINT p5; 
-    POINT p6;
-    POINT p7;
-    POINT p8; 
+    Vector3D p5; 
+    Vector3D p6;
+    Vector3D p7;
+    Vector3D p8; 
 
     
 
@@ -158,27 +164,41 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
 
     
 
-    if ((!map[p1.y][p1.x])&&(!map[p2.y][p2.x])
-        &&(!map[p3.y][p3.x])&&(!map[p4.y][p4.x])&&(!arkolidina(chars,charcount,newposx,y))
-        &&((newposx)<=(mapsizex-1)*32.0f)&&((newposy)<((mapsizey-1)*32.0f))&&
-        ((newposx-radius)>=-radius)&&((y-radius)>=-radius)
+    if ((!map[(int)p1.y][(int)p1.x]) &&
+        (!map[(int)p2.y][(int)p2.x]) &&
+        (!map[(int)p3.y][(int)p3.x]) &&
+        (!map[(int)p4.y][(int)p4.x]) && 
+        (!arkolidina(chars,charcount,newposx,y)) &&
+        ((newposx)<=(mapsizex-1)*32.0f) &&
+        ((newposy)<((mapsizey-1)*32.0f)) &&
+        ((newposx-radius)>=-radius) &&
+        ((y-radius)>=-radius)
 
-        ){
-
-            if ((x>newposx)&&(dirx))
+       )
+    {
+        if ((x>newposx)&&(dirx))
+        {
                 *dirx=1;
-            else
-                if ((x<newposx)&&(dirx))
-                    *dirx=2;
+        }
+        else if ((x<newposx)&&(dirx))
+        {
+            *dirx=2;
+        }
 
-            x=x+difx;
+        x=x+difx;
 
     }
 
-    if ((!map[p5.y][p5.x])&&(!map[p6.y][p6.x])
-        &&(!map[p7.y][p7.x])&&(!map[p8.y][p8.x])&&(!arkolidina(chars,charcount,x,newposy))
-        &&((newposx)<=(mapsizex-1)*32.0f)&&((newposy)<((mapsizey-1)*32.0f))&&
-        ((newposx-radius)>=-radius)&&((y-radius)>=-radius)){
+    if ((!map[(int)p5.y][(int)p5.x]) &&
+        (!map[(int)p6.y][(int)p6.x]) &&
+        (!map[(int)p7.y][(int)p7.x]) &&
+        (!map[(int)p8.y][(int)p8.x]) &&
+        (!arkolidina(chars,charcount,x,newposy)) &&
+        ((newposx)<=(mapsizex-1)*32.0f) &&
+        ((newposy)<((mapsizey-1)*32.0f))&&
+        ((newposx-radius)>=-radius) &&
+        ((y-radius)>=-radius))
+    {
 
             if ((y>newposy)&&(diry))
                 *diry=1;
@@ -187,8 +207,6 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
                     *diry=2;
 
             y=y-dify;
-
-
     }
 
     if ((*diry>0)||(*dirx>0)){
@@ -212,14 +230,16 @@ void Dude::draw(PicsContainer& pics, unsigned index,
               1.0f,
               1.0f,
               angle-(3.14f/2.0f),
-              COLOR(r,g,b)
-              COLOR(r,g,b));
+              COLOR(r,g,b, 1.f),
+              COLOR(r,g,b, 1.f));
 }
 //----------------------------------------------------------
 bool Dude::atack(bool useBullets, bool isMine, CBulletContainer* bulcon){
 
     if ((useBullets)&&(ammo<=0))
+    {
         return false;
+    }
 
 
     canAtack=false;
@@ -283,7 +303,7 @@ void Dude::appearInRandomPlace(bool** map, int mapwidth, int mapheight){
     
     start.x=rand()%mapwidth;
     start.y=rand()%mapheight;
-    while (map[start.y][start.x]){
+    while (map[(int)start.y][(int)start.x]){
         start.x=rand()%mapwidth;
         start.y=rand()%mapheight;
     }

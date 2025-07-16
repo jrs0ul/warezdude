@@ -15,6 +15,17 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 add_executable(warezdude3
                     src/mainer.cpp
                     src/Game.cpp
+                    src/dude.cpp
+                    src/map.cpp
+                    src/maplist.cpp
+                    src/SelectMenu.cpp
+                    src/gui/Text.cpp
+                    src/SysConfig.cpp
+                    src/TextureLoader.cpp
+                    src/SDLVideo.cpp
+                    src/ShaderProgram.cpp
+                    src/audio/OggStream.cpp
+                    src/audio/SoundSystem.cpp
                     )
 
 target_link_libraries(warezdude3 

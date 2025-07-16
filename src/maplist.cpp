@@ -21,18 +21,18 @@ MapList::MapList(){
 
    for (int i=0;i<_count;i++){
       maps[i]=new char[255];
-	  char c='.';
-	  int a=0;
-	  while ((c!=EOF)&&(c!='\n')){
-	   c=fgetc(f);
-	   if ((c!=EOF)&&(c!='\n'))
-	     maps[i][a]=c;
-	   else
-	     maps[i][a]='\0';
-	   a++;
-	  }
+      char c='.';
+      int a=0;
+      while ((c!=EOF)&&(c!='\n')){
+       c=fgetc(f);
+       if ((c!=EOF)&&(c!='\n'))
+         maps[i][a]=c;
+       else
+         maps[i][a]='\0';
+       a++;
+      }
 
-	   
+       
    }
   }
 
@@ -43,19 +43,19 @@ MapList::MapList(){
 }
 
 void MapList::Destroy(){
-	if (_count){
-	 for (int i=0;i<_count;i++){
-		 if (maps[i]){
+    if (_count){
+     for (int i=0;i<_count;i++){
+         if (maps[i]){
           delete []maps[i];
 
-		  
-		 }
-	 }
+          
+         }
+     }
       delete []maps;
-	  maps=0;
-	  
-	}
-	//}
+      maps=0;
+      
+    }
+    //}
 
 }
 
