@@ -8,13 +8,12 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -no-pie")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_executable(warezdude3
                     src/mainer.cpp
-                    src/Game.cpp
                     src/dude.cpp
                     src/map.cpp
                     src/bullet.cpp
@@ -35,12 +34,13 @@ add_executable(warezdude3
                     src/Usefull.cpp
                     src/TextureLoader.cpp
                     src/Image.cpp
-                    src/Extensions.cpp
                     src/SDLVideo.cpp
+                    src/Extensions.cpp
                     src/ShaderProgram.cpp
                     src/Shader.cpp
                     src/audio/OggStream.cpp
                     src/audio/SoundSystem.cpp
+                    src/Game.cpp
                     )
 
 target_link_libraries(warezdude3 

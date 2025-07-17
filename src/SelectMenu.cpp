@@ -44,20 +44,20 @@ void SelectMeniu::getInput(unsigned key){
 
     if (key != pressedkey){
 
-        //printf("%u\n", key);
+        printf("%u\n", key);
         //cia tam kad parinktu kai mygtuka atleidi
-        if (pressedkey == 13) {
+        if (pressedkey == SDL_SCANCODE_RETURN) {
             if (selection.count)
                 selected = true;      //enter
         }
 
-        if (pressedkey == 27) {
+        if (pressedkey == SDL_SCANCODE_ESCAPE) {
             canceled=true;      //esc
         }
 
         if (selection.count){
             switch(key) {
-                case SDLK_UP: 
+                case SDL_SCANCODE_UP: 
                     {
                         if (state>0) //up{
                             state--;
@@ -65,7 +65,7 @@ void SelectMeniu::getInput(unsigned key){
                             state = selection.count - 1;
                     }  break;
 
-                case SDLK_DOWN: 
+                case SDL_SCANCODE_DOWN: 
                     {
                         if (state < selection.count - 1)  //down
                             state++;
@@ -135,7 +135,7 @@ void SelectMeniu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsign
         }
         else
         {
-            WriteText(x+34,y+26+((i-start)*20), pics,font,selection.opt[i],1.0f,1.0f, COLOR(0,0,0,1.f));
+            WriteText(x+34, y+26+((i-start)*20), pics, font, selection.opt[i], 1.0f,1.0f, COLOR(0,0,0,1.f), COLOR(0,0,0,1.f));
             WriteText(x+32,y+28+((i-start)*20), pics,font,selection.opt[i]);
 
         }

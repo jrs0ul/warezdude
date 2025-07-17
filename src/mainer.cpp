@@ -244,7 +244,8 @@ int main(){
     while (Game.Works){
 
 
-        if ((SDL_GetTicks() > tick)){
+        if ((SDL_GetTicks() > tick))
+        {
 
             Game.DeltaTime = (SDL_GetTicks() - Game.TimeTicks) / 1000.0f;
             Game.TimeTicks = SDL_GetTicks();

@@ -125,6 +125,19 @@ bool nextWepPressed=false;
 
 
 //==================================================
+
+Game::Game()
+{
+    Accumulator = 0;
+    DT = 1000.0f/60.0f/1000.0f;
+    Works = true;
+    TimeTicks = 0;
+
+    DebugMode = 0;
+
+}
+
+
 void AdaptSoundPos(int soundIndex, float soundx,float soundy){
 
     SoundSystem* ss = SoundSystem::getInstance();
@@ -686,7 +699,7 @@ void Game::DrawStats()
 //intro screenas
 void DrawTitleScreen(){
 
-    pics.draw(0, 0,0,0,1.0f,1.25f,1.9f);
+    pics.draw(0, 320, 240, 0, true,1.25f,1.9f);
     pics.draw(16, 0,0,0);
 
 
@@ -2311,117 +2324,119 @@ void Game::render(){
     glUniformMatrix4fv(MatrixID, 1, GL_FALSE, finalM.m);
     colorShader.use();
 
-            if (TitleScreen){
-                DrawTitleScreen();
-                if (mainmenu.active())
-                {
-                    mainmenu.draw(pics,
-                                  pics.findByName("pointer.tga"),
-                                  pics.findByName("charai.tga"));
-                }
+    if (TitleScreen)
+    {
 
-                if (netmenu.active())
-                {
-                    netmenu.draw(pics,
-                                 pics.findByName("pointer.tga"),
-                                 pics.findByName("charai.tga")
-                                 );
-                }
+        DrawTitleScreen();
+        if (mainmenu.active())
+        {
+            mainmenu.draw(pics,
+                    pics.findByName("pics/pointer.tga"),
+                    pics.findByName("pics/charai.tga"));
+        }
 
-                if (netgame.active())
-                {
-                    netgame.draw(pics,
-                                 pics.findByName("pointer.tga"),
-                                 pics.findByName("charai.tga")
-                                 );
-                }
+        if (netmenu.active())
+        {
+            netmenu.draw(pics,
+                    pics.findByName("pics/pointer.tga"),
+                    pics.findByName("pics/charai.tga")
+                    );
+        }
 
-                if (options.active())
-                {
-                    options.draw(pics,
-                                 pics.findByName("pointer.tga"),
-                                 pics.findByName("charai.tga")
-                                 );
-                }
+        if (netgame.active())
+        {
+            netgame.draw(pics,
+                    pics.findByName("pics/pointer.tga"),
+                    pics.findByName("pics/charai.tga")
+                    );
+        }
 
-                if (ipedit.active())
-                {
-                    ipedit.draw(pics, pics.findByName("charai.tga"));
-                }
+        if (options.active())
+        {
+            options.draw(pics,
+                    pics.findByName("pics/pointer.tga"),
+                    pics.findByName("pics/charai.tga")
+                    );
+        }
 
-                if (SfxVolumeC.active())
-                {
-                    SfxVolumeC.draw(pics, 
-                                    pics.findByName("pointer.tga"),
-                                    pics.findByName("pointer.tga"),
-                                    pics.findByName("charai.tga")
-                                    );
-                }
+        if (ipedit.active())
+        {
+            ipedit.draw(pics, pics.findByName("pics/charai.tga"));
+        }
 
-                if (MusicVolumeC.active())
-                {
-                    MusicVolumeC.draw(pics,
-                                      pics.findByName("pointer.tga"),
-                                      pics.findByName("pointer.tga"),
-                                      pics.findByName("charai.tga")
-                                      );
-                }
+        if (SfxVolumeC.active())
+        {
+            SfxVolumeC.draw(pics, 
+                    pics.findByName("pics/pointer.tga"),
+                    pics.findByName("pics/pointer.tga"),
+                    pics.findByName("pics/charai.tga")
+                    );
+        }
+
+        if (MusicVolumeC.active())
+        {
+            MusicVolumeC.draw(pics,
+                    pics.findByName("pics/pointer.tga"),
+                    pics.findByName("pics/pointer.tga"),
+                    pics.findByName("pics/charai.tga")
+                    );
+        }
+    }
+    else
+        if (IntroScreen)
+        {
+            DrawIntro();
+        }
+        else
+            if (HelpScreen){
+                DrawHelp();
             }
-            else
-                if (IntroScreen)
-                {
-                    DrawIntro();
+            else 
+                if (EndScreen){
+                    pics.draw(15, 0,0, false, 1.0f,1.25f,1.9f);
+                    WriteText(260,430, pics, 10, "The End...to be continued ?");
                 }
-                else
-                    if (HelpScreen){
-                        DrawHelp();
+
+
+                else{
+
+
+
+                    if ((mapas.width>0)&&(mapas.height>0)){
+
+                        if (fadein)
+                            DrawMap(fadetim/160.0f,fadetim/160.0f,fadetim/160.0f);
+                        else
+                            DrawMap();
+
+
                     }
-                    else 
-                        if (EndScreen){
-                            pics.draw(15, 0,0, false, 1.0f,1.25f,1.9f);
-                            WriteText(260,430, pics, 10, "The End...to be continued ?");
-                        }
 
+                    if (fadein)
+                        WriteText(sys.ScreenWidth / 2-150, 
+                                sys.ScreenHeight/2-64,
+                                pics, 10, "Get Ready!", 2,2);
 
-                        else{
+                    if (objectivetim)
+                        DrawMissionObjectives();
 
+                    if (mapas.mons.count())
+                        DrawStats();
 
-                            
-                            if ((mapas.width>0)&&(mapas.height>0)){
-
-                                if (fadein)
-                                    DrawMap(fadetim/160.0f,fadetim/160.0f,fadetim/160.0f);
-                                else
-                                    DrawMap();
-
-                                
-                            }
-
-                            if (fadein)
-                                WriteText(sys.ScreenWidth / 2-150, 
-                                          sys.ScreenHeight/2-64,
-                                          pics, 10, "Get Ready!", 2,2);
-
-                            if (objectivetim)
-                                DrawMissionObjectives();
-
-                            if (mapas.mons.count())
-                                DrawStats();
-
-                            if ((mapas.width>scrx)&&(mapas.height>scry)&&(ShowMiniMap))
-                            {
-                                DrawMiniMap(sys.ScreenWidth - mapas.width*4, sys.ScreenHeight - mapas.height*4);
-                            }
+                    if ((mapas.width>scrx)&&(mapas.height>scry)&&(ShowMiniMap))
+                    {
+                        DrawMiniMap(sys.ScreenWidth - mapas.width*4, sys.ScreenHeight - mapas.height*4);
+                    }
 
 
 
-                            if (showdebugtext)
-                                DrawSomeText();  
+                    if (showdebugtext)
+                        DrawSomeText();  
 
 
-                        }
+                }
 
-                       pics.drawBatch(&colorShader, &defaultShader, 666);
+    pics.drawBatch(&colorShader, &defaultShader, 666);
 
 
 
@@ -3217,6 +3232,10 @@ void Game::loadConfig()
     sprintf(buf, "%s/settings.cfg", DocumentPath);
     sys.load(buf);
 
+    ScreenWidth = sys.ScreenWidth;
+    ScreenHeight = sys.ScreenHeight;
+    windowed = sys.useWindowed;
+
     sys.write(buf);
 }
 
@@ -3292,7 +3311,7 @@ void Game::init()
     InitAudio();
 
 
-    PlayNewSong("Evil.ogg");
+    PlayNewSong("evil.ogg");
 
     Works = true;
 

@@ -25,8 +25,9 @@ void WriteText(unsigned int x, unsigned int y,
                const char* s,
                float scalex, float scaley, COLOR c1, COLOR c2){
 
-    for (unsigned int i = 0; i < strlen(s); i++){
-        pics.draw(font, x+(9*scalex)*i, y, ((unsigned char)s[i])-32,
+    for (unsigned int i = 0; i < strlen(s); i++)
+    {
+        pics.draw(font, x+(9 * scalex)*i, y, ((unsigned char)s[i])-32,
                   false, scalex, scaley, 0.0f, c1, c2);
     }
 }

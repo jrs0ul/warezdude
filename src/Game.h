@@ -60,6 +60,8 @@ public:
 
 public:
 
+    Game();
+
     void init();
     void render();
     void logic();
