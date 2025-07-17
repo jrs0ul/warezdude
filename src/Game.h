@@ -129,6 +129,7 @@ private:
     void HelpScreenHandle();
     int PlayerCount();
     void LoadShader(ShaderProgram* shader, const char* name);
+    void IntroScreenHandle();
     
 };
 

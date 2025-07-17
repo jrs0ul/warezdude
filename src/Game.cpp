@@ -359,6 +359,8 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 
     int tmpy=0;
 
+    unsigned tileset = pics.findByName("pics/tileset.tga");
+
 
     for (int a=psky-scry; a<psky ;a++){
         int tmpx=0; 
@@ -366,7 +368,11 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
             if (mapas.tiles)
                 if (mapas.tiles[a])
                 {
-                    pics.draw(pics.findByName("tileset.tga"),32*tmpx+pushx-posx,32*tmpy+pushy-posy, true, mapas.tiles[a][i]-1,
+                    pics.draw(tileset, 
+                              32*tmpx+pushx-posx,
+                              32*tmpy+pushy-posy, 
+                              mapas.tiles[a][i]-1,
+                              true,
                     1.0f,1.0f,0.0,COLOR(r,g,b, 1.0f), COLOR(r, g, b, 1.0f));
                 }
 
@@ -1905,8 +1911,8 @@ void Game::TitleMeniuHandle()
 
 }
 //---------------------------------------------------------
-void IntroScreenHandle(){
-    if ((triger)||(!FirstTime)){
+void Game::IntroScreenHandle(){
+    if ((Keys[4] && !OldKeys[4])||(!FirstTime)){
         IntroScreen=false;
         HelpScreen=true;
         intro_cline=0;
@@ -1942,7 +1948,7 @@ void Game::HelpScreenHandle()
             itmframe=0;
         itmtim=0;
     }
-    if ((triger)||(!FirstTime)){
+    if ((Keys[4] && !OldKeys[4])||(!FirstTime)){
         HelpScreen=false;
         if (FirstTime)
             FirstTime=false;
@@ -2005,7 +2011,7 @@ void Game::logic(){
                         mainmenu.activate();    
                         FirstTime=true;
                         EndScreen=false;
-                        PlayNewSong("Evil.ogg");
+                        PlayNewSong("evil.ogg");
                     }
                 }
 
@@ -2023,6 +2029,7 @@ void Game::logic(){
                     else 
                     {   //------------------the game
 
+                        
                         mapas.fadeDecals();
 
                         if (objectivetim)//judinam taimeri
@@ -2040,7 +2047,7 @@ void Game::logic(){
                         if ((goods<1)&&(!ext))  //jei nebera itemu dedam exit
                             PutExit(); 
 
-
+                        
                         AnimateSlime();
 
 
@@ -2088,15 +2095,13 @@ void Game::logic(){
                         }
 
 
-                        if ((Keys[0]||Keys[1]||Keys[2]||Keys[3])&&(!mapas.mons[mapas.enemyCount].shot)
+                        /*if ((Keys[0]||Keys[1]||Keys[2]||Keys[3])&&(!mapas.mons[mapas.enemyCount].shot)
                                 &&(!mapas.mons[mapas.enemyCount].spawn)&&(mapas.mons[mapas.enemyCount].canAtack))
                             MoveDude();
 
-
-
                         // jei uzeina ant daikto, ji pasiima
-                        ItemPickup();
-
+                        ItemPickup();*/
+/*
                         //saunam
                         if ((Keys[4])&&(!mapas.mons[mapas.enemyCount].shot)&&(mapas.mons[mapas.enemyCount].alive)&&(!mapas.mons[mapas.enemyCount].spawn))
                             if (mapas.mons[mapas.enemyCount].canAtack){
@@ -2156,7 +2161,7 @@ void Game::logic(){
                                     }
 
 
-                            }
+                            }*/
 
 
                         if (!mapas.mons[mapas.enemyCount].canAtack)
@@ -2212,7 +2217,7 @@ void Game::logic(){
 }
 //------------------------------------
 void DrawHelp(){
-    pics.draw(13, 0,0,0,1.0f,1.25f,1.9f);
+    pics.draw(13, 320, 240, 0, true, 1.25f,1.9f);
     WriteText(30, 30, pics, 10, "Colect these and...");
     pics.draw(11, 50,50, false, itmframe);
     pics.draw(11, 100,50, false, itmframe+4);
@@ -2244,7 +2249,7 @@ void DrawHelp(){
 }
 //-------------------------------------
 void DrawIntro(){
-    pics.draw(13, 0,0, false, 0,1.0f,1.25f,1.9f);
+    pics.draw(13, 320, 240, 0, true,1.25f,1.9f);
 
     for (int i=0;i<intro_cline;i++)
     {
