@@ -54,7 +54,7 @@ PFNGLUNIFORM2FPROC                   glUniform2f = 0;
 PFNGLUNIFORM3FPROC                   glUniform3f = 0;
 PFNGLUNIFORM4FPROC                   glUniform4f = 0;
 PFNGLUNIFORM1IPROC                   glUniform1i = 0;
-PFNGLUNIFORMMATRIX4FVPROC            glUniformMatrix4fv = 0;
+//PFNGLUNIFORMMATRIX4FVPROC            glUniformMatrix4fv = 0;
 #endif
 PFNGLGETINFOLOGARBPROC               glGetInfoLogARB = 0;
 
@@ -146,7 +146,7 @@ void LoadExtensions() {
     glUniform3f  = (PFNGLUNIFORM3FPROC)SDL_GL_GetProcAddress("glUniform3f");
     glUniform4f  = (PFNGLUNIFORM4FPROC)SDL_GL_GetProcAddress("glUniform4f");
     glUniform1i  = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress("glUniform1i");
-    glUniformMatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC)SDL_GL_GetProcAddress("glUniformMatrix4fv");
+    //glUniformMatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC)SDL_GL_GetProcAddress("glUniformMatrix4fv");
 #endif
     glGetInfoLogARB = (PFNGLGETINFOLOGARBPROC)SDL_GL_GetProcAddress("glGetInfoLogARB");
     //--------------------------------------------

@@ -11,6 +11,7 @@
     #include <winsock2.h>
 #else
     #include <sys/socket.h>
+    #include <netinet/in.h>
 #endif
 
 class CClient{
@@ -18,6 +19,8 @@ class CClient{
     SOCKET clientSock;
     SOCKADDR_IN _sin;
 #else
+    int clientSock;
+    sockaddr_in _sin;
 
 #endif
     bool isJoinedServer;

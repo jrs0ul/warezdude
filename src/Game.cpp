@@ -1152,11 +1152,8 @@ void Game::ItemPickup()
 
 //---------------------------------
 //serverio threadas laukiantis prisijungimu
-long Game::Threadproc(void *param){
+void Game::Threadproc(){
 
-    if (param)
-    {
-    }
 
     while (!killthread)
     {
@@ -1178,7 +1175,6 @@ long Game::Threadproc(void *param){
 
         }
     }
-    return 0;
 }
 
 
@@ -1189,7 +1185,7 @@ void Game::InitServer()
     killthread=false;
     serveris.launch(NetPort);
 
-    threadman.create(Threadproc);
+    serverThread.detach();
 }
 //--------------------------------
 void Game::StopServer()
@@ -1197,7 +1193,6 @@ void Game::StopServer()
     isServer=false;
     killthread=true;
     serveris.shutDown();
-    threadman.close();
 }
 //---------------------------------
 bool Game::JoinServer(const char* ip, unsigned port)

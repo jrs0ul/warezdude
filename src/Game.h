@@ -1,5 +1,6 @@
 #pragma once
 
+#include <thread>
 #ifndef __ANDROID__
 #include "audio/SoundSystem.h"
 #include "audio/OggStream.h"
@@ -15,22 +16,19 @@
 #include "CClient.h"
 #include "CServer.h"
 #include "map.h"
-#include "Threads.h"
 
 
 const int GameKeyCount=10;
 
 static CMap mapas;
+static CClient clientas;
 static CServer serveris;
+static SystemConfig sys;
+
+
 
 class Game
 {
-    static CClient clientas;
-
-
-    static SystemConfig sys;
-
-    ThreadManager threadman;
 
     float   OrthoMatrix[16];
     float   ViewMatrix[16];
@@ -67,6 +65,7 @@ public:
     void logic();
     void destroy();
     void loadConfig();
+    static void Threadproc();
 
 private:
     void MoveDude();
@@ -80,7 +79,6 @@ private:
     //monster races amd item positions
     static void SendMapData(int clientIndex, CMap& map);
     void PutExit();
-    static long Threadproc(void *param);
     void InitServer();
     void StopServer();
     bool JoinServer(const char* ip, unsigned port);
@@ -131,3 +129,6 @@ private:
     void LoadShader(ShaderProgram* shader, const char* name);
     
 };
+
+
+static std::thread serverThread(&Game::Threadproc);

@@ -1,0 +1,21 @@
+<xml>
+<Images>
+<Img src="logo.tga" width="512" height="256" filter="1" />
+<Img src="tileset.tga" width="32" height="32" filter="0" />
+<Img src="monstar.tga" width="32" height="32" filter="0" />
+<Img src="monster.tga" width="32" height="32" filter="0" />
+<Img src="cop.tga" width="32" height="32" filter="0" />
+<Img src="human.tga" width="32" height="32" filter="0" />
+<Img src="bullet.tga" width="16" height="16" filter="0" />
+<Img src="Items.tga" width="32" height="32" filter="0" />
+<Img src="digits.tga" width="16" height="32" filter="0" />
+<Img src="Icons.tga" width="32" height="32" filter="0" />
+<Img src="charai.tga" width="16" height="32" filter="0" />
+<Img src="nitems.tga" width="32" height="32" filter="0" />
+<Img src="mini.tga" width="4" height="4" filter="0" />
+<Img src="nofate.tga" width="512" height="256" filter="0" />
+<Img src="end.tga" width="512" height="256" filter="0" />
+<Img src="blood.tga" width="32" height="32" filter="0" />
+<Img src="title.tga" width="256" height="128" filter="0" />
+<Img src="pointer.tga" width="16" height="16" filter="0" />
+<Images>

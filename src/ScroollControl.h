@@ -18,7 +18,7 @@ public:
   //numusa userio atlikta pasirinkima
   void reset();
   //jei keyus i virsu apcia tai keiciasi ir state
-  void getInput(unsigned char key);
+  void getInput(unsigned key);
   //nupaisom
   void draw( PicsContainer& pics, unsigned rod, unsigned bg,  unsigned font);
 };

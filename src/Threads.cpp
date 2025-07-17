@@ -1,8 +1,8 @@
 #include "Threads.h"
 
-void ThreadManager::create(long int (void*) ThreadProc)
+void ThreadManager::create(long (*ThreadProc))
 {
-    threadh = CreateThread(NULL, 0, Threadproc,0, 0, &threadID);
+    threadHandle = CreateThread(0, 0, ThreadProc,0, 0, &threadID);
 }
 
 void ThreadManager::close()
