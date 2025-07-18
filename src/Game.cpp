@@ -2573,30 +2573,38 @@ void Game::QuitApp()
 
 void LoadIntro(){
     FILE* f;
-    f=fopen("intro.itf","rt");
-    if (f){
+    puts("Loading intro text...");
+    f = fopen("intro.itf","rt");
 
-
-        int pos=0;
-        int c=';';
-        while (c!=EOF){
-            c=fgetc(f);
-            if ((c!=EOF)||(lin<100)){
-                if ((c!='\n')&&(pos<100)){
-                    IntroText[lin][pos]=c;
-                    pos++;
-                }
-                else{
-                    IntroText[lin][pos]='\0';
-                    lin++;
-                    pos=0;
-                }
-
-
-            }
-        }
-        fclose(f);
+    if (!f)
+    {
+        puts("bumer,could not open intro.itf");
+        return;
     }
+
+
+    int pos=0;
+    int c=';';
+    while (c!=EOF){
+        c=fgetc(f);
+        printf("%c", c);
+        if ((c!=EOF)||(lin<100)){
+            if ((c!='\n')&&(pos<100)){
+                IntroText[lin][pos]=c;
+                pos++;
+            }
+            else{
+                IntroText[lin][pos]='\0';
+                puts(IntroText[lin]);
+                lin++;
+                pos=0;
+            }
+
+
+        }
+    }
+    fclose(f);
+    
 
 }
 
