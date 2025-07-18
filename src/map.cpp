@@ -1,5 +1,6 @@
 #include <cstdio>
 #include "map.h"
+#include "Xml.h"
 
 
 //-----------------------------------------
@@ -88,70 +89,288 @@ void CMap::arangeItems(){
 bool CMap::Load(const char* path, bool createItems, int otherplayers){
 
     FILE* mapas;
-    int c=0;
-    char bufas[255];
+    char buf[255];
 
-    strcpy(bufas,"maps/");
 
-    strcat(bufas,path);
+    puts(path);
+
+    strcpy(buf,"maps/");
+
+    strcat(buf,path);
     strcpy(name,path);
 
-    mapas=fopen(bufas,"rt");
+    printf("Loading [%s]\n", buf);
+
+    enemyCount = 0;
+
+    Xml mapfile;
+
+    bool res = mapfile.load(buf);
+
+    if (res)
+    {
+        XmlNode* mainnode = mapfile.root.getNode(L"Map");
+
+
+        if (mainnode)
+        {
+            for (int i = 0; i < mainnode->childrenCount(); ++i)
+            {
+                XmlNode* node = mainnode->getNode(i);
+
+                if (node)
+                {
+                    if (wcscmp(node->getName(), L"size") == 0)  //  parse size
+                    {
+                        for (int a = 0; a < node->attributeCount(); ++a)
+                        {
+                            XmlAttribute *attr = node->getAttribute(a);
+
+                            if (attr)
+                            {
+                                if (wcscmp(attr->getName(), L"width") == 0)
+                                {
+                                    wchar_t* val = attr->getValue();
+
+                                    if (val)
+                                    {
+                                        sprintf(buf, "%ls", val);
+                                        width = atoi(buf);
+                                        printf("MAP WIDTH: %d\n", width);
+                                    }
+                                }
+                                else if (wcscmp(attr->getName(), L"height") == 0)
+                                {
+                                    wchar_t* val = attr->getValue();
+
+                                    if (val)
+                                    {
+                                        sprintf(buf, "%ls", val);
+                                        height = atoi(buf);
+                                        tiles  = new unsigned char*[height];
+                                        colide = new bool* [height];
+                                        printf("MAP HEIGHT: %d\n", height);
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                    else if (wcscmp(node->getName(), L"rows") == 0)  //  parse rows
+                    {
+                        for (int a = 0; a < node->childrenCount(); ++a)
+                        {
+                            XmlNode* row = node->getNode(a);
+
+                            if (row)
+                            {
+                                sprintf(buf, "%ls", row->getValue());
+                                printf("row %d: %s\n", a, buf);
+
+                                tiles[a] = new unsigned char[width];
+                                colide[a] = new bool[width];
+
+                                for (int j = 0; j < width; j++)
+                                {
+
+                                    tiles[a][j] = buf[j] - 48;
+
+                                    if (((tiles[a][j]>=19)&&(tiles[a][j]<=34))||((tiles[a][j]>=44)&&(tiles[a][j]<48))||
+                                            ((tiles[a][j]>=50)&&(tiles[a][j]<=65))||(tiles[a][j]==67)||(tiles[a][j]==69)||(tiles[a][j]==71)
+                                            ||(tiles[a][j]==9))
+                                    {
+                                        colide[a][j]=true;
+                                    }
+                                    else
+                                    {
+                                        colide[a][j]=false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if (wcscmp(node->getName(), L"start") == 0) // start pos
+                    {
+                        for (int a = 0; a < node->attributeCount(); ++a)
+                        {
+                            XmlAttribute *attr = node->getAttribute(a);
+
+                            if (attr)
+                            {
+                                if (wcscmp(attr->getName(), L"x") == 0)
+                                {
+                                    wchar_t* val = attr->getValue();
+
+                                    if (val)
+                                    {
+                                        sprintf(buf, "%ls", val);
+                                        start.x = atoi(buf);
+                                        printf("PLAYER START.X: %f\n", start.x);
+                                    }
+                                }
+                                else if (wcscmp(attr->getName(), L"y") == 0)
+                                {
+                                    wchar_t* val = attr->getValue();
+
+                                    if (val)
+                                    {
+                                        sprintf(buf, "%ls", val);
+                                        start.y = atoi(buf);
+                                        printf("PLAYER START.Y: %f\n", start.y);
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                    else if (wcscmp(node->getName(), L"exit") == 0) // exit pos
+                    {
+                        for (int a = 0; a < node->attributeCount(); ++a)
+                        {
+                            XmlAttribute *attr = node->getAttribute(a);
+
+                            if (attr)
+                            {
+                                if (wcscmp(attr->getName(), L"x") == 0)
+                                {
+                                    wchar_t* val = attr->getValue();
+
+                                    if (val)
+                                    {
+                                        sprintf(buf, "%ls", val);
+                                        exit.x = atoi(buf);
+                                        printf("PLAYER EXIT.X: %f\n", exit.x);
+                                    }
+                                }
+                                else if (wcscmp(attr->getName(), L"y") == 0)
+                                {
+                                    wchar_t* val = attr->getValue();
+
+                                    if (val)
+                                    {
+                                        sprintf(buf, "%ls", val);
+                                        exit.y = atoi(buf);
+                                        printf("PLAYER EXIT.Y: %f\n", exit.y);
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                    else if (wcscmp(node->getName(), L"items") == 0) // key item count
+                    {
+                        sprintf(buf, "%ls", node->getValue());
+                        misionItems = atoi(buf);
+                    }
+                    else if (wcscmp(node->getName(), L"time") == 0) // time to complete
+                    {
+                        sprintf(buf, "%ls", node->getValue());
+                        timeToComplete = atoi(buf);
+                    }
+                    else if (wcscmp(node->getName(), L"goods") == 0) // goodies
+                    {
+                        sprintf(buf, "%ls", node->getValue());
+                        goods = atoi(buf);
+                    }
+                    else if (wcscmp(node->getName(), L"enemies") == 0) // goodies
+                    {
+                        enemyCount = node->childrenCount();
+
+                        for (int a = 0; a < node->childrenCount(); ++a)
+                        {
+                            XmlNode* enemy = node->getNode(a);
+
+                            if (enemy)
+                            {
+
+                                int sx,sy;
+                                Dude naujas;
+                                naujas.id = a;
+
+                                for (int a = 0; a < enemy->attributeCount(); ++a)
+                                {
+                                    XmlAttribute *attr = enemy->getAttribute(a);
+
+                                    if (attr)
+                                    {
+                                        if (wcscmp(attr->getName(), L"x") == 0)
+                                        {
+                                            wchar_t* val = attr->getValue();
+
+                                            if (val)
+                                            {
+                                                sprintf(buf, "%ls", val);
+                                                sx = atoi(buf);
+                                            }
+                                        }
+                                        else if (wcscmp(attr->getName(), L"y") == 0)
+                                        {
+                                            wchar_t* val = attr->getValue();
+
+                                            if (val)
+                                            {
+                                                sprintf(buf, "%ls", val);
+                                                sy = atoi(buf);
+                                            }
+
+                                        }
+                                    }
+                                } // for
+
+                                naujas.start.x=sx*32;
+                                naujas.start.y=sy*32;
+                                naujas.x=(float)naujas.start.x;
+                                naujas.y=(float)naujas.start.y;
+                                naujas.race=rand()%3+1; 
+                                naujas.hp=30+rand()%10;
+                                mons.add(naujas);
+
+                            }
+
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
+
+    mapfile.destroy();
+
+    /*mapas=fopen(buf,"rt");
 
     if (!mapas)
         return false;
 
-    fscanf(mapas,"%u %u",&width,&height);
+    fscanf(mapas,"%u %u\n",&width,&height);*/
 
-
-    tiles  = new unsigned char*[height];
-    colide = new bool* [height];
-
-    fgetc(mapas); //readln
-    for (int a=0; a<height; a++){
-        tiles[a]=new unsigned char[width];
-        colide[a]=new bool[width];
-        for (int i=0; i<width; i++){
-            c=fgetc(mapas);
-            tiles[a][i]=c-48;
-            if (((tiles[a][i]>=19)&&(tiles[a][i]<=34))||((tiles[a][i]>=44)&&(tiles[a][i]<48))||
-                ((tiles[a][i]>=50)&&(tiles[a][i]<=65))||(tiles[a][i]==67)||(tiles[a][i]==69)||(tiles[a][i]==71)
-                ||(tiles[a][i]==9))
-                colide[a][i]=true;
-            else colide[a][i]=false;
-        }
-        fgetc(mapas);
-    }
+    printf("map width %d, height %d\n", width, height);
 
 
 
+   
+
+
+
+/*
     //cia pradeda zaidejas
-    fscanf(mapas,"%d %d",&start.x,&start.y);
-    fscanf(mapas,"%d %d",&exit.x,&exit.y);
-    start.x=start.x*32;
-    start.y=start.y*32;
-    fscanf(mapas,"%d",&misionItems);
+    fscanf(mapas,"%d\n",&start.x);
+    fscanf(mapas,"%d\n",&start.y);
+    printf("player pos x:%d y:%d\n", start.x, start.y);
+    fscanf(mapas,"%d %d\n",&exit.x,&exit.y);
+    printf("exit x %d y %d\n", exit.x, exit.y);*/
+    start.x = start.x * 32;
+    start.y = start.y * 32;
+    /*fscanf(mapas,"%d\n",&misionItems);
+    printf("items: %d\n", misionItems);
     fscanf(mapas,"%d",&timeToComplete);
+    printf("time %d\n", timeToComplete);
     fscanf(mapas,"%d",&goods);
-    //kiek monstru;
-    enemyCount=0;
-    fscanf(mapas,"%d",&enemyCount);
+    //kiek monstru;*/
     if ((enemyCount+1+otherplayers)!=0){
         //mons=new Dude[enemyCount+1+otherplayers];
 
-        for (int i=0; i<enemyCount; i++){
-            int sx,sy;
-            fscanf(mapas,"%d %d",&sx, &sy);
-            Dude naujas;
-            naujas.id=i;
-            naujas.start.x=sx*32;
-            naujas.start.y=sy*32;
-            naujas.x=(float)naujas.start.x;
-            naujas.y=(float)naujas.start.y;
-            naujas.race=rand()%3+1; 
-            naujas.hp=30+rand()%10;
-            mons.add(naujas);
-        }
         Dude playeris;
         playeris.id=254;
         playeris.hp=100;
@@ -165,7 +384,6 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
         }
     }
 
-    fclose(mapas);
 
 
     if (createItems)

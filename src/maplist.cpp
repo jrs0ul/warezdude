@@ -1,45 +1,65 @@
 #include <cstdio>
 #include <cstring>
+#include <cwchar>
 #include "maplist.h"
+#include "Xml.h"
 
 //----------------------
-MapList::MapList(){
- FILE* f;
- 
- maps=0;
+MapList::MapList()
+{
+    Xml mapList;
 
- f=fopen("maps/list.txt","rt");
- if (f!=NULL){
-  fscanf(f,"%d",&_count);
- 
+    bool res = mapList.load("maps/list.xml");
 
-  fgetc(f);
-  if (_count){
-   
-   maps=new char*[_count];
-   
+    if (res)
+    {
+        XmlNode *mainnode = mapList.root.getNode(L"Maps");
 
-   for (int i=0;i<_count;i++){
-      maps[i]=new char[255];
-      char c='.';
-      int a=0;
-      while ((c!=EOF)&&(c!='\n')){
-       c=fgetc(f);
-       if ((c!=EOF)&&(c!='\n'))
-         maps[i][a]=c;
-       else
-         maps[i][a]='\0';
-       a++;
-      }
+        _count = 0;
 
-       
-   }
-  }
+        if (mainnode)
+        {
+            _count = mainnode->childrenCount();
+            if (_count)
+            {
+                maps = new char*[_count];
+            }
+            else
+            {
+                return;
+            }
+        }
 
-  
- }
- current=0;
- fclose(f);
+        for (int i = 0; i < _count; ++i)
+        {
+            XmlNode *node = mainnode->getNode(i);
+
+            if (node)
+            {
+                for (int j = 0; j < (int)node->attributeCount(); ++j)
+                {
+                    XmlAttribute* attr = node->getAttribute(j);
+
+                    if (attr)
+                    {
+                        if (wcscmp(attr->getName(), L"name") == 0)
+                        {
+                            wchar_t* val = attr->getValue();
+
+                            if (val)
+                            {
+                                maps[i] = new char[255];
+                                sprintf(maps[i], "%ls", val);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    current=0;
 }
 
 void MapList::Destroy(){

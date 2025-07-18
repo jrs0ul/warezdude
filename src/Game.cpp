@@ -364,7 +364,8 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 
     for (int a=psky-scry; a<psky ;a++){
         int tmpx=0; 
-        for (int i=pskx-scrx;i<pskx;i++){
+        for (int i=pskx-scrx; i<pskx; i++)
+        {
             if (mapas.tiles)
                 if (mapas.tiles[a])
                 {
@@ -2095,13 +2096,13 @@ void Game::logic(){
                         }
 
 
-                        /*if ((Keys[0]||Keys[1]||Keys[2]||Keys[3])&&(!mapas.mons[mapas.enemyCount].shot)
+                        if ((Keys[0]||Keys[1]||Keys[2]||Keys[3])&&(!mapas.mons[mapas.enemyCount].shot)
                                 &&(!mapas.mons[mapas.enemyCount].spawn)&&(mapas.mons[mapas.enemyCount].canAtack))
                             MoveDude();
 
                         // jei uzeina ant daikto, ji pasiima
-                        ItemPickup();*/
-/*
+                        ItemPickup();
+
                         //saunam
                         if ((Keys[4])&&(!mapas.mons[mapas.enemyCount].shot)&&(mapas.mons[mapas.enemyCount].alive)&&(!mapas.mons[mapas.enemyCount].spawn))
                             if (mapas.mons[mapas.enemyCount].canAtack){
@@ -2161,7 +2162,7 @@ void Game::logic(){
                                     }
 
 
-                            }*/
+                            }
 
 
                         if (!mapas.mons[mapas.enemyCount].canAtack)
@@ -2406,8 +2407,8 @@ void Game::render(){
                 else{
 
 
-
-                    if ((mapas.width>0)&&(mapas.height>0)){
+                    if ((mapas.width > 0) && (mapas.height > 0))
+                    {
 
                         if (fadein)
                             DrawMap(fadetim/160.0f,fadetim/160.0f,fadetim/160.0f);
@@ -2418,9 +2419,11 @@ void Game::render(){
                     }
 
                     if (fadein)
+                    {
                         WriteText(sys.ScreenWidth / 2-150, 
                                 sys.ScreenHeight/2-64,
                                 pics, 10, "Get Ready!", 2,2);
+                    }
 
                     if (objectivetim)
                         DrawMissionObjectives();
