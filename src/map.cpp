@@ -107,6 +107,8 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
 
     bool res = mapfile.load(buf);
 
+    printf("pam param\n");
+
     if (res)
     {
         XmlNode* mainnode = mapfile.root.getNode(L"Map");
@@ -164,27 +166,35 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
 
                             if (row)
                             {
-                                sprintf(buf, "%ls", row->getValue());
-                                printf("row %d: %s\n", a, buf);
 
+                                printf("width %d\n", width);
                                 tiles[a] = new unsigned char[width];
                                 colide[a] = new bool[width];
 
-                                for (int j = 0; j < width; j++)
+
+                                printf("children : %d\n", row->childrenCount());
+                                for (int j = 0; j < row->childrenCount(); ++j)
                                 {
+                                    XmlNode* tile = row->getNode(j);
 
-                                    tiles[a][j] = buf[j] - 48;
+                                    if (tile)
+                                    {
+                                        sprintf(buf, "%ls", tile->getValue());
+                                        tiles[a][j] = atoi(buf) - 48;
 
-                                    if (((tiles[a][j]>=19)&&(tiles[a][j]<=34))||((tiles[a][j]>=44)&&(tiles[a][j]<48))||
-                                            ((tiles[a][j]>=50)&&(tiles[a][j]<=65))||(tiles[a][j]==67)||(tiles[a][j]==69)||(tiles[a][j]==71)
-                                            ||(tiles[a][j]==9))
-                                    {
-                                        colide[a][j]=true;
+                                        if (((tiles[a][j]>=19)&&(tiles[a][j]<=34))||((tiles[a][j]>=44)&&(tiles[a][j]<48))||
+                                                ((tiles[a][j]>=50)&&(tiles[a][j]<=65))||(tiles[a][j]==67)||(tiles[a][j]==69)||(tiles[a][j]==71)
+                                                ||(tiles[a][j]==9))
+                                        {
+                                            colide[a][j]=true;
+                                        }
+                                        else
+                                        {
+                                            colide[a][j]=false;
+                                        }
+
                                     }
-                                    else
-                                    {
-                                        colide[a][j]=false;
-                                    }
+
                                 }
                             }
                         }

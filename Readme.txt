@@ -1,37 +1,27 @@
-Valdymas:
+Controls:
 
-Rodyklës - valdo herojø
-CTRL - ðaudyti
-TAB - Mini þemëlapis
-SPACE - darinëja duris
+Arrows - hero movement
+CTRL - shoots
+TAB - Mini map
+SPACE - opens/closes doors
 
-ESC - iðeiti á title/ið programos
-F12 - Screenshotas
+ESC - quit to title/quits the program
+F12 - screenshot
 F4 - Fullscreen/Windowded
 
-Þaidima taipogi galima þaisti su maþiausiai
-3mygtø gamepadu/joysticku.
-
-Þaidimo ypatumai:
-
-Þaidime yra 7 lygiai. Dauguma ið jø turi laiko
-limità, t.y. per kiek laiko reikia pereiti lygi.
-Kaikuriuose lygiuose reikia surinkti tam tikrà
-skaièiø daiktø ar iðgelbëti þmogiukø. Tik tada
-atsiras iðëjimas. Melyni monstrai gali suësti
-kai kuriuos daiktus. Kai monstras praryja daikta
-jis pasidaro tamsesnis, taip ji lengviau atskirti.
-Daiktus atgausite nuðove tuos monstrus.
-Poroje lygiu uþtenka tik surasti iðëjimà.
-Ieðkoti daiktø bei iðëjimo padës mini þemëlapis.
-Daiktai jame paþymëti þaliai, o iðëjimas raudonai.
-
-Reikalavimai:
-
-Teoriniai:
-~4MB Vaizdo plokðtë palaikanti D3D9(c?)
-~300Mhz cpu (gal ir maþiau arba net daugiau nei 1Ghz :D)
-~2 MB laivos vietos hdd
+It's possible to play the game witha a at least 3
+button gamepad/joystick.
 
 
-Tikiuosi, kad jûsø sitemoje jau yra d3d9x9_29.dll
+Game features:
+
+The game has 7 levels. Most of them has a time limit.
+In some levels you have to collect a certain
+amount of items or save people. Only then the exit will
+show up. Blue monsters can eat some items. When a monster
+eats an item, the monster becomes darker so you can tell
+it has the item. To recover the item you have to kill the
+monster.
+In several level you only need to find the exit.
+The mini map will help you to search for the exit.
+Items are marked green and the exit is red.

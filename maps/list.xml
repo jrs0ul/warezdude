@@ -1,12 +1,12 @@
 <xml>
 <Maps>
-    <map name="network.map" />
-    <map name="wd2m2.map" />
-    <map name="test.map" />
-    <map name="bunkers.map" />
-    <map name="bman.map" />
-    <map name="mk.map" />
-    <map name="worm.map" />
-    <map name="maelstrom.map" />
+    <map name="network.xml" />
+    <map name="wd2m2.xml" />
+    <map name="test.xml" />
+    <map name="bunkers.xml" />
+    <map name="bman.xml" />
+    <map name="mk.xml" />
+    <map name="worm.xml" />
+    <map name="maelstrom.xml" />
 </Maps>
 
