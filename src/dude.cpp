@@ -55,10 +55,14 @@ void Dude::respawn(){
     }
 }
 //--------------------------------------------------
-void Dude::rotate(float angle){
-    this->angle+=angle;
-    if (this->angle>=6.28f)
-        this->angle=0;
+void Dude::rotate(float angle)
+{
+    angle += angle;
+
+    if (angle >= 6.28f)
+    {
+        angle=0;
+    }
 }
 
 

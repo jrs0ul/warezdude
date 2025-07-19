@@ -117,7 +117,7 @@ int leterKey;
 
 bool Client_GotMapData=false;
 
-long mousepowx,mousepowy;
+//long mousepowx,mousepowy;
 
 bool noAmmo=false;
 bool nextWepPressed=false;
@@ -2084,8 +2084,11 @@ void Game::logic(){
 
 
 
-                        if ((mousepowx)&&(!mapas.mons[mapas.enemyCount].shot)&&(!mapas.mons[mapas.enemyCount].spawn))
-                            mapas.mons[mapas.enemyCount].rotate(3.14f/(256.0f/-mousepowx));
+                        if ((MouseX)&&(!mapas.mons[mapas.enemyCount].shot)&&(!mapas.mons[mapas.enemyCount].spawn))
+                        {
+                            printf("%f\n", 3.14/(256.f/-MouseX));
+                            mapas.mons[mapas.enemyCount].rotate(3.14f/(256.0f/-MouseX));
+                        }
 
                         if (!Keys[7])   
                             nextWepPressed=false;
