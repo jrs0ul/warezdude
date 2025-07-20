@@ -16,29 +16,35 @@ void EditBox::init(unsigned int dx, unsigned int dy, const char* dtitl, unsigned
  pressedKey=0;
 }
 //------------------------------------
-void EditBox::getInput(unsigned char key, unsigned char Gkey)
+void EditBox::getInput(const char* eventText, unsigned key)
 {
-    if (pressedKey != key)
-    {
-        if (Gkey==13) entered=true;
-        if (Gkey==27) canceled=true;
-        int ilgis=(int)strlen(text);
-        pressedKey=key;
-        if ((key>31)&&(key<127)){
-            if (ilgis<maxlength){
-                text[ilgis]=key;
-                text[ilgis+1]='\0'; 
-            }
+    if (pressedKey!=key){
+        if ( pressedKey == SDL_SCANCODE_RETURN )
+            entered = true;
+        if ( pressedKey == 27 )
+            canceled = true;
+    }
+
+    strcpy(text, eventText);
+
+    //unsigned ilgis = (unsigned)strlen(text);
+    pressedKey = key;
+    /*if ((key > 31) && (key < 127)){
+        if (ilgis < maxlength){
+            text[ilgis] = (char)key;
+            text[ilgis + 1] = '\0';
         }
-        else if (key==8)
-        {
+    }
+    else
+        if (key==8){ //backspace
             if (ilgis>0){
                 text[ilgis-1]='\0';
             }
+            else 
+                if (key!=13) 
+                    pressedKey=0;
         }
-
-        else if (key!=13) pressedKey=0;
-    }
+    }*/
 
 }
 //------------------------------------

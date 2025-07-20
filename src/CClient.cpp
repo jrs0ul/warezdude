@@ -1,4 +1,5 @@
 #include "CClient.h"
+#include <cstdio>
 
 #ifndef _WIN32
 #include <arpa/inet.h>
@@ -14,6 +15,8 @@
 
 bool CClient::connectServer(const char* ip, unsigned port)
 {
+    printf("CONNECTING [%s]...\n", ip);
+
 #ifdef _WIN32
     WSAData wsaData;
     WSAStartup(MAKEWORD(2,0),&wsaData);
@@ -26,6 +29,7 @@ bool CClient::connectServer(const char* ip, unsigned port)
     if (clientSock == -1)
 #endif
     {
+        puts("CON FAIL");
         return false;
     }
 
@@ -34,10 +38,11 @@ bool CClient::connectServer(const char* ip, unsigned port)
 #else
     hostent* hostEntry;
 #endif
-    hostEntry = gethostbyname(ip);
+    hostEntry = gethostbyname("127.0.0.1");//ip);
 
     if (!hostEntry)
     {
+        puts("CONNECTION FAIL");
         return false;
     }
 
@@ -55,6 +60,7 @@ bool CClient::connectServer(const char* ip, unsigned port)
     if (connect(clientSock,(sockaddr*)&_sin, sizeof(sockaddr_in))!= -1)
 #endif
     {
+        printf("CONNECTED!\n");
         isJoinedServer=true;
         return true;
     }

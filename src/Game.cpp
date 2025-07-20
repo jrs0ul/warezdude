@@ -319,12 +319,7 @@ void LoadKeyData(){
     } 
 
 
-    if ((mapkey)&&(!Keys[5])){
-        mapkey=false;
-        ShowMiniMap=!ShowMiniMap;
-
-    }
-
+   
     if ((mainkey)&&(!Keys[4])){
         mainkey=false;
         triger=true;
@@ -421,8 +416,8 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
                 pics.draw(7,
                           (round(mapas.items[i].x))-((pskx-scrx)*32)+pushx-posx,
                           (round(mapas.items[i].y))-((psky-scry)*32)+pushy-posy,
-                          true,
                           mapas.items[i].value-5,
+                          true,
                           1.0f,1.0f,0.0,
                           COLOR(r,g,b, 1.f),
                           COLOR(r,g,b, 1.f)
@@ -435,15 +430,15 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 
     
 
-    for (int z=0; z<bulbox.count(); z++)
+    for (int z=0; z < bulbox.count(); z++)
     {
         pics.draw(6,
                   round(bulbox.buls[z].x)-((pskx-scrx)*32)+pushx-posx,
                   round(bulbox.buls[z].y)-((psky-scry)*32)+pushy-posy,
-                  true,
                   bulbox.buls[z].frame,
+                  true,
                   1.0f,1.0f,
-                  bulbox.buls[z].angle-(3.14f/2.0f)
+                  (bulbox.buls[z].angle + (3.14f/2.0f)) * (180/M_PI)
                  ); 
     }
 
@@ -481,7 +476,6 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
         }
     }
 
-    
 
 
 }
@@ -490,7 +484,7 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 void Game::DrawMiniMap(int x, int y)
 {
 
-    pics.draw(12, x,y,0,0.6f,mapas.width*2.0f,mapas.height*2.0f);
+    pics.draw(12, x, y, 0, false ,mapas.width,mapas.height, 0, COLOR(1,1,1, 0.6f), COLOR(1,1,1, 0.6f));
 
     for (int i=0;i<mapas.height;i++)
     {
@@ -502,20 +496,20 @@ void Game::DrawMiniMap(int x, int y)
                 frame=mapas.colide[i][a];
             if (frame)
             {
-                pics.draw(12, a*4+x,i*4+y,frame,0.6f);
+                pics.draw(12, a*4+x,i*4+y,frame, false, 1.f, 1.f, 0.f, COLOR(1,1,1,0.6f), COLOR(1,1,1,0.6f));
             }
         }
     }
 
         pics.draw(12, x+(round(mapas.mons[mapas.enemyCount].x/32.0f)*4),
                                             y+(round(mapas.mons[mapas.enemyCount].y/32.0f)*4),
-                                            3,0.6f);
+                                            3, false);
 
         for (unsigned i = 0; i<mapas.items.count(); i++)
         {
             pics.draw(12, x+(round(mapas.items[i].x/32.0f)*4),
-                                            y+(round(mapas.items[i].y/32.0f)*4),
-                                            4,0.6f);
+                          y+(round(mapas.items[i].y/32.0f)*4),
+                                            4, false);
         }
 
 
@@ -535,7 +529,7 @@ void DrawNum(int x, int y,int num){
 
     for (int a=0; a<3; a++)
     {
-        pics.draw(8, x+a*16, y, false, arr[a],0.6f,0.98f);
+        pics.draw(8, x+a*16, y, arr[a], false, 0.6f,0.98f);
     }
 
 
@@ -678,16 +672,16 @@ bool Game::OnHit(Bullet& bul)
 void Game::DrawStats()
 {
 
-    pics.draw(9, 30,435,2,0.6f);
+    pics.draw(9, 30,435,2, false, 0.6f);
     DrawNum(58,440,mapas.mons[mapas.enemyCount].hp);
 
 
-    pics.draw(9, 120,440,0,0.6f); 
+    pics.draw(9, 120,440,0, false, 0.6f); 
     DrawNum(155,440,mapas.mons[mapas.enemyCount].ammo);
 
     if (mapas.misionItems)
     {
-        pics.draw(9, 220,440,1,0.6f);
+        pics.draw(9, 220,440,1, false, 0.6f);
         DrawNum(255,440,goods);
     }
 
@@ -1530,7 +1524,7 @@ void Game::MonsterAI(int index){
                 if (!colide){
                     mapas.mons[index].enemyseen=true;
                 //yessss!!!! veikia
-                    mapas.mons[index].angle=-atan2(mapas.mons[victimindex].y -mapas.mons[index].y  , mapas.mons[victimindex].x - mapas.mons[index].x);
+                    mapas.mons[index].angle=atan2(mapas.mons[victimindex].y -mapas.mons[index].y  , mapas.mons[victimindex].x - mapas.mons[index].x);
                 //pakeiciam monstro kampa taip kad judetu link aukos
                 }
                 delete []line;
@@ -1788,7 +1782,7 @@ void Game::TitleMeniuHandle()
         if (ipedit.active()){
             if (!ipedit.entered){
                 
-                ipedit.getInput(leterKey,globalKEY);
+                ipedit.getInput(EditText, globalKEY);
                 leterKey=0;
                 
             }
@@ -2029,6 +2023,14 @@ void Game::logic(){
 
                     else 
                     {   //------------------the game
+                        
+
+                        if (Keys[8] && !OldKeys[8]){
+                            printf("minimap\n");
+                            ShowMiniMap = !ShowMiniMap;
+
+                        }
+
 
                         
                         mapas.fadeDecals();
@@ -2084,10 +2086,9 @@ void Game::logic(){
 
 
 
-                        if ((MouseX)&&(!mapas.mons[mapas.enemyCount].shot)&&(!mapas.mons[mapas.enemyCount].spawn))
+                        if ((RelativeMouseX)&&(!mapas.mons[mapas.enemyCount].shot)&&(!mapas.mons[mapas.enemyCount].spawn))
                         {
-                            printf("%f\n", 3.14/(256.f/-MouseX));
-                            mapas.mons[mapas.enemyCount].rotate(3.14f/(256.0f/-MouseX));
+                            mapas.mons[mapas.enemyCount].rotate(3.14f/(256.0f/-RelativeMouseX));
                         }
 
                         if (!Keys[7])   
@@ -2107,12 +2108,15 @@ void Game::logic(){
                         ItemPickup();
 
                         //saunam
-                        if ((Keys[4])&&(!mapas.mons[mapas.enemyCount].shot)&&(mapas.mons[mapas.enemyCount].alive)&&(!mapas.mons[mapas.enemyCount].spawn))
-                            if (mapas.mons[mapas.enemyCount].canAtack){
-
+                        if ((Keys[4])&&(!mapas.mons[mapas.enemyCount].shot) && 
+                                (mapas.mons[mapas.enemyCount].alive)&&(!mapas.mons[mapas.enemyCount].spawn))
+                        
+                            if (mapas.mons[mapas.enemyCount].canAtack)
+                            {
                                 bool res=false;
 
-                                switch(mapas.mons[mapas.enemyCount].currentWeapon){
+                                switch(mapas.mons[mapas.enemyCount].currentWeapon)
+                                {
                                     case 1: res=mapas.mons[mapas.enemyCount].atack(true,false,&bulbox); break;
                                     case 2: res=mapas.mons[mapas.enemyCount].atack(true,true,&bulbox); break;
                                     case 0: BeatEnemy(mapas.enemyCount,20); break;
@@ -2143,6 +2147,7 @@ void Game::logic(){
                                     }
                                     bool isMine=false;
                                     if (mapas.mons[mapas.enemyCount].currentWeapon==2)
+
                                         isMine=true;
                                     if (isServer){
                                         for (int i=0;i<(int)serveris.clientCount();i++)
@@ -2223,16 +2228,16 @@ void Game::logic(){
 void DrawHelp(){
     pics.draw(13, 320, 240, 0, true, 1.25f,1.9f);
     WriteText(30, 30, pics, 10, "Colect these and...");
-    pics.draw(11, 50,50, false, itmframe);
-    pics.draw(11, 100,50, false, itmframe+4);
+    pics.draw(11, 50,50, itmframe, false);
+    pics.draw(11, 100,50, itmframe+4, false);
     WriteText(200,80, pics, 10, "Save those guys...");
-    pics.draw(11, 200,100, false, itmframe+8);
+    pics.draw(11, 200,100, itmframe+8, false);
     WriteText(200,150, pics, 10, "to unlock exit ");
-    pics.draw(11, 420,150, false, itmframe+12);
+    pics.draw(11, 420,150, itmframe+12, false);
 
-    pics.draw(7, 100,210, false, 0);
+    pics.draw(7, 100,210, 0, false);
     WriteText(140,220, pics, 10,"Ammo");
-    pics.draw(7, 100,230, false, 1);
+    pics.draw(7, 100, 230, 1, false);
     WriteText(140,240, pics, 10,"Health Up");
 
     WriteText(140,320, pics, 10, "Controls:");
@@ -2243,7 +2248,7 @@ void DrawHelp(){
     int monframe=itmframe;
     if (monframe==3)
         monframe=0;
-    pics.draw(3, 100,270, false, monframe);
+    pics.draw(3, 100,270, monframe, false);
     WriteText(140,270, pics, 10, "These monsters can eat items");
     WriteText(140,290, pics, 10, "kill them to retrieve items back.");
 
@@ -2434,7 +2439,7 @@ void Game::render(){
                     if (mapas.mons.count())
                         DrawStats();
 
-                    if ((mapas.width>scrx)&&(mapas.height>scry)&&(ShowMiniMap))
+                    if (/*(mapas.width>scrx)&&(mapas.height>scry)&&*/(ShowMiniMap))
                     {
                         DrawMiniMap(sys.ScreenWidth - mapas.width*4, sys.ScreenHeight - mapas.height*4);
                     }

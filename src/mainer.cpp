@@ -82,6 +82,17 @@ static void  process_events(){
 
         switch( event.type ) {
 
+        case SDL_TEXTINPUT:
+            {
+                strcat(Game.EditText, event.text.text);
+                
+
+            } break;
+
+        case SDL_TEXTEDITING:
+            {
+            } break;
+
         case SDL_KEYDOWN:{
 
             Game.globalKEY = (char)event.key.keysym.scancode;
@@ -153,6 +164,9 @@ void CheckKeys()
     Game.MouseX = _MouseX*scaleX;
     Game.MouseY = _MouseY*scaleY;
 
+    Game.RelativeMouseX = MouseX;
+    Game.RelativeMouseY = MouseY;
+
     //Game.gamepad.v[0] = MouseX * 10.0f;
     //Game.gamepad.v[1] = MouseY * 10.0f;
 
@@ -162,16 +176,16 @@ void CheckKeys()
 
     if ( keys[SDL_SCANCODE_W] )    Game.Keys[0] = 1;
     if ( keys[SDL_SCANCODE_S] )    Game.Keys[1] = 1;
-    if ( keys[SDL_SCANCODE_A] )    Game.Keys[2] = 1;
-    if ( keys[SDL_SCANCODE_D] )    Game.Keys[3] = 1;
+    if ( keys[SDL_SCANCODE_A] )    Game.Keys[3] = 1;
+    if ( keys[SDL_SCANCODE_D] )    Game.Keys[2] = 1;
     if ( keys[SDL_SCANCODE_UP] )   Game.Keys[0] = 1;
     if ( keys[SDL_SCANCODE_DOWN])  Game.Keys[1] = 1;
-    if ( keys[SDL_SCANCODE_LEFT])  Game.Keys[2] = 1;
-    if ( keys[SDL_SCANCODE_RIGHT]) Game.Keys[3] = 1;
-    if ( keys[SDL_SCANCODE_SPACE]) Game.Keys[4] = 1;
+    if ( keys[SDL_SCANCODE_LEFT])  Game.Keys[3] = 1;
+    if ( keys[SDL_SCANCODE_RIGHT]) Game.Keys[2] = 1;
+    if ( keys[SDL_SCANCODE_SPACE]) Game.Keys[6] = 1;
     if ( keys[SDL_SCANCODE_RETURN]) Game.Keys[5] = 1;
-    if ( keys[SDL_SCANCODE_ESCAPE]) Game.Keys[6] = 1;
-    if ( keys[SDL_SCANCODE_DELETE]) Game.Keys[7] = 1;
+    if ( keys[SDL_SCANCODE_LCTRL]) Game.Keys[4] = 1;
+    if ( keys[SDL_SCANCODE_TAB]) Game.Keys[8] = 1;
 
     if (JoyNum){
         if (SDL_JoystickGetButton (Joy, 0))

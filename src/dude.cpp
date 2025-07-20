@@ -55,14 +55,15 @@ void Dude::respawn(){
     }
 }
 //--------------------------------------------------
-void Dude::rotate(float angle)
+void Dude::rotate(float ang)
 {
-    angle += angle;
+    angle += ang;
 
     if (angle >= 6.28f)
     {
-        angle=0;
+        angle = 0;
     }
+
 }
 
 
@@ -229,13 +230,14 @@ void Dude::draw(PicsContainer& pics, unsigned index,
     pics.draw(index, 
               round(x)-((pskx-scrx)*32)+pushx-posx,
               round(y)-((psky-scry)*32)+pushy-posy,
-              true,
               frame,
+              true,
               1.0f,
               1.0f,
-              angle-(3.14f/2.0f),
+              (angle + M_PI / 2.f) * 57.2958f,
               COLOR(r,g,b, 1.f),
               COLOR(r,g,b, 1.f));
+
 }
 //----------------------------------------------------------
 bool Dude::atack(bool useBullets, bool isMine, CBulletContainer* bulcon){

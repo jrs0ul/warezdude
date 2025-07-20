@@ -15,7 +15,7 @@ class EditBox:public ActiveControl{
   char title[20];
   unsigned char pressedKey;
   void init(unsigned int dx, unsigned int dy, const char* dtitl, unsigned char dmaxl);
-  void getInput(unsigned char key, unsigned char Gkey);
+  void getInput(const char* eventText, unsigned key);
   void draw(PicsContainer& pics, unsigned font, unsigned remelis=0);
   void reset();
  };

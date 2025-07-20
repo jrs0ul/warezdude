@@ -39,12 +39,16 @@ class Game
 
 public:
 
+    char EditText[255];
+
     TouchData   touches;
 
     int DebugMode;
     Vector3D gamepad;
     float MouseX;
     float MouseY;
+    float RelativeMouseX;
+    float RelativeMouseY;
     unsigned char globalKEY;
     unsigned char OldKeys[GameKeyCount]; //zaidimo mygtukai
     unsigned char Keys[GameKeyCount]; //zaidimo mygtukai

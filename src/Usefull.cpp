@@ -24,13 +24,13 @@ Vector3D MakeVector(float speedx, float speedy, float _angle )
 {
     Matrix rot;
     Matrix tr;
-    Vector3D pn = Vector3D(speedx,speedy, 0);
+    Vector3D pn = Vector3D(speedx,0, speedy);
     MatrixRotationY(_angle, rot);
-    Vector3D vel2;
     pn.transform(rot);
-    return pn;
-}
+    return Vector3D(pn.x, pn.z, 0.f);
 
+
+}
 
 //--------------------------------------------------------------------
 
