@@ -5,7 +5,7 @@ project(WarezDude3 LANGUAGES CXX)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR})
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE Debug)
 endif()
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -fPIC")

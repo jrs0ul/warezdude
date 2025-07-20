@@ -1,4 +1,5 @@
 #include "CServer.h"
+#include <cstdio>
 #ifndef _WIN32
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -45,7 +46,7 @@ bool CServer::launch(int port)
 #ifdef _WIN32
     WSAStartup(MAKEWORD(2,0),&wsaData); //inicializuojame WS2_32.DLL
 #endif
-    serverSock = socket(AF_INET, SOCK_STREAM,0);
+    serverSock = socket(AF_INET, SOCK_STREAM, 0);
 
 #ifdef _WIN32
     if (serverSock == INVALID_SOCKET)
@@ -53,6 +54,7 @@ bool CServer::launch(int port)
     if (serverSock == -1)
 #endif
     {
+        printf("Invalid socket!\n");
         return false;
     }
 
@@ -62,7 +64,7 @@ bool CServer::launch(int port)
     sockaddr_in sin;
 #endif
     sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = INADDR_ANY;
+    sin.sin_addr.s_addr = htonl(INADDR_ANY);
     sin.sin_port = htons(port); //nustatome prievada(port)
 
 
@@ -72,6 +74,7 @@ bool CServer::launch(int port)
     if (bind(serverSock, (sockaddr*)&sin, sizeof(sockaddr_in)) == -1)
 #endif
     {
+        printf("can't bind\n");
         return false;
     }
 

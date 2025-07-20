@@ -83,22 +83,26 @@ static void  process_events(){
         switch( event.type ) {
 
         case SDL_TEXTINPUT:
-            {
+        {
                 strcat(Game.EditText, event.text.text);
-                
 
-            } break;
+        } break;
 
         case SDL_TEXTEDITING:
-            {
-            } break;
+        {
+        } break;
+
+        case SDL_KEYUP:
+        {
+            Game.globalKEY = 0;
+            Game.globalKeyUp = (char)event.key.keysym.scancode;
+        } break;
 
         case SDL_KEYDOWN:{
 
             Game.globalKEY = (char)event.key.keysym.scancode;
             switch( event.key.keysym.sym ) {
                 default:{} break;
-                case SDLK_q: { Game.Works = false;} break;
                 case SDLK_F1: {++Game.DebugMode; if (Game.DebugMode >= 2) Game.DebugMode = 0;} 
             }
         } break;
@@ -145,24 +149,16 @@ void CheckKeys()
 
     JoyNum = SDL_NumJoysticks();
 
-    if (JoyNum > 0) {
-
-        SDL_JoystickOpen(0);
-
-        SDL_JoystickUpdate ();
-        JoyX = SDL_JoystickGetAxis(Joy, 0);
-        JoyY = SDL_JoystickGetAxis(Joy, 1);
-    }
-
+    
     
     SDL_GetRelativeMouseState ( &MouseX,&MouseY );
-    SDL_GetMouseState(&_MouseX, &_MouseY);
+    //SDL_GetMouseState(&_MouseX, &_MouseY);
 
     Game.gamepad.v[0] = JoyX/ 1000.0f;
     Game.gamepad.v[1] = JoyY/ 1000.0f;
     
-    Game.MouseX = _MouseX*scaleX;
-    Game.MouseY = _MouseY*scaleY;
+    //Game.MouseX = _MouseX*scaleX;
+    //Game.MouseY = _MouseY*scaleY;
 
     Game.RelativeMouseX = MouseX;
     Game.RelativeMouseY = MouseY;
@@ -187,11 +183,36 @@ void CheckKeys()
     if ( keys[SDL_SCANCODE_LCTRL]) Game.Keys[4] = 1;
     if ( keys[SDL_SCANCODE_TAB]) Game.Keys[8] = 1;
 
-    if (JoyNum){
+
+    if (JoyNum > 0) {
+
+        SDL_JoystickOpen(0);
+
+        //printf("controller button count %d\n", buttonNum);
+
+        SDL_JoystickUpdate ();
+        //Game.RelativeMouseX = SDL_JoystickGetAxis(Joy, 0);
+        //Game.RelativeMouseY = SDL_JoystickGetAxis(Joy, 1);
+
         if (SDL_JoystickGetButton (Joy, 0))
             Game.Keys[4] = 1;
         if (SDL_JoystickGetButton (Joy, 1))
             Game.Keys[5] = 1;
+        if (SDL_JoystickGetButton (Joy, 5))
+            Game.Keys[7] = 1;
+        if (SDL_JoystickGetButton (Joy, 4))
+            Game.Keys[7] = 1;
+        if (SDL_JoystickGetButton (Joy, 13))
+            Game.Keys[0] = 1;
+        if (SDL_JoystickGetButton (Joy, 14))
+            Game.Keys[1] = 1;
+        if (SDL_JoystickGetButton (Joy, 15))
+            Game.Keys[2] = 1;
+        if (SDL_JoystickGetButton (Joy, 16))
+            Game.Keys[3] = 1;
+
+
+
 
         SDL_JoystickClose(0);
     }

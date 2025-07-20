@@ -50,6 +50,7 @@ public:
     float RelativeMouseX;
     float RelativeMouseY;
     unsigned char globalKEY;
+    unsigned char globalKeyUp;
     unsigned char OldKeys[GameKeyCount]; //zaidimo mygtukai
     unsigned char Keys[GameKeyCount]; //zaidimo mygtukai
     char DocumentPath[255];

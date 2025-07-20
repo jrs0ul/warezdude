@@ -23,7 +23,7 @@
 
 const int slime=35;
 
-const unsigned NetPort=666;
+const unsigned NetPort=66666;
 
 
 OggStream music;
@@ -1197,9 +1197,16 @@ void Game::InitServer()
 {
     isServer=true;
     killthread=false;
-    serveris.launch(NetPort);
-
-    serverThread.detach();
+    printf("Launching server on port: %d\n", NetPort);
+    if (serveris.launch(NetPort))
+    {
+        printf("Server launched!\n");
+        serverThread.detach();
+    }
+    else
+    {
+        printf("SERVER LAUNCH FAILED!\n");
+    }
 }
 //--------------------------------
 void Game::StopServer()
@@ -1719,7 +1726,7 @@ void Game::TitleMeniuHandle()
                 QuitServer();
             }
             if (!mainmenu.selected)
-                mainmenu.getInput(globalKEY);
+                mainmenu.getInput(Keys, OldKeys);
             else{
                 switch(mainmenu.state){
                 case 0:{
@@ -1748,7 +1755,7 @@ void Game::TitleMeniuHandle()
 
     if (netmenu.active()){
         if (!netmenu.selected)
-            netmenu.getInput(globalKEY);
+            netmenu.getInput(Keys, OldKeys);
         else{
             switch(netmenu.state)
             {
@@ -1806,7 +1813,7 @@ void Game::TitleMeniuHandle()
     //----------------
         if (netgame.active()){
             if (!netgame.selected)
-                netgame.getInput(globalKEY);
+                netgame.getInput(Keys, OldKeys);
             else{
                 if (netgame.state==1){
                   IsCoop=false;
@@ -1835,7 +1842,7 @@ void Game::TitleMeniuHandle()
 
         if (options.active()){
             if (!options.selected)
-                options.getInput(globalKEY);
+                options.getInput(Keys, OldKeys);
             else{
                 
                 options.deactivate();

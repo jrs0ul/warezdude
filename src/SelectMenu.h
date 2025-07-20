@@ -38,7 +38,7 @@ struct Smenu{
   //numusa userio atlikta pasirinkima
   void reset();
   //jei keyus i virsu apcia tai keiciasi ir state
-  void getInput(unsigned key);
+  void getInput(const unsigned char* keys, const unsigned char* oldKeys);
   //nupaisom
   void draw( PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons=0,float r=1.0f,float b=1.0f,float g=1.0f);
  

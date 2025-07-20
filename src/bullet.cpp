@@ -5,9 +5,6 @@
 
 void Bullet::ai(bool** map, int width, int height){
 
-    int plusy=0,plusx=0; 
-
-
     if (!explode){
 
         if (!isMine){

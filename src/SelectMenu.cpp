@@ -40,48 +40,49 @@ void SelectMeniu::reset(){
  canceled=false;
 }
 //--------------------------------------------
-void SelectMeniu::getInput(unsigned key){
+void SelectMeniu::getInput(const unsigned char* keys, const unsigned char* oldKeys){
 
-    if (key != pressedkey){
+    //if (key != pressedkey){
 
-        printf("%u\n", key);
         //cia tam kad parinktu kai mygtuka atleidi
-        if (pressedkey == SDL_SCANCODE_RETURN) {
+        if (keys[4] && !oldKeys[4]) 
+        {
             if (selection.count)
+            {
                 selected = true;      //enter
+            }
         }
 
-        if (pressedkey == SDL_SCANCODE_ESCAPE) {
+        if (keys[5] && !oldKeys[5]) 
+        {
             canceled=true;      //esc
         }
 
-        if (selection.count){
-            switch(key) {
-                case SDL_SCANCODE_UP: 
-                    {
+        if (selection.count)
+        {
+
+            if (keys[0] && !oldKeys[0])
+            {
                         if (state>0) //up{
                             state--;
                         else
                             state = selection.count - 1;
-                    }  break;
+            }
+            else if (keys[1] && !oldKeys[1])
+            {
 
-                case SDL_SCANCODE_DOWN: 
-                    {
-                        if (state < selection.count - 1)  //down
-                            state++;
-                        else
-                            state = 0;
-                    }
-                    break;
-
-                        default: pressedkey = 0;
-                    }
-
+                if (state < selection.count - 1)  //down
+                    state++;
+                else
+                    state = 0;
             }
 
 
-            pressedkey = key;
         }
+
+
+        //    pressedkey = key;
+        //}
 
     }
 //--------------------------------------------
@@ -115,7 +116,7 @@ void SelectMeniu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsign
     }
 
     //DrawBlock(device,spraitas,x,y,width,height,0,0,200);
-    WriteText(x+12, y+2, pics, font, title, 1.0f, 1.0f, COLOR(0,0,0, 1.f)); 
+    WriteText(x+12, y+2, pics, font, title, 1.0f, 1.0f, COLOR(0,0,0, 1.f), COLOR(0,0,0,1.f)); 
     WriteText(x+10, y+4, pics, font, title); 
   
 

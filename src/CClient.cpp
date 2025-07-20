@@ -38,7 +38,7 @@ bool CClient::connectServer(const char* ip, unsigned port)
 #else
     hostent* hostEntry;
 #endif
-    hostEntry = gethostbyname("127.0.0.1");//ip);
+    hostEntry = gethostbyname(ip);
 
     if (!hostEntry)
     {
