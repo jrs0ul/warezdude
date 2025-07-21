@@ -58,6 +58,8 @@ MapList::MapList()
         }
     }
 
+    mapList.destroy();
+
 
     current=0;
 }

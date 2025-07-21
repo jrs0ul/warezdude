@@ -258,8 +258,8 @@ bool Dude::atack(bool useBullets, bool isMine, CBulletContainer* bulcon){
 
         Bullet newbul;
 
-        newbul.x=x+(cos(-angle)*10.0f);
-        newbul.y=y-(sin(angle)*10.0f);
+        newbul.x = x+(cos(-angle) * 8.0f);
+        newbul.y = y+(sin(angle) * 10.0f);
         newbul.parentID=id;
         newbul.tim=0;
         newbul.angle=angle;
@@ -307,14 +307,17 @@ void Dude::splatter(){
 //------------------------------
 void Dude::appearInRandomPlace(bool** map, int mapwidth, int mapheight){
     
-    start.x=rand()%mapwidth;
-    start.y=rand()%mapheight;
-    while (map[(int)start.y][(int)start.x]){
-        start.x=rand()%mapwidth;
-        start.y=rand()%mapheight;
+    startX = rand() % mapwidth;
+    startY = rand() % mapheight;
+
+    while (map[startY][startX])
+    {
+        startX = rand()%mapwidth;
+        startY = rand()%mapheight;
     }
-    x=start.x*32.0f;
-    y=start.y*32.0f;
+
+    x = startX * 32.0f;
+    y = startY * 32.0f;
 
 }
 //----------------------------------------

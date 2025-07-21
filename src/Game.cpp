@@ -45,10 +45,6 @@ int goods=0;
 int timeleft=0;
 bool ext=false;
 bool showdebugtext=false;
-bool TitleScreen=true;  //rodome zaidimo TM picsa
-bool IntroScreen=false; //rodome intro
-bool HelpScreen=false; //rodome helpa
-bool EndScreen=false;
 bool FirstTime=true;
 int ms=0;
 
@@ -134,6 +130,8 @@ Game::Game()
     TimeTicks = 0;
 
     DebugMode = 0;
+
+    state = GAMESTATE_TITLE;
 
 }
 
@@ -276,13 +274,7 @@ void LoadKeyData(){
         globalKey=27;
     }
 
-    if (input.keydata[DIK_TAB]& 0x80) {Keys[5]=1; mapkey=true;}
-    if (input.keydata[DIK_SPACE]& 0x80) {Keys[6]=1;}
-    if (input.keydata[DIK_RSHIFT]& 0x80) Keys[7]=1;
-
-
-    
-    
+        
     
 
     if (input.mstate.lX!=0) 
@@ -312,10 +304,7 @@ void LoadKeyData(){
         if ( input.jstate.lX > 0 ) Keys[2]=1;
         if ( input.jstate.lX < 0 ) Keys[3]=1;
 
-        if(input.jstate.rgbButtons[0]&0x80) {Keys[4]=1; globalKey=13; mainkey=true;}
-        if(input.jstate.rgbButtons[1]&0x80) {Keys[5]=1; mapkey=true;}
-        if(input.jstate.rgbButtons[2]&0x80) {Keys[6]=1;}
-
+        
     } 
 
 
@@ -696,36 +685,9 @@ void Game::DrawStats()
 
 }
 
-//--------------------------
-//intro screenas
-void DrawTitleScreen(){
-
-    pics.draw(0, 320, 240, 0, true,1.25f,1.9f);
-    pics.draw(16, 0,0,0);
-
-
-
-    char buf[80];   
-
-    sprintf(buf,"Jrs%dul",0);
-    WriteText(540,10, pics, 10, buf);
-    sprintf(buf,"%d",2007);
-    WriteText(550,30, pics, 10, buf);
-
-}
-
-
 //------------------------
 //the hero and camera movement
 void Game::MoveDude(){
-
-
-    /*if (keys[3])
-        mapas.mons[mapas.enemyCount].rotate(0.1f);*/
-
-    /*if (keys[2])
-        mapas.mons[mapas.enemyCount].rotate(-0.1f);*/
-
 
 
 
@@ -1021,22 +983,26 @@ void Game::SendMapInfo(int clientIndex, CMap& map){
 
 }
 //------------------------------------------------
-void Game::SendMapData(int clientIndex, CMap& map){
+void Game::SendMapData(int clientIndex, CMap& map)
+{
 
     char bufer[1024];
-    int index=3;
+
+    int index = 3;
+
     bufer[0]='d'; bufer[1]='a'; bufer[2]='t';
+
     memcpy(&bufer[index], &map.enemyCount, sizeof(int));
     index+=sizeof(int);
 
     for (int i = 0; i < map.enemyCount; i++)
     {
-        memcpy(&bufer[index], &map.mons[i].race,sizeof(int));
-        index+=sizeof(int);
+        memcpy(&bufer[index], &map.mons[i].race, sizeof(int));
+        index += sizeof(int);
     }
 
-    int itmcount=(int)map.items.count();
-    memcpy(&bufer[index],&itmcount,sizeof(int));
+    int itmcount = (int)map.items.count();
+    memcpy(&bufer[index], &itmcount, sizeof(int));
     index+=sizeof(int);
 
     for (unsigned long i=0; i < map.items.count(); i++)
@@ -1047,7 +1013,7 @@ void Game::SendMapData(int clientIndex, CMap& map){
         index += sizeof(float);
         memcpy(&bufer[index], &map.items[i].value,sizeof(int));
         index += sizeof(int);
-        
+
     }
 
     serveris.sendData(clientIndex,bufer,index);
@@ -1061,7 +1027,7 @@ void Game::SendWarpMessage()
     int index=0;
     buferis[0]='n'; buferis[1]='x'; buferis[2]='t';
     index+=3;
-    clientas.sendData(buferis,index);
+    clientas.sendData(buferis, index);
 }
 
 
@@ -1071,8 +1037,10 @@ void Game::ItemPickup()
 
     for (unsigned long i=0; i<mapas.items.count(); i++)
     {
-        if (CirclesColide(mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y,8,
-            mapas.items[i].x,mapas.items[i].y,4)){
+        if (CirclesColide(mapas.mons[mapas.enemyCount].x,
+                          mapas.mons[mapas.enemyCount].y,8,
+                          mapas.items[i].x,mapas.items[i].y,4))
+        {
 
                 int item=mapas.items[i].value;
                 if ((item != 0) && ((item != 6) || (mapas.mons[mapas.enemyCount].hp < 100)))
@@ -1134,7 +1102,7 @@ void Game::ItemPickup()
                     mapai.current++;
                     if (mapai.current==mapai.count()){
                         mapai.current=0;
-                        EndScreen=true;
+                        state = GAMESTATE_ENDING;
                         PlayNewSong("Crazy.ogg");
 
                     }
@@ -1166,27 +1134,35 @@ void Game::ItemPickup()
 
 //---------------------------------
 //serverio threadas laukiantis prisijungimu
-void Game::Threadproc(){
-
+void Game::Threadproc()
+{
 
     while (!killthread)
     {
-        int res=serveris.waitForClient();
-        if (res){
 
-            Dude naujas;
-            mapas.mons.add(naujas);
+        if (serveris.serverState())
+        {
+            int res = serveris.waitForClient();
 
-            mapas.mons[mapas.mons.count()-1].id=mapas.mons[mapas.mons.count()-2].id+1;
-
-            for (int i=0; i < (int)serveris.clientCount(); i++)
+            if (res)
             {
-                SendMapInfo(i, mapas);
+
+                printf("CLIENT CONNECTED!\n");
+
+                Dude naujas;
+                mapas.mons.add(naujas);
+
+                mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id+1;
+
+                for (int i=0; i < (int)serveris.clientCount(); i++)
+                {
+                    SendMapInfo(i, mapas);
+                }
+
+                SendMapData(serveris.clientCount()-1, mapas);
+                //----end
+
             }
-
-            SendMapData(serveris.clientCount()-1, mapas);
-            //----end
-
         }
     }
 }
@@ -1285,7 +1261,7 @@ void Game::DoorsInteraction()
         SoundSystem* ss = SoundSystem::getInstance();
 
 
-        if (Keys[6])
+        if (Keys[ACTION_OPEN])
         {
             if ((mapas.tiles[dry][drx]==67)
                 ||(mapas.tiles[dry][drx]==65)
@@ -1715,45 +1691,58 @@ void Game::ResetVolume()
 
 
 //-------------------------------------------------------------
-void Game::TitleMeniuHandle()
+void Game::TitleMenuLogic()
 {
 
-    if (mainmenu.active()){
-            if (isServer){
-                StopServer();
-            }
-            if (isClient){
-                QuitServer();
-            }
-            if (!mainmenu.selected)
-                mainmenu.getInput(Keys, OldKeys);
-            else{
-                switch(mainmenu.state){
-                case 0:{
-                    mainmenu.reset();
-                    TitleScreen=false;
-                    IntroScreen=true;
-                    PlayNewSong("crazy.ogg");   
-                       }break;
-                case 1:{
-                    netmenu.activate();
-                    mainmenu.reset();
-                    mainmenu.deactivate();
-                       }break;
-                case 2:{
-                    options.activate();
-                    mainmenu.reset();
-                    mainmenu.deactivate();
-                       }break;
-                case 3:{
-                    Works = false;
-                    mainmenu.reset();
-                       }break;
-                }
-            }
+    if (mainmenu.active())
+    {
+        if (isServer)
+        {
+            StopServer();
         }
 
-    if (netmenu.active()){
+        if (isClient)
+        {
+            QuitServer();
+        }
+
+        if (!mainmenu.selected)
+        {
+            mainmenu.getInput(Keys, OldKeys);
+        }
+        else
+        {
+            switch(mainmenu.state)
+            {
+                case 0:
+                    {
+                        mainmenu.reset();
+                        state = GAMESTATE_INTRO;
+                        PlayNewSong("crazy.ogg");   
+                    } break;
+                case 1:
+                    {
+                        netmenu.activate();
+                        mainmenu.reset();
+                        mainmenu.deactivate();
+                    }break;
+                case 2:
+                    {
+                        options.activate();
+                        mainmenu.reset();
+                        mainmenu.deactivate();
+                    }break;
+                case 3:
+                    {
+                        Works = false;
+                        mainmenu.reset();
+                    }break;
+            }
+        }
+    }
+
+    if (netmenu.active())
+    {
         if (!netmenu.selected)
             netmenu.getInput(Keys, OldKeys);
         else{
@@ -1770,7 +1759,8 @@ void Game::TitleMeniuHandle()
                     if (netmenu.active())
                         netmenu.deactivate();
                     netmenu.reset();
-                    ipedit.activate();  
+                    ipedit.activate();
+                    EditText[0] = 0;
                 }
             }
         }
@@ -1811,23 +1801,27 @@ void Game::TitleMeniuHandle()
 
         }
     //----------------
-        if (netgame.active()){
+        if (netgame.active())
+        {
             if (!netgame.selected)
                 netgame.getInput(Keys, OldKeys);
             else{
-                if (netgame.state==1){
+                if (netgame.state == 1)
+                {
                   IsCoop=false;
                   IsDeathMatch=true;
                 }
 
-                if (netgame.state==1){
+                if (netgame.state == 1)
+                {
                   IsCoop=true;
                   IsDeathMatch=false;
                 }
 
                 netgame.reset();
                 netgame.deactivate();
-                TitleScreen=false;
+
+                state = GAMESTATE_GAME;
                 PlayNewSong("music.ogg");
                 InitServer();
                 LoadFirstMap();
@@ -1913,21 +1907,26 @@ void Game::TitleMeniuHandle()
 
 }
 //---------------------------------------------------------
-void Game::IntroScreenHandle(){
-    if ((Keys[4] && !OldKeys[4])||(!FirstTime)){
-        IntroScreen=false;
-        HelpScreen=true;
-        intro_cline=0;
-        intro_cchar=0;
-        intro_gline=0;
+void Game::IntroScreenLogic()
+{
+    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_UP]) || (!FirstTime))
+    {
+        state = GAMESTATE_HELP;
+        intro_cline = 0;
+        intro_cchar = 0;
+        intro_gline = 0;
     }
 
-    if (intro_gline<=lin){
+    if (intro_gline <= lin)
+    {
         intro_tim++;
-        if (intro_tim==5){
+        if (intro_tim==5)
+        {
             intro_tim=0;
             intro_cchar++;
-            if ((IntroText[intro_cline][intro_cchar]=='\0')){
+
+            if ((IntroText[intro_cline][intro_cchar]=='\0'))
+            {
                 intro_cline++;
                 intro_gline++;
 
@@ -1941,19 +1940,31 @@ void Game::IntroScreenHandle(){
     }
 }
 //---------------------------------------------------------------
-void Game::HelpScreenHandle()
+void Game::HelpScreenLogic()
 {
     itmtim++;
-    if (itmtim>10){
+
+    if (itmtim>10)
+    {
         itmframe++; //animuoti daiktai
-        if (itmframe>3)
-            itmframe=0;
+        if (itmframe > 3)
+        {
+            itmframe = 0;
+        }
+
         itmtim=0;
     }
-    if ((Keys[4] && !OldKeys[4])||(!FirstTime)){
-        HelpScreen=false;
+
+    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])||(!FirstTime))
+    {
+
         if (FirstTime)
+        {
             FirstTime=false;
+        }
+
+        state = GAMESTATE_GAME;
+
         PlayNewSong("music.ogg");
         LoadFirstMap();
 
@@ -1976,15 +1987,17 @@ int Game::PlayerCount()
 
 void Game::logic(){
 
-    if ((mapas.timeToComplete)&&(!TitleScreen)&&(!IntroScreen)&&(!EndScreen))
+    if ((mapas.timeToComplete) && (state == GAMESTATE_GAME))
     {
-        ms+=10;
-        if (ms>=1000){
+        ms += 10;
+
+        if (ms >= 1000)
+        {
             if (timeleft)
                 timeleft--;
             else 
                 KillPlayer(0);
-            ms=0;
+            ms = 0;
         }
     }
 
@@ -1995,242 +2008,278 @@ void Game::logic(){
     }
 
     if (music.playing()) //updeitinam muzona
+    {
         music.update();
+    }
 
 
-    if (TitleScreen)
-        TitleMeniuHandle();
-    else
-        if (IntroScreen)
-            IntroScreenHandle();
-        else
-            if (HelpScreen)
-                HelpScreenHandle();
-            else
-                if (EndScreen){
-                    if (triger){
-                        TitleScreen=true;
-                        mainmenu.activate();    
-                        FirstTime=true;
-                        EndScreen=false;
-                        PlayNewSong("evil.ogg");
-                    }
+    switch(state)
+    {
+        case GAMESTATE_TITLE  : TitleMenuLogic();  break;
+        case GAMESTATE_INTRO  : IntroScreenLogic(); break;
+        case GAMESTATE_HELP   : HelpScreenLogic();  break;
+        case GAMESTATE_ENDING :
+                                {
+                                    if (Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])
+                                    {
+                                        state = GAMESTATE_TITLE;
+
+                                        mainmenu.activate();
+                                        FirstTime = true;
+                                        PlayNewSong("evil.ogg");
+
+                                    }
+
+                                } break;
+        case GAMESTATE_GAME : CoreGameLogic(); break;
+    }
+
+    if (fadein)
+    {
+        fadetim++;
+
+        if (fadetim == 160)
+        {
+            fadein = false;
+            fadetim = 0;
+        }
+
+    }
+
+    touches.up.destroy();
+    touches.down.destroy();
+    touches.move.destroy();
+
+}
+
+//------------------------------------
+void Game::CoreGameLogic()
+{
+
+    if (Keys[ACTION_MAP] && !OldKeys[ACTION_MAP])
+    {
+        ShowMiniMap = !ShowMiniMap;
+
+    }
+
+    mapas.fadeDecals();
+
+    if (objectivetim)  //  decrement objective timer
+    {
+        objectivetim--;
+    }
+
+    itmtim++;
+
+    if (itmtim > 10)
+    {
+        itmframe++;  //  item animation
+
+        if (itmframe > 3)
+        {
+            itmframe = 0;
+        }
+
+        itmtim=0;
+    }
+
+
+    if ((goods < 1) && (!ext))  //  no more items ? Let's spawn exit
+    {
+        PutExit();
+    }
+
+
+    AnimateSlime();
+
+    //hero movement
+
+    if (mapas.mons[mapas.enemyCount].shot)
+    { //hero dies here
+        mapas.mons[mapas.enemyCount].splatter();
+
+        if (!mapas.mons[mapas.enemyCount].shot){
+
+            if ((!isClient)&&(!isServer)){
+                mapas.mons[mapas.enemyCount].x=(float)mapas.start.x;
+                mapas.mons[mapas.enemyCount].y=(float)mapas.start.y;
+            }
+            else{
+                mapas.mons[mapas.enemyCount].appearInRandomPlace(mapas.colide,mapas.width,mapas.height);
+
+            }
+
+            AddaptMapView();
+            findpskxy();
+        }
+
+    }
+
+
+    if (mapas.mons[mapas.enemyCount].spawn)
+    { //respawn      
+        mapas.mons[mapas.enemyCount].respawn();
+
+        if ((mapas.mons[mapas.enemyCount].ammo<1)&&(!mapas.mons[mapas.enemyCount].spawn))
+        {
+            mapas.mons[mapas.enemyCount].ammo=20;
+        }
+    }
+
+
+
+    if ((RelativeMouseX)&&(!mapas.mons[mapas.enemyCount].shot)&&(!mapas.mons[mapas.enemyCount].spawn))
+    {
+        mapas.mons[mapas.enemyCount].rotate(3.14f/(256.0f/-RelativeMouseX));
+    }
+
+    if (!Keys[ACTION_NEXT_WEAPON])
+    {
+        nextWepPressed=false;
+    }
+
+    if ((Keys[ACTION_NEXT_WEAPON]) && (!Keys[ACTION_FIRE]) && (!nextWepPressed))
+    {
+        nextWepPressed = true;
+        mapas.mons[mapas.enemyCount].chageNextWeapon();
+    }
+
+    if ((Keys[0]||Keys[1]||Keys[2]||Keys[3])&&(!mapas.mons[mapas.enemyCount].shot)
+            &&(!mapas.mons[mapas.enemyCount].spawn)&&(mapas.mons[mapas.enemyCount].canAtack))
+    {
+        MoveDude();
+    }
+
+    // jei uzeina ant daikto, ji pasiima
+    ItemPickup();
+
+
+    if (touches.allfingersup)
+    {
+        if (touches.up.count())
+        {
+            Keys[ACTION_FIRE] = 1;
+        }
+    }
+
+
+    //saunam
+    if ((Keys[ACTION_FIRE]) && (!mapas.mons[mapas.enemyCount].shot) && 
+            (mapas.mons[mapas.enemyCount].alive)&&(!mapas.mons[mapas.enemyCount].spawn))
+    {
+
+        if (mapas.mons[mapas.enemyCount].canAtack)
+        {
+            bool res=false;
+
+            switch(mapas.mons[mapas.enemyCount].currentWeapon)
+            {
+                case 1: res=mapas.mons[mapas.enemyCount].atack(true,false,&bulbox); break;
+                case 2: res=mapas.mons[mapas.enemyCount].atack(true,true,&bulbox); break;
+                case 0: BeatEnemy(mapas.enemyCount,20); break;
+            }
+
+            if ((mapas.mons[mapas.enemyCount].currentWeapon>0)&&(res)){
+                if (mapas.mons[mapas.enemyCount].currentWeapon==1){
+
+                    AdaptSoundPos(0,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y); 
+                    SoundSystem::getInstance()->playsound(0); 
+
+                }
+                if (mapas.mons[mapas.enemyCount].currentWeapon==2){
+                    AdaptSoundPos(12,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
+                    SoundSystem::getInstance()->playsound(12);
                 }
 
-                else
-                    if (fadein){
-                        fadetim++;
-                        if (fadetim==160){
-                            fadein=false;
-                            fadetim=0;
-                        }
+                if (isClient){
+                    char buf[10];
+                    buf[0]='s'; buf[1]='h'; buf[2]='t';
+                    memcpy(&buf[3],&mapas.mons[mapas.enemyCount].ammo,sizeof(int));
+                    unsigned char isMine=0;
+                    if (mapas.mons[mapas.enemyCount].currentWeapon==2)
+                        isMine=1;
+                    memcpy(&buf[7],&isMine,sizeof(unsigned char));
+                    clientas.sendData(buf,8);
+                }
+                bool isMine=false;
+                if (mapas.mons[mapas.enemyCount].currentWeapon==2)
 
-                    }
+                    isMine=true;
+                if (isServer){
+                    for (int i=0;i<(int)serveris.clientCount();i++)
+                        SendBulletImpulse(255,mapas.mons[mapas.enemyCount].ammo,i,isMine);
+                }
 
-
-                    else 
-                    {   //------------------the game
-                        
-
-                        if (Keys[8] && !OldKeys[8]){
-                            printf("minimap\n");
-                            ShowMiniMap = !ShowMiniMap;
-
-                        }
-
-
-                        
-                        mapas.fadeDecals();
-
-                        if (objectivetim)//judinam taimeri
-                            objectivetim--;
-
-                        itmtim++;
-                        if (itmtim>10){
-                            itmframe++; //animuoti daiktai
-                            if (itmframe>3)
-                                itmframe=0;
-                            itmtim=0;
-                        }
-
-
-                        if ((goods<1)&&(!ext))  //jei nebera itemu dedam exit
-                            PutExit(); 
-
-                        
-                        AnimateSlime();
+            }
+            else if (mapas.mons[mapas.enemyCount].currentWeapon>0)
+            {
+                if (noAmmo){
+                    mapas.mons[mapas.enemyCount].chageNextWeapon();
+                    noAmmo=false;
+                }
+                else{
+                    AdaptSoundPos(4,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
+                    SoundSystem::getInstance()->playsound(4);
+                    if (!noAmmo)
+                        noAmmo=true;
+                }
+            }
+        }
+    }
+    //--
+    if (!mapas.mons[mapas.enemyCount].canAtack)
+    {
+        mapas.mons[mapas.enemyCount].reload(25);
+    }
 
 
-                        //herojaus judejimas
+    for (int i = mapas.enemyCount;i<mapas.enemyCount+PlayerCount();i++)
+    {
+        if (mapas.mons[i].hit)
+        {
+            mapas.mons[i].damageAnim();
 
-                        if (mapas.mons[mapas.enemyCount].shot){ //isitaskymas
-                            mapas.mons[mapas.enemyCount].splatter();
-
-                            if (!mapas.mons[mapas.enemyCount].shot){
-
-                                if ((!isClient)&&(!isServer)){
-                                    mapas.mons[mapas.enemyCount].x=(float)mapas.start.x;
-                                    mapas.mons[mapas.enemyCount].y=(float)mapas.start.y;
-                                }
-                                else{
-                                    mapas.mons[mapas.enemyCount].appearInRandomPlace(mapas.colide,mapas.width,mapas.height);
-
-                                }
-
-                                AddaptMapView();
-                                findpskxy();
-                            }
-
-                        }
+            if (!mapas.mons[i].hit)
+            {
+                AdaptSoundPos(10,mapas.mons[i].x,mapas.mons[i].y);
+                SoundSystem::getInstance()->playsound(10);
+            }
+        }
+    }
 
 
-                        if (mapas.mons[mapas.enemyCount].spawn){ //respawn      
-                            mapas.mons[mapas.enemyCount].respawn();
+    SlimeReaction(mapas.enemyCount); // herojaus reakcija i slime
 
-                            if ((mapas.mons[mapas.enemyCount].ammo<1)&&(!mapas.mons[mapas.enemyCount].spawn))
-                                mapas.mons[mapas.enemyCount].ammo=20;   
-                        }
+    DoorsInteraction();//open doors
 
+    HandleBullets();//kulku ai-------------
 
+    //kaip ir monstru ai
+    if (mapas.enemyCount)
+    {
+        for (int i=0; i<mapas.enemyCount; i++)
+        {
+            if (!isClient)
+            {
+                MonsterAI(i);
+            }
+        }
+    }
+    //zudom playerius jei pas juos nebeliko gifkiu
 
-                        if ((RelativeMouseX)&&(!mapas.mons[mapas.enemyCount].shot)&&(!mapas.mons[mapas.enemyCount].spawn))
-                        {
-                            mapas.mons[mapas.enemyCount].rotate(3.14f/(256.0f/-RelativeMouseX));
-                        }
+    for (unsigned i=0;i<mapas.mons.count();i++)
+    {
+        if ((mapas.mons[i].hp<=0)&&(!mapas.mons[i].shot))
+        {
+            KillEnemy(mapas.mons[i].id);
+        }
+    }
 
-                        if (!Keys[7])   
-                            nextWepPressed=false;
-
-                        if ((Keys[7])&&(!Keys[4])&&(!nextWepPressed)){
-                            nextWepPressed=true;
-                            mapas.mons[mapas.enemyCount].chageNextWeapon();
-                        }
-
-
-                        if ((Keys[0]||Keys[1]||Keys[2]||Keys[3])&&(!mapas.mons[mapas.enemyCount].shot)
-                                &&(!mapas.mons[mapas.enemyCount].spawn)&&(mapas.mons[mapas.enemyCount].canAtack))
-                            MoveDude();
-
-                        // jei uzeina ant daikto, ji pasiima
-                        ItemPickup();
-
-                        //saunam
-                        if ((Keys[4])&&(!mapas.mons[mapas.enemyCount].shot) && 
-                                (mapas.mons[mapas.enemyCount].alive)&&(!mapas.mons[mapas.enemyCount].spawn))
-                        
-                            if (mapas.mons[mapas.enemyCount].canAtack)
-                            {
-                                bool res=false;
-
-                                switch(mapas.mons[mapas.enemyCount].currentWeapon)
-                                {
-                                    case 1: res=mapas.mons[mapas.enemyCount].atack(true,false,&bulbox); break;
-                                    case 2: res=mapas.mons[mapas.enemyCount].atack(true,true,&bulbox); break;
-                                    case 0: BeatEnemy(mapas.enemyCount,20); break;
-                                }
-
-
-                                if ((mapas.mons[mapas.enemyCount].currentWeapon>0)&&(res)){
-                                    if (mapas.mons[mapas.enemyCount].currentWeapon==1){
-
-                                        AdaptSoundPos(0,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y); 
-                                        SoundSystem::getInstance()->playsound(0); 
-
-                                    }
-                                    if (mapas.mons[mapas.enemyCount].currentWeapon==2){
-                                        AdaptSoundPos(12,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
-                                        SoundSystem::getInstance()->playsound(12);
-                                    }
-
-                                    if (isClient){
-                                        char buf[10];
-                                        buf[0]='s'; buf[1]='h'; buf[2]='t';
-                                        memcpy(&buf[3],&mapas.mons[mapas.enemyCount].ammo,sizeof(int));
-                                        unsigned char isMine=0;
-                                        if (mapas.mons[mapas.enemyCount].currentWeapon==2)
-                                            isMine=1;
-                                        memcpy(&buf[7],&isMine,sizeof(unsigned char));
-                                        clientas.sendData(buf,8);
-                                    }
-                                    bool isMine=false;
-                                    if (mapas.mons[mapas.enemyCount].currentWeapon==2)
-
-                                        isMine=true;
-                                    if (isServer){
-                                        for (int i=0;i<(int)serveris.clientCount();i++)
-                                            SendBulletImpulse(255,mapas.mons[mapas.enemyCount].ammo,i,isMine);
-                                    }
-
-                                }
-                                else
-                                    if (mapas.mons[mapas.enemyCount].currentWeapon>0){
-                                        if (noAmmo){
-                                            mapas.mons[mapas.enemyCount].chageNextWeapon();
-                                            noAmmo=false;
-                                        }
-                                        else{
-                                            AdaptSoundPos(4,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
-                                            SoundSystem::getInstance()->playsound(4);
-                                            if (!noAmmo)
-                                                noAmmo=true;
-                                        }
-                                    }
-
-
-                            }
-
-
-                        if (!mapas.mons[mapas.enemyCount].canAtack)
-                            mapas.mons[mapas.enemyCount].reload(25);
-
-
-                        for (int i=mapas.enemyCount;i<mapas.enemyCount+PlayerCount();i++)
-                        {
-                            if (mapas.mons[i].hit)
-                            {
-                                mapas.mons[i].damageAnim();
-
-                                if (!mapas.mons[i].hit)
-                                {
-                                    AdaptSoundPos(10,mapas.mons[i].x,mapas.mons[i].y);
-                                    SoundSystem::getInstance()->playsound(10);
-                                }
-                            }
-                        }
-
-
-                        SlimeReaction(mapas.enemyCount); // herojaus reakcija i slime
-
-                        DoorsInteraction();//open doors
-
-                        HandleBullets();//kulku ai-------------
-
-                        //kaip ir monstru ai
-                        if (mapas.enemyCount)
-                        {
-                            for (int i=0; i<mapas.enemyCount; i++)
-                            {
-                                if (!isClient)
-                                {
-                                    MonsterAI(i);
-                                }
-                            }
-                        }
-                        //zudom playerius jei pas juos nebeliko gifkiu
-
-                        for (unsigned i=0;i<mapas.mons.count();i++)
-                        {
-                            if ((mapas.mons[i].hp<=0)&&(!mapas.mons[i].shot))
-                            {
-                                KillEnemy(mapas.mons[i].id);
-                            }
-                        }
-
-
-                    }
 
 
 }
+
+
 //------------------------------------
 void DrawHelp(){
     pics.draw(13, 320, 240, 0, true, 1.25f,1.9f);
@@ -2332,7 +2381,8 @@ void Game::DrawMissionObjectives()
 
 //---------------------------
 
-void Game::render(){
+void Game::render()
+{
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -2345,126 +2395,130 @@ void Game::render(){
     glUniformMatrix4fv(MatrixID, 1, GL_FALSE, finalM.m);
     colorShader.use();
 
-    if (TitleScreen)
+    switch(state)
     {
-
-        DrawTitleScreen();
-        if (mainmenu.active())
-        {
-            mainmenu.draw(pics,
-                    pics.findByName("pics/pointer.tga"),
-                    pics.findByName("pics/charai.tga"));
-        }
-
-        if (netmenu.active())
-        {
-            netmenu.draw(pics,
-                    pics.findByName("pics/pointer.tga"),
-                    pics.findByName("pics/charai.tga")
-                    );
-        }
-
-        if (netgame.active())
-        {
-            netgame.draw(pics,
-                    pics.findByName("pics/pointer.tga"),
-                    pics.findByName("pics/charai.tga")
-                    );
-        }
-
-        if (options.active())
-        {
-            options.draw(pics,
-                    pics.findByName("pics/pointer.tga"),
-                    pics.findByName("pics/charai.tga")
-                    );
-        }
-
-        if (ipedit.active())
-        {
-            ipedit.draw(pics, pics.findByName("pics/charai.tga"));
-        }
-
-        if (SfxVolumeC.active())
-        {
-            SfxVolumeC.draw(pics, 
-                    pics.findByName("pics/pointer.tga"),
-                    pics.findByName("pics/pointer.tga"),
-                    pics.findByName("pics/charai.tga")
-                    );
-        }
-
-        if (MusicVolumeC.active())
-        {
-            MusicVolumeC.draw(pics,
-                    pics.findByName("pics/pointer.tga"),
-                    pics.findByName("pics/pointer.tga"),
-                    pics.findByName("pics/charai.tga")
-                    );
-        }
+        case GAMESTATE_TITLE  : DrawTitleScreen(); break;
+        case GAMESTATE_INTRO  : DrawIntro();       break;
+        case GAMESTATE_HELP   : DrawHelp();        break;
+        case GAMESTATE_ENDING : DrawEndScreen();   break;
+        case GAMESTATE_GAME   : DrawGameplay();    break;
     }
-    else
-        if (IntroScreen)
-        {
-            DrawIntro();
-        }
-        else
-            if (HelpScreen){
-                DrawHelp();
-            }
-            else 
-                if (EndScreen){
-                    pics.draw(15, 0,0, false, 1.0f,1.25f,1.9f);
-                    WriteText(260,430, pics, 10, "The End...to be continued ?");
-                }
-
-
-                else{
-
-
-                    if ((mapas.width > 0) && (mapas.height > 0))
-                    {
-
-                        if (fadein)
-                            DrawMap(fadetim/160.0f,fadetim/160.0f,fadetim/160.0f);
-                        else
-                            DrawMap();
-
-
-                    }
-
-                    if (fadein)
-                    {
-                        WriteText(sys.ScreenWidth / 2-150, 
-                                sys.ScreenHeight/2-64,
-                                pics, 10, "Get Ready!", 2,2);
-                    }
-
-                    if (objectivetim)
-                        DrawMissionObjectives();
-
-                    if (mapas.mons.count())
-                        DrawStats();
-
-                    if (/*(mapas.width>scrx)&&(mapas.height>scry)&&*/(ShowMiniMap))
-                    {
-                        DrawMiniMap(sys.ScreenWidth - mapas.width*4, sys.ScreenHeight - mapas.height*4);
-                    }
-
-
-
-                    if (showdebugtext)
-                        DrawSomeText();  
-
-
-                }
 
     pics.drawBatch(&colorShader, &defaultShader, 666);
 
-
-
 }
+//-------------------------------------
+void Game::DrawTitleScreen()
+{
+    pics.draw(0, 320, 240, 0, true,1.25f,1.9f);
+    pics.draw(16, 0,0,0);
 
+
+
+    char buf[80];   
+
+    sprintf(buf,"Jrs%dul",0);
+    WriteText(540,10, pics, 10, buf);
+    sprintf(buf,"%d",2007);
+    WriteText(550,30, pics, 10, buf);
+
+    if (mainmenu.active())
+    {
+        mainmenu.draw(pics,
+                pics.findByName("pics/pointer.tga"),
+                pics.findByName("pics/charai.tga"));
+    }
+
+    if (netmenu.active())
+    {
+        netmenu.draw(pics,
+                pics.findByName("pics/pointer.tga"),
+                pics.findByName("pics/charai.tga")
+                );
+    }
+
+    if (netgame.active())
+    {
+        netgame.draw(pics,
+                pics.findByName("pics/pointer.tga"),
+                pics.findByName("pics/charai.tga")
+                );
+    }
+
+    if (options.active())
+    {
+        options.draw(pics,
+                pics.findByName("pics/pointer.tga"),
+                pics.findByName("pics/charai.tga")
+                );
+    }
+
+    if (ipedit.active())
+    {
+        ipedit.draw(pics, pics.findByName("pics/charai.tga"));
+    }
+
+    if (SfxVolumeC.active())
+    {
+        SfxVolumeC.draw(pics, 
+                pics.findByName("pics/pointer.tga"),
+                pics.findByName("pics/pointer.tga"),
+                pics.findByName("pics/charai.tga")
+                );
+    }
+
+    if (MusicVolumeC.active())
+    {
+        MusicVolumeC.draw(pics,
+                pics.findByName("pics/pointer.tga"),
+                pics.findByName("pics/pointer.tga"),
+                pics.findByName("pics/charai.tga")
+                );
+    }
+}
+//------------------------------------
+void Game::DrawEndScreen()
+{
+    pics.draw(15, 0,0, false, 1.0f,1.25f,1.9f);
+    WriteText(260,430, pics, 10, "The End...to be continued ?");
+}
+//------------------------------------
+void Game::DrawGameplay()
+{
+    if ((mapas.width > 0) && (mapas.height > 0))
+    {
+
+        if (fadein)
+            DrawMap(fadetim/160.0f,fadetim/160.0f,fadetim/160.0f);
+        else
+            DrawMap();
+
+
+    }
+
+    if (fadein)
+    {
+        WriteText(sys.ScreenWidth / 2-150, 
+                sys.ScreenHeight/2-64,
+                pics, 10, "Get Ready!", 2,2);
+    }
+
+    if (objectivetim)
+        DrawMissionObjectives();
+
+    if (mapas.mons.count())
+        DrawStats();
+
+    if (/*(mapas.width>scrx)&&(mapas.height>scry)&&*/(ShowMiniMap))
+    {
+        DrawMiniMap(sys.ScreenWidth - mapas.width*4, sys.ScreenHeight - mapas.height*4);
+    }
+
+
+
+    if (DebugMode == 1)
+        DrawSomeText();  
+}
 
 //------------------------------------
 
@@ -2805,25 +2859,26 @@ void Game::GetMapInfo(const char* bufer, int bufersize, int* index)
                 *index+=sizeof(unsigned int);
 
 
-                if (strcmp(mapname,mapas.name)!=0){//jei mapas ne tas pats tai uzloadinam
+                if (strcmp(mapname,mapas.name)!=0)
+                {//jei mapas ne tas pats tai uzloadinam
                     LoadMap(mapname,klientai);
-                    Client_GotMapData=true;
-                    TitleScreen=false;
+                    Client_GotMapData = true;
+                    state = GAMESTATE_GAME;
                 }
-                else{
+                else
+                {
 
-                    if (klientai-klientaiold){
+                    if (klientai-klientaiold)
+                    {
                         Dude naujas;
-                            for (int i=0;i<(klientai-klientaiold);i++){
-                                mapas.mons.add(naujas);
-                                mapas.mons[mapas.mons.count()-1].id=mapas.mons[mapas.mons.count()-2].id+1;
-                            }
-                        
+                        for (int i=0;i<(klientai-klientaiold);i++)
+                        {
+                            mapas.mons.add(naujas);
+                            mapas.mons[mapas.mons.count()-1].id=mapas.mons[mapas.mons.count()-2].id+1;
+                        }
                     }
 
                 }
-
-
             }
         }
     }
@@ -3050,10 +3105,11 @@ void Game::GetData()
                                     }
                                 }
                                 else
-                                    if (strcmp(hdr,"nxt")==0){
+                                    if (strcmp(hdr,"nxt")==0)
+                                    {
                                         index+=3;
                                         mapai.current++;
-                                        int kiek=serveris.clientCount();
+                                        int kiek = serveris.clientCount();
 
                                         GoToLevel(mapai.current,kiek);
                                         for (int a =0; a<(int)serveris.clientCount();a++){

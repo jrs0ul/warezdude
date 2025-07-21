@@ -42,8 +42,6 @@ void SelectMeniu::reset(){
 //--------------------------------------------
 void SelectMeniu::getInput(const unsigned char* keys, const unsigned char* oldKeys){
 
-    //if (key != pressedkey){
-
         //cia tam kad parinktu kai mygtuka atleidi
         if (keys[4] && !oldKeys[4]) 
         {
@@ -80,13 +78,9 @@ void SelectMeniu::getInput(const unsigned char* keys, const unsigned char* oldKe
 
         }
 
-
-        //    pressedkey = key;
-        //}
-
     }
 //--------------------------------------------
-void SelectMeniu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons,float r,float b,float g)
+void SelectMeniu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons)
 {
 
     unsigned newcount=0;

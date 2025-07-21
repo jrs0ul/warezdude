@@ -18,12 +18,35 @@
 #include "map.h"
 
 
-const int GameKeyCount=10;
+const int GameKeyCount = 10;
 
 static CMap mapas;
 static CClient clientas;
 static CServer serveris;
 static SystemConfig sys;
+
+enum Actions
+{
+    ACTION_UP,
+    ACTION_DOWN,
+    ACTION_LEFT,
+    ACTION_RIGHT,
+    ACTION_OPEN,
+    ACTION_BACK,
+    ACTION_FIRE,
+    ACTION_NEXT_WEAPON,
+    ACTION_MAP
+
+};
+
+enum GameState
+{
+    GAMESTATE_TITLE,
+    GAMESTATE_INTRO,
+    GAMESTATE_HELP,
+    GAMESTATE_GAME,
+    GAMESTATE_ENDING
+};
 
 
 
@@ -38,6 +61,8 @@ class Game
 
 
 public:
+
+    GameState state;
 
     char EditText[255];
 
@@ -75,6 +100,9 @@ public:
     static void Threadproc();
 
 private:
+    void DrawTitleScreen();
+    void DrawEndScreen();
+    void DrawGameplay();
     void MoveDude();
     void SendWarpMessage();
     void ItemPickup();
@@ -104,7 +132,7 @@ private:
     void SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine);
     void findpskxy();
     void LoadFirstMap();
-    void TitleMeniuHandle();
+    void TitleMenuLogic();
     void HandleBullets();
     void AnimateSlime();
     void ResetVolume();
@@ -131,11 +159,12 @@ private:
     void GetCharData(const char* bufer, int bufersize, int* index);
     void DrawMiniMap(int x, int y);
     void LoadMap(const char* mapname, int otherplayers);
-    void HelpScreenHandle();
+    void HelpScreenLogic();
     int PlayerCount();
     void LoadShader(ShaderProgram* shader, const char* name);
-    void IntroScreenHandle();
-    
+    void IntroScreenLogic();
+
+    void CoreGameLogic();
 };
 
 

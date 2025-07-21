@@ -78,18 +78,23 @@ static void  process_events(){
     float scaleX = 1.f;
     float scaleY = 1.f;
 
-    while( SDL_PollEvent( &event ) ) {
+    while( SDL_PollEvent( &event ) ) 
+    {
 
-        switch( event.type ) {
+        switch( event.type ) 
+        {
 
         case SDL_TEXTINPUT:
         {
+            if (strlen(Game.EditText) + strlen(event.text.text) < 254)
+            {
                 strcat(Game.EditText, event.text.text);
-
+            }
         } break;
 
         case SDL_TEXTEDITING:
         {
+            printf("pos %d\n", event.edit.start);
         } break;
 
         case SDL_KEYUP:
@@ -101,9 +106,10 @@ static void  process_events(){
         case SDL_KEYDOWN:{
 
             Game.globalKEY = (char)event.key.keysym.scancode;
-            switch( event.key.keysym.sym ) {
+            switch( event.key.keysym.sym ) 
+            {
                 default:{} break;
-                case SDLK_F1: {++Game.DebugMode; if (Game.DebugMode >= 2) Game.DebugMode = 0;} 
+                case SDLK_F1: {++Game.DebugMode; if (Game.DebugMode > 1) Game.DebugMode = 0;} 
             }
         } break;
         case SDL_MOUSEBUTTONUP:{
@@ -119,6 +125,7 @@ static void  process_events(){
             Game.touches.allfingersup = false;
 
         } break;
+
         case SDL_MOUSEMOTION:{
             if(SDL_GetMouseState(0, 0)&SDL_BUTTON_LMASK){
                 Vector3D pos(event.button.x * scaleX, event.button.y * scaleY, 0);
@@ -140,8 +147,6 @@ static void  process_events(){
 //--------------------
 void CheckKeys()
 {
-    float scaleX = 1.f;
-    float scaleY = 1.f;
     
     int JoyNum = 0;
     
@@ -178,9 +183,9 @@ void CheckKeys()
     if ( keys[SDL_SCANCODE_DOWN])  Game.Keys[1] = 1;
     if ( keys[SDL_SCANCODE_LEFT])  Game.Keys[3] = 1;
     if ( keys[SDL_SCANCODE_RIGHT]) Game.Keys[2] = 1;
-    if ( keys[SDL_SCANCODE_SPACE]) Game.Keys[6] = 1;
-    if ( keys[SDL_SCANCODE_RETURN]) Game.Keys[5] = 1;
-    if ( keys[SDL_SCANCODE_LCTRL]) Game.Keys[4] = 1;
+    if ( keys[SDL_SCANCODE_SPACE]) Game.Keys[4] = 1;
+    if ( keys[SDL_SCANCODE_ESCAPE]) Game.Keys[5] = 1;
+    if ( keys[SDL_SCANCODE_LCTRL]) Game.Keys[6] = 1;
     if ( keys[SDL_SCANCODE_TAB]) Game.Keys[8] = 1;
 
 
@@ -218,24 +223,13 @@ void CheckKeys()
     }
 }
 
-static int writer(char *data, size_t size, size_t nmemb,
-                  std::string *buffer){
-
-    int result = 0;
-    if (buffer){
-            buffer->append(data, size * nmemb);
-            result = size * nmemb;
-    }
-
-        return result;
-}
-
 //--------------------
-int main(){
+int main()
+{
 
     srand(time(0));
 
-    char buf[255];
+    char buf[128];
     GetHomePath(buf);
     sprintf(Game.DocumentPath, "%s.warezdude3", buf);
     MakeDir(Game.DocumentPath);
@@ -274,6 +268,7 @@ int main(){
     Game.TimeTicks = SDL_GetTicks();
     
     SDL_ShowCursor(false);
+
 
    
     while (Game.Works){

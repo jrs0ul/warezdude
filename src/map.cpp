@@ -4,7 +4,7 @@
 
 
 //-----------------------------------------
-void CMap::addMonster(Dude &newmonster, bool isPlayer){
+void CMap::addMonster(Dude &newmonster){
     mons.add(newmonster);
 }
 //-------------------------------------------
@@ -88,9 +88,7 @@ void CMap::arangeItems(){
 //-------------------------------------
 bool CMap::Load(const char* path, bool createItems, int otherplayers){
 
-    FILE* mapas;
     char buf[255];
-
 
     puts(path);
 
@@ -107,8 +105,6 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
 
     bool res = mapfile.load(buf);
 
-    printf("pam param\n");
-
     if (res)
     {
         XmlNode* mainnode = mapfile.root.getNode(L"Map");
@@ -116,7 +112,7 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
 
         if (mainnode)
         {
-            for (int i = 0; i < mainnode->childrenCount(); ++i)
+            for (unsigned i = 0; i < mainnode->childrenCount(); ++i)
             {
                 XmlNode* node = mainnode->getNode(i);
 
@@ -124,7 +120,7 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
                 {
                     if (wcscmp(node->getName(), L"size") == 0)  //  parse size
                     {
-                        for (int a = 0; a < node->attributeCount(); ++a)
+                        for (unsigned a = 0; a < node->attributeCount(); ++a)
                         {
                             XmlAttribute *attr = node->getAttribute(a);
 
@@ -160,20 +156,17 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
                     }
                     else if (wcscmp(node->getName(), L"rows") == 0)  //  parse rows
                     {
-                        for (int a = 0; a < node->childrenCount(); ++a)
+                        for (unsigned a = 0; a < node->childrenCount(); ++a)
                         {
                             XmlNode* row = node->getNode(a);
 
                             if (row)
                             {
 
-                                printf("width %d\n", width);
                                 tiles[a] = new unsigned char[width];
                                 colide[a] = new bool[width];
 
-
-                                printf("children : %d\n", row->childrenCount());
-                                for (int j = 0; j < row->childrenCount(); ++j)
+                                for (unsigned j = 0; j < row->childrenCount(); ++j)
                                 {
                                     XmlNode* tile = row->getNode(j);
 
@@ -201,7 +194,7 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
                     }
                     else if (wcscmp(node->getName(), L"start") == 0) // start pos
                     {
-                        for (int a = 0; a < node->attributeCount(); ++a)
+                        for (unsigned a = 0; a < node->attributeCount(); ++a)
                         {
                             XmlAttribute *attr = node->getAttribute(a);
 
@@ -235,7 +228,7 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
                     }
                     else if (wcscmp(node->getName(), L"exit") == 0) // exit pos
                     {
-                        for (int a = 0; a < node->attributeCount(); ++a)
+                        for (unsigned a = 0; a < node->attributeCount(); ++a)
                         {
                             XmlAttribute *attr = node->getAttribute(a);
 
@@ -286,7 +279,7 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
                     {
                         enemyCount = node->childrenCount();
 
-                        for (int a = 0; a < node->childrenCount(); ++a)
+                        for (unsigned a = 0; a < node->childrenCount(); ++a)
                         {
                             XmlNode* enemy = node->getNode(a);
 
@@ -297,7 +290,7 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
                                 Dude naujas;
                                 naujas.id = a;
 
-                                for (int a = 0; a < enemy->attributeCount(); ++a)
+                                for (unsigned a = 0; a < enemy->attributeCount(); ++a)
                                 {
                                     XmlAttribute *attr = enemy->getAttribute(a);
 
@@ -327,10 +320,10 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
                                     }
                                 } // for
 
-                                naujas.start.x=sx*32;
-                                naujas.start.y=sy*32;
-                                naujas.x=(float)naujas.start.x;
-                                naujas.y=(float)naujas.start.y;
+                                naujas.startX = sx*32;
+                                naujas.startY = sy*32;
+                                naujas.x=(float)naujas.startX;
+                                naujas.y=(float)naujas.startY;
                                 naujas.race=rand()%3+1; 
                                 naujas.hp=30+rand()%10;
                                 mons.add(naujas);
@@ -348,81 +341,67 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
 
     mapfile.destroy();
 
-    /*mapas=fopen(buf,"rt");
-
-    if (!mapas)
-        return false;
-
-    fscanf(mapas,"%u %u\n",&width,&height);*/
-
     printf("map width %d, height %d\n", width, height);
 
-
-
-   
-
-
-
-/*
-    //cia pradeda zaidejas
-    fscanf(mapas,"%d\n",&start.x);
-    fscanf(mapas,"%d\n",&start.y);
-    printf("player pos x:%d y:%d\n", start.x, start.y);
-    fscanf(mapas,"%d %d\n",&exit.x,&exit.y);
-    printf("exit x %d y %d\n", exit.x, exit.y);*/
     start.x = start.x * 32;
     start.y = start.y * 32;
-    /*fscanf(mapas,"%d\n",&misionItems);
-    printf("items: %d\n", misionItems);
-    fscanf(mapas,"%d",&timeToComplete);
-    printf("time %d\n", timeToComplete);
-    fscanf(mapas,"%d",&goods);
-    //kiek monstru;*/
-    if ((enemyCount+1+otherplayers)!=0){
-        //mons=new Dude[enemyCount+1+otherplayers];
+
+    if ((enemyCount + 1 + otherplayers) != 0)
+    {
 
         Dude playeris;
         playeris.id=254;
         playeris.hp=100;
         playeris.weaponCount=3;
         playeris.currentWeapon=1;
-        playeris.frame=(playeris.currentWeapon+1)*4-2;  
+        playeris.frame=(playeris.currentWeapon+1)*4-2;
         mons.add(playeris);
-        for (int i=0;i<otherplayers;i++){
-         playeris.id++;
-         mons.add(playeris);
+
+        for (int i=0;i<otherplayers;i++)
+        {
+            playeris.id++;
+            mons.add(playeris);
         }
     }
 
 
 
     if (createItems)
+    {
         arangeItems();
+    }
 
 
     return true;
 }
 //--------------------------------------
-void CMap::Destroy(){
+void CMap::Destroy()
+{
 
- mons.destroy();
+    mons.destroy();
 
- if (tiles){
-  for (int a=0;a<height;a++)
-    delete []tiles[a];
-  delete []tiles;
-  tiles=0;
- } 
- if (colide){
-  for (int a=0;a<height;a++)
-    delete []colide[a];
-  delete []colide;
-  colide=0;
- }
+    if (tiles)
+    {
+        for (int a=0;a<height;a++)
+        {
+            delete []tiles[a];
+        }
 
- items.destroy();
- decals.destroy();
- 
+        delete []tiles;
+        tiles=0;
+    }
+
+    if (colide)
+    {
+        for (int a=0;a<height;a++)
+            delete []colide[a];
+        delete []colide;
+        colide=0;
+    }
+
+    items.destroy();
+    decals.destroy();
+
 
 }
 //-------------------------------------------
