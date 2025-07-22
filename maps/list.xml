@@ -1,6 +1,6 @@
 <xml>
 <Maps>
-    <map name="network.xml" />
+    <map name="bman.xml" />
     <map name="wd2m2.xml" />
     <map name="test.xml" />
     <map name="bunkers.xml" />

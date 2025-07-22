@@ -27,7 +27,7 @@ void WriteText(unsigned int x, unsigned int y,
 
     for (unsigned int i = 0; i < strlen(s); i++)
     {
-        pics.draw(font, x+(9 * scalex)*i, y, ((unsigned char)s[i])-32,
+        pics.draw(font, x+(11 * scalex)*i, y, ((unsigned char)s[i])-32,
                   false, scalex, scaley, 0.0f, c1, c2);
     }
 }

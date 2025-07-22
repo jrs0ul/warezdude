@@ -43,6 +43,8 @@ class CMap
             enemyCount=0;
         }
 
+        Dude* getPlayer();
+
         bool Load(const char* path, bool createItems=true, int otherplayers=0);
         void Destroy();
         void ReplaceTiles(unsigned char old, unsigned char fresh);

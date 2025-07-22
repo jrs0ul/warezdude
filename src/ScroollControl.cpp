@@ -31,41 +31,30 @@ void ScroollControl::draw(PicsContainer& pics, unsigned rod, unsigned bg, unsign
 
 }
 
-void ScroollControl::getInput(unsigned key){
- if (key!=pressedkey){
-  //cia tam kad parinktu kai mygtuka atleidi
-  if (pressedkey==13) {
-   
-    selected=true;      //enter
-  }
+void ScroollControl::getInput(const unsigned char* keys, const unsigned char* oldKeys)
+{
+    //cia tam kad parinktu kai mygtuka atleidi
+    if (keys[4] && !oldKeys[4]) 
+    {
+        selected = true;      //enter
+    }
 
-  if (pressedkey==27) {
-   canceled=true;      //esc
-  }
+    if (keys[5] && !oldKeys[5])
+    {
+        canceled = true;      //esc
+    }
 
-  
-  
-  
-
-    
-  pressedkey=key;
- }
-  switch(key){
-    case SDLK_LEFT:if (state>step) //up
-        state-=step;
-      
-       break;
-
-    case SDLK_RIGHT:
+    if (keys[3])
+    {
+        if (state>step) //up
+            state-=step;
+    }
+    else if (keys[2])
     {
         if (state<maxstate-step)  //down
             state+=step;
     }
-       
-        break;
 
-   // default: pressedkey=0;
-   }
 
 }
 //----------------------------

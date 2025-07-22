@@ -3,6 +3,12 @@
 #include "Xml.h"
 
 
+
+
+Dude* CMap::getPlayer()
+{
+    return &mons[enemyCount];
+}
 //-----------------------------------------
 void CMap::addMonster(Dude &newmonster){
     mons.add(newmonster);

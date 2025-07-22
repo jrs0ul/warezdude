@@ -73,10 +73,12 @@ void Dude::rotate(float ang)
 void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int mapsizex, int mapsizey,
                 DArray<Dude>& chars,int charcount, int* dirx, int* diry){
 
-    Vector3D vl = MakeVector(walkSpeed,strifeSpeed,angle);
+    Vector3D vl = MakeVector(walkSpeed, strifeSpeed, angle);
+    vl.normalize();
 
-    float difx=vl.x;//cos(-angle)*speed;
-    float dify=vl.y; //sin(angle)*speed;
+
+    float difx = vl.x;
+    float dify = vl.y;
 
     float newposx=x+difx;
     float newposy=y-dify;
@@ -92,29 +94,20 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
     Vector3D p7;
     Vector3D p8; 
 
-    
 
-    /*D3DXVECTOR2 v2=MakeVector(radius,0,angle);
-    D3DXVECTOR2 v3=MakeVector(radius,0,angle+3.14f/3.0f);
-    D3DXVECTOR2 v4=MakeVector(radius,0,angle-3.14f/3.0f);
-    
+    p1.x = round((newposx - radius) / 32.0f);
 
-    p1.x=round((newposx+v2.x)/32.0f);
-    p1.y=round((y-v2.y)/32.0f);
-
-    p2.x=round((newposx+v3.x)/32.0f);
-    p2.y=round((y-v3.y)/32.0f);
-
-    p3.x=round((newposx+v4.x)/32.0f);
-    p3.y=round((y-v4.y)/32.0f);*/
-
-
-    p1.x=round((newposx-radius)/32.0f);
     if (p1.x>mapsizex-1)
+    {
         p1.x=mapsizex-1;
-    p1.y=round((y-radius)/32.0f);
+    }
+
+    p1.y = round((y - radius) / 32.0f);
+
     if (p1.y>mapsizey-1)
-        p1.y=mapsizey-1;
+    {
+        p1.y = mapsizey-1;
+    }
 
     p2.x=round((newposx+radius)/32.0f);
     if (p2.x>mapsizex-1)
@@ -131,15 +124,7 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
 
 //--------
 
-    /*p5.x=round((x+v2.x)/32.0f);
-    p5.y=round((newposy-v2.y)/32);
-
-    p6.x=round((x+v3.x)/32.0f);
-    p6.y=round((newposy-v3.y)/32);
-
-    p7.x=round((x+v4.x)/32.0f);
-    p7.y=round((newposy-v4.y)/32);*/
-
+   
     p5.x=round((x-radius)/32.0f);
     if (p5.x>mapsizex-1)
         p5.x=mapsizex-1;
@@ -190,7 +175,7 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
             *dirx=2;
         }
 
-        x=x+difx;
+        x = x + difx;
 
     }
 
@@ -202,7 +187,7 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
         ((newposx)<=(mapsizex-1)*32.0f) &&
         ((newposy)<((mapsizey-1)*32.0f))&&
         ((newposx-radius)>=-radius) &&
-        ((y-radius)>=-radius))
+        ((newposy-radius)>=-radius))
     {
 
             if ((y>newposy)&&(diry))
@@ -211,7 +196,7 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
                 if ((y<newposy)&&(diry))
                     *diry=2;
 
-            y=y-dify;
+            y = y - dify;
     }
 
     if ((*diry>0)||(*dirx>0)){

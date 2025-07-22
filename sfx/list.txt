@@ -5,7 +5,7 @@ mdeath.ogg
 noammo.ogg
 crunch.ogg
 jee.ogg
-thanks.ogg
+jee.ogg
 doormove.ogg
 doorstop.ogg
 pain.ogg

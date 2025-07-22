@@ -689,9 +689,8 @@ void Game::DrawStats()
 //the hero and camera movement
 void Game::MoveDude(){
 
-
-
-    if ((Keys[0])||(Keys[1])||(Keys[2])||(Keys[3])){
+    if ((Keys[0])||(Keys[1])||(Keys[2])||(Keys[3]))
+    {
         int dirx,diry;
         float speed=0.0f;
         float sspeed=0.0f;
@@ -710,7 +709,9 @@ void Game::MoveDude(){
                                               mapas.width, mapas.height, mapas.mons,
                                               mapas.enemyCount + serveris.clientCount() + 1, &dirx,&diry);
         else
-            mapas.mons[mapas.enemyCount].move(speed,sspeed,8.0f,mapas.colide, mapas.width, mapas.height, mapas.mons,mapas.enemyCount+klientai+1,&dirx,&diry);
+            mapas.mons[mapas.enemyCount].move(speed,sspeed,8.0f, mapas.colide,
+                                              mapas.width, mapas.height, mapas.mons,
+                                              mapas.enemyCount+klientai+1,&dirx,&diry);
 
         //stumdom "kamera"
         if ((mapas.height>scry)&&(diry==1)){
@@ -822,7 +823,7 @@ void Game::AddaptMapView()
     if (mapas.width < 22)
     {
         scrx = mapas.width;
-        posx = (sys.ScreenWidth / 2 - ((mapas.width*32)/2))*-1;
+        posx = (sys.ScreenWidth / 2 - ((mapas.width*32)/2))*-1 - 16;
     }
     else{
         if (mapas.width > 22){
@@ -834,7 +835,7 @@ void Game::AddaptMapView()
     if (mapas.height < 17)
     {
         scry = mapas.height;
-        posy = (sys.ScreenHeight / 2 - ((mapas.height*32)/2))*-1;
+        posy = (sys.ScreenHeight / 2 - ((mapas.height*32)/2))*-1 - 16;
     }
     else
     {
@@ -853,29 +854,38 @@ void Game::AddaptMapView()
 
 void Game::findpskxy()
 {
-    UpBorder=0;
-    DownBorder=0;
-    LeftBorder=0;
-    RightBorder=0;
+    UpBorder    = 0;
+    DownBorder  = 0;
+    LeftBorder  = 0;
+    RightBorder = 0;
 
 
-    int pusesizx=scrx / 2; //puse matomo ekrano
-    int pusesizy=scry / 2;
+    int pusesizx = scrx / 2; //puse matomo ekrano
+    int pusesizy = scry / 2;
     //-
-    pskx = round(mapas.mons[mapas.enemyCount].x/32.0f)+pusesizx; //mapas.mons[mapas.monscount]x+puseekrano.x
+    pskx = round(mapas.mons[mapas.enemyCount].x / 32.0f) + pusesizx; //mapas.mons[mapas.monscount]x+puseekrano.x
+
     if (pskx<scrx)
+    {
         pskx=scrx;
-    if (pskx>mapas.width) 
+    }
+
+    if (pskx>mapas.width)
+    {
         pskx=mapas.width;
+    }
     //-
-    psky=round(mapas.mons[mapas.enemyCount].y/32.0f)+pusesizy;
+    psky = round(mapas.mons[mapas.enemyCount].y / 32.0f) + pusesizy;
+
     if (psky<scry)
+    {
         psky=scry;
-    if (psky>mapas.height) 
-        psky=mapas.height;
+    }
 
-
-
+    if (psky>mapas.height)
+    {
+        psky = mapas.height;
+    }
 
     if ((scry<mapas.height)&&(psky==mapas.height)){
         DownBorder=64;
@@ -1865,7 +1875,7 @@ void Game::TitleMenuLogic()
         if (MusicVolumeC.active()){
             if (!MusicVolumeC.selected)
             {
-                MusicVolumeC.getInput(globalKEY);
+                MusicVolumeC.getInput(Keys, OldKeys);
             }
             else{
                 MusicVolumeC.deactivate();
@@ -1885,7 +1895,7 @@ void Game::TitleMenuLogic()
 
         if (SfxVolumeC.active()){
             if (!SfxVolumeC.selected)
-                SfxVolumeC.getInput(globalKEY);
+                SfxVolumeC.getInput(Keys, OldKeys);
             else{
                 SfxVolumeC.deactivate();
                 options.activate();
@@ -1909,7 +1919,7 @@ void Game::TitleMenuLogic()
 //---------------------------------------------------------
 void Game::IntroScreenLogic()
 {
-    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_UP]) || (!FirstTime))
+    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!FirstTime))
     {
         state = GAMESTATE_HELP;
         intro_cline = 0;
@@ -2050,6 +2060,11 @@ void Game::logic(){
     touches.down.destroy();
     touches.move.destroy();
 
+    OldMouseX = MouseX;
+    OldMouseY = MouseY;
+
+    OldGamepad = gamepad;
+
 }
 
 //------------------------------------
@@ -2116,21 +2131,45 @@ void Game::CoreGameLogic()
     }
 
 
-    if (mapas.mons[mapas.enemyCount].spawn)
-    { //respawn      
-        mapas.mons[mapas.enemyCount].respawn();
+    Dude* player = mapas.getPlayer();
 
-        if ((mapas.mons[mapas.enemyCount].ammo<1)&&(!mapas.mons[mapas.enemyCount].spawn))
+    if (player->spawn)
+    { //respawn      
+        player->respawn();
+
+        if ((player->ammo < 1) && (!player->spawn))
         {
-            mapas.mons[mapas.enemyCount].ammo=20;
+            player->ammo = 20;
         }
     }
 
 
 
-    if ((RelativeMouseX)&&(!mapas.mons[mapas.enemyCount].shot)&&(!mapas.mons[mapas.enemyCount].spawn))
+    if (((OldGamepad.x != gamepad.x ) || (OldGamepad.y != gamepad.y )) &&
+        !((int)gamepad.x == 0 && (int)gamepad.y == 0) && (!player->shot) && (!player->spawn))
     {
-        mapas.mons[mapas.enemyCount].rotate(3.14f/(256.0f/-RelativeMouseX));
+        Vector3D dir = gamepad;
+        //dir.normalize();
+
+        //printf("%f %f\n", dir.x, dir.y);
+
+        player->angle = M_PI / 2 - atan2(dir.x, dir.y);
+    }
+
+
+    if ((((int)MouseX != (int)OldMouseX) || ((int)MouseY != (int)OldMouseY)) &&
+            (!player->shot) && (!player->spawn))
+    {
+
+        Vector3D dudePosOnScreen(round(player->x)-((pskx-scrx)*32)+pushx-posx,
+                                 round(player->y)-((psky-scry)*32)+pushy-posy, 0);
+
+        Vector3D mouse(MouseX, MouseY, 0);
+
+        Vector3D fv = mouse - dudePosOnScreen;
+        fv.normalize();
+        float newAngle = M_PI / 2 - atan2(fv.x, fv.y);
+        player->angle = newAngle;
     }
 
     if (!Keys[ACTION_NEXT_WEAPON])
@@ -2318,7 +2357,7 @@ void DrawIntro(){
 
     for (int i=0;i<intro_cline;i++)
     {
-        WriteText(30,25*i+20, pics, 10, IntroText[i+18*(intro_gline/18)]);
+        WriteText(30, 25 * i + 20, pics, 10, IntroText[i+18*(intro_gline/18)]);
     }
 
     for (int a=0; a<intro_cchar; a++)
@@ -2479,7 +2518,7 @@ void Game::DrawTitleScreen()
 //------------------------------------
 void Game::DrawEndScreen()
 {
-    pics.draw(15, 0,0, false, 1.0f,1.25f,1.9f);
+    pics.draw(15, 320, 240, 0, true,  1.25f,1.9f);
     WriteText(260,430, pics, 10, "The End...to be continued ?");
 }
 //------------------------------------
@@ -2509,6 +2548,8 @@ void Game::DrawGameplay()
     if (mapas.mons.count())
         DrawStats();
 
+    pics.draw(18, MouseX, MouseY, 0, true);
+
     if (/*(mapas.width>scrx)&&(mapas.height>scry)&&*/(ShowMiniMap))
     {
         DrawMiniMap(sys.ScreenWidth - mapas.width*4, sys.ScreenHeight - mapas.height*4);
@@ -2517,7 +2558,9 @@ void Game::DrawGameplay()
 
 
     if (DebugMode == 1)
-        DrawSomeText();  
+    {
+        DrawSomeText();
+    }
 }
 
 //------------------------------------

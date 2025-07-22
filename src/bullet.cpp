@@ -3,38 +3,49 @@
 #include "Usefull.h"
 
 
-void Bullet::ai(bool** map, int width, int height){
+void Bullet::ai(bool** map, int width, int height)
+{
 
-    if (!explode){
+    if (!explode)
+    {
 
-        if (!isMine){
-            if ((y+4.0f<height*32.0f)&&(x+4.0f<width*32.0f)&&(x-4.0f>0.0f)&&(y-4.0f>0.0f))
+        if (!isMine)
+        {
+            Vector3D vl = MakeVector(2.0f,0,angle);
+            float difx = vl.x;
+            float dify = vl.y;
+
+            if ((y - (dify * 1.5f) + radius < height * 32.0f) && (x + (difx * 1.5f) + radius < width * 32.0f) && 
+                    (x + (difx * 1.5f) - radius > 0.0f) && (y - (dify * 1.5f) - radius > 0.0f))
             {
-                Vector3D vl = MakeVector(2.0f,0,angle);
-                float difx=vl.x;//cos(-angle)*2.0f;
-                float dify=vl.y;//sin(angle)*2.0f;
 
-                if ((tim<256)&&
+                if ((tim < 256)&&
                     (!map[(int)round((y-(dify*1.5f))/32.0f)][(int)round((x+(difx*1.5f))/32.0f)])){
 
                         tim+=2; 
 
-                        x+=difx;
-                        y-=dify;
+                        x += difx;
+                        y -= dify;
                 }
-                else{
+                else
+                {
                     frame=2;
                     explode=true;
                 }
-            }else{
+            }
+            else
+            {
                 frame=2;
                 explode=true;
             }
         }
     }
-    else{
+    else
+    {
         explodetim++;
-        if (explodetim>=10){
+
+        if (explodetim >= 10)
+        {
             explodetim=0;
             tim=0;
             exists=false;

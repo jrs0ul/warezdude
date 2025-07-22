@@ -70,8 +70,13 @@ public:
 
     int DebugMode;
     Vector3D gamepad;
+    Vector3D OldGamepad;
     float MouseX;
     float MouseY;
+
+    float OldMouseX;
+    float OldMouseY;
+
     float RelativeMouseX;
     float RelativeMouseY;
     unsigned char globalKEY;
