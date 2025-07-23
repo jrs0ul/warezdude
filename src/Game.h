@@ -1,6 +1,5 @@
 #pragma once
 
-#include <thread>
 #ifndef __ANDROID__
 #include "audio/SoundSystem.h"
 #include "audio/OggStream.h"
@@ -16,14 +15,12 @@
 #include "CClient.h"
 #include "CServer.h"
 #include "map.h"
+#include "maplist.h"
 
 
 const int GameKeyCount = 10;
 
-static CMap mapas;
-static CClient clientas;
-static CServer serveris;
-static SystemConfig sys;
+
 
 enum Actions
 {
@@ -58,6 +55,43 @@ class Game
 
     ShaderProgram        defaultShader;
     ShaderProgram        colorShader;
+
+    MapList mapai;
+    CMap mapas;
+    CClient clientas;
+    CServer serveris;
+    SystemConfig sys;
+    OggStream music;
+    CBulletContainer bulbox;
+    PicsContainer pics;
+
+    unsigned int imgCount;
+    unsigned int maxwavs;
+
+
+    int goods;
+    int timeleft;
+    bool ext;
+    bool showdebugtext;
+    bool FirstTime;
+    int ms;
+
+
+    int pskx;
+    int psky;
+    int pushx; 
+    int pushy;
+    int scrx;
+    int scry;
+    int LeftBorder;
+    int RightBorder;
+    int UpBorder;
+    int DownBorder;// ar rodyti pakrasti ?
+    int posx;
+    int posy;
+
+    int itmframe;
+    int itmtim;
 
 
 public:
@@ -102,7 +136,6 @@ public:
     void logic();
     void destroy();
     void loadConfig();
-    static void Threadproc();
 
 private:
     void DrawTitleScreen();
@@ -115,9 +148,9 @@ private:
     void GoToLevel(int level, int otherplayer);
     void SendItemSRemove(int ItemIndex, int clientIndex, bool playerTaked);
     //mapo pavadinimas, klientu skaicius
-    static void SendMapInfo(int clientIndex, CMap& map);
+    void SendMapInfo(int clientIndex, CMap& map);
     //monster races amd item positions
-    static void SendMapData(int clientIndex, CMap& map);
+    void SendMapData(int clientIndex, CMap& map);
     void PutExit();
     void InitServer();
     void StopServer();
@@ -168,9 +201,14 @@ private:
     int PlayerCount();
     void LoadShader(ShaderProgram* shader, const char* name);
     void IntroScreenLogic();
+    void PlayNewSong(const char* songName);
+
+    void DeleteAudio();
 
     void CoreGameLogic();
+    void DrawNum(int x, int y, int num);
+    void DrawHelp();
+    void DrawIntro();
 };
 
 
-static std::thread serverThread(&Game::Threadproc);

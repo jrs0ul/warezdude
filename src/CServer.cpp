@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/select.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #endif
 
@@ -77,6 +78,30 @@ bool CServer::launch(int port)
         printf("can't bind\n");
         return false;
     }
+
+#ifdef _WIN32
+    DWORD nonBlocking = 1;
+    if ( ioctlsocket(serverSock,
+                     FIONBIO,
+                     &nonBlocking ) != 0 )
+    {
+        printf( "failed to set non-blocking\n" );
+        return false;
+    }
+#else
+
+    int nonBlocking = 1;
+    if ( fcntl(serverSock,
+               F_SETFL,
+               O_NONBLOCK,
+               nonBlocking ) == -1 )
+    {
+        printf( "failed to set non-blocking\n" );
+        return false;
+    }
+
+
+#endif
 
     isServerRunning = true;
     return true;

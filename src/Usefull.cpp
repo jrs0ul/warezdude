@@ -23,7 +23,6 @@ bool CirclesColide(float x1,float y1,float radius1, float x2, float y2, float ra
 Vector3D MakeVector(float speedx, float speedy, float _angle )
 {
     Matrix rot;
-    Matrix tr;
     Vector3D pn = Vector3D(speedx,0, speedy);
     MatrixRotationY(_angle, rot);
     pn.transform(rot);

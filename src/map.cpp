@@ -51,8 +51,9 @@ void CMap::arangeItems(){
 
     }
 
-    //isdelioja ammo, medi, timers
-    for (int a=0; a<goods; a++){
+    //places ammo and medkits
+    for (int a=0; a<goods; a++)
+    {
         ix=rand()%width;
         iy=rand()%height;
 

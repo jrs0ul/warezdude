@@ -6,7 +6,6 @@
 
 
 #include "Dude.h"
-#include "maplist.h"
 #include "BulletContainer.h"
 #include "SelectMenu.h"
 #include "EditBox.h"
@@ -26,47 +25,6 @@ const int slime=35;
 
 const unsigned NetPort=66666;
 
-
-OggStream music;
-
-CBulletContainer bulbox; 
-
-
-PicsContainer pics;
-unsigned int imgCount=0;
-unsigned int maxwavs=0;
-
-
-//=============================
-unsigned char KeyCodes[GameKeyCount][2]={0};
-//=============================
-
-
-int goods=0;
-int timeleft=0;
-bool ext=false;
-bool showdebugtext=false;
-bool FirstTime=true;
-int ms=0;
-
-
-
-MapList mapai;
-
-
-//---
-int pskx=22,psky=17;
-int pushx=0; int pushy=0;
-int scrx=22,scry=17;
-int LeftBorder=0;
-int RightBorder=0;
-int UpBorder=0;
-int DownBorder=0;// ar rodyti pakrasti ?
-int posx=32, posy=32;
-//---
-
-int itmframe=0;
-int itmtim=0;
 
 int slimtim=0;
 bool slimeswap=false;
@@ -106,7 +64,6 @@ bool isClient=false;
 bool IsCoop=true;
 bool IsDeathMatch=false;
 
-bool killthread=false;
 
 int klientai=0;
 
@@ -134,6 +91,29 @@ Game::Game()
 
     state = GAMESTATE_TITLE;
 
+
+    imgCount=0;
+    maxwavs=0;
+
+
+    goods=0;
+    timeleft=0;
+    ext=false;
+    showdebugtext=false;
+    FirstTime=true;
+    ms=0;
+
+    pskx=22; psky=17;
+    pushx=0; pushy=0;
+    scrx=22; scry=17;
+    LeftBorder=0;
+    RightBorder=0;
+    UpBorder=0;
+    DownBorder=0;// ar rodyti pakrasti ?
+    posx=32, posy=32;
+
+    itmframe=0;
+    itmtim=0;
 }
 
 
@@ -159,7 +139,7 @@ int Game::FPS()
 
 //-------------------------------------------
 
-void DeleteAudio(){
+void Game::DeleteAudio(){
 
 
     music.stop();
@@ -180,11 +160,14 @@ bool Game::InitAudio()
 }
 
 //----------------------------------------
-void PlayNewSong(const char* songName){
-    if (music.playing()){
+void Game::PlayNewSong(const char* songName)
+{
+    if (music.playing())
+    {
         music.stop();
         music.release();
     }
+
     char buf[255];
     sprintf(buf,"music/%s",songName);
     music.open(buf);
@@ -192,131 +175,6 @@ void PlayNewSong(const char* songName){
     music.playback();
 }
 
-
-
-//--------------------------------------
-void LoadKeyData(){
-    FILE* f;
-
-    f=fopen("keys.cfg","rt");
-    if (f){
-     for (int i=0;i<4;i++){
-      unsigned int tmp=0;
-      fscanf(f,"%u",&tmp);
-      KeyCodes[i][0]=(unsigned char)tmp;
-     }
-     fgetc(f);
-     for (int i=0;i<4;i++){
-      unsigned int tmp=0;
-      fscanf(f,"%u",&tmp);
-      KeyCodes[i][1]=(unsigned char)tmp;
-     }
-     fclose(f);
-    } else
-    {
-      f= fopen("keys.cfg","wt+");
-      fprintf(f,"200 208 205 203\n");
-      fprintf(f,"17 31 32 30\n");
-      KeyCodes[0][0]=200; 
-      KeyCodes[1][0]=208; 
-      KeyCodes[2][0]=205;
-      KeyCodes[3][0]=203;
-      
-      KeyCodes[0][1]=17; 
-      KeyCodes[1][1]=31; 
-      KeyCodes[2][1]=32;
-      KeyCodes[3][1]=30;
-
-      fclose(f);
-    }
-
-}
-//------------------------------------
-
-/*void ReadKeys(){
-
-    memset(Keys,0,GameKeyCount);
-    mousepowx=mousepowy=0l;
-
-    globalKey=0;
-
-    input.updateKeyData();
-    input.updateMouseData();
-
-
-    if ((input.keydata[KeyCodes[0][0]]& 0x80)||
-        (input.keydata[KeyCodes[0][1]]& 0x80)){
-            Keys[0]=1; globalKey=38;}
-
-    if ((input.keydata[KeyCodes[1][0]]& 0x80)||
-        (input.keydata[KeyCodes[1][1]]& 0x80)){
-            Keys[1]=1; globalKey=40;}
-
-    if ((input.keydata[KeyCodes[2][0]]& 0x80)||
-        (input.keydata[KeyCodes[2][1]]& 0x80)){
-        Keys[2]=1; globalKey=VK_RIGHT;
-    }
-
-    if ((input.keydata[KeyCodes[3][0]]& 0x80)||
-        (input.keydata[KeyCodes[3][1]]& 0x80)){
-        Keys[3]=1; globalKey=VK_LEFT;
-    }
-
-    if ((input.keydata[DIK_RCONTROL]& 0x80)||
-        (input.keydata[DIK_LCONTROL]& 0x80)){
-            Keys[4]=1; mainkey=true; 
-    }
-
-
-    if (input.keydata[DIK_RETURN]& 0x80){
-        globalKey=13;
-    }
-    if (input.keydata[DIK_ESCAPE]& 0x80){
-        globalKey=27;
-    }
-
-        
-    
-
-    if (input.mstate.lX!=0) 
-        mousepowx=input.mstate.lX;
-  
-    if (input.mstate.lY!=0) 
-    mousepowy=input.mstate.lY;
-
-    if (input.mstate.lZ<0) 
-     Keys[7]=1;
-  
- 
-    if (input.mstate.rgbButtons[0])
-        Keys[4]=1;
-    if (input.mstate.rgbButtons[1])
-        Keys[6]=1;
-
-
-
-
-    if (sys.joypresent){
-
-        input.updateJoyData();
-
-        if ( input.jstate.lY < 0 ) {Keys[0]=1; globalKey=38;}
-        if ( input.jstate.lY > 0 ) {Keys[1]=1; globalKey=40;}
-        if ( input.jstate.lX > 0 ) Keys[2]=1;
-        if ( input.jstate.lX < 0 ) Keys[3]=1;
-
-        
-    } 
-
-
-   
-    if ((mainkey)&&(!Keys[4])){
-        mainkey=false;
-        triger=true;
-    }
-    else triger=false;
-
-}*/
 
 //-------------------
 
@@ -371,7 +229,7 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 
 
 
-    for (unsigned i=0; i<mapas.decals.count();i++)
+    for (unsigned i = 0; i<mapas.decals.count(); i++)
     {
         mapas.decals[i].draw(pics, 15, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
     }
@@ -379,7 +237,7 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 
     for (unsigned long i=0; i<mapas.items.count();i++){
 
-        if (mapas.items[i].value<5)
+        if (mapas.items[i].value < 5)
         {
             if ((round(mapas.items[i].y)<psky*32)&&(round(mapas.items[i].y)>=((psky-scry)*32))&&
                 ((round(mapas.items[i].x)<pskx*32))&&(round(mapas.items[i].x)>=((pskx-scrx)*32)))
@@ -419,15 +277,14 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 
     bulbox.draw(pics, pskx, psky, pushx, pushy, scrx, scry, posx, posy);
 
-   
 
-    for (int i=0;i<klientai+2;i++){
+    for (int i=0;i<klientai+2;i++)
+    {
         if (mapas.mons[mapas.enemyCount+i].alive)
         {
             mapas.mons[mapas.enemyCount+i].draw(pics, 5, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
         }
     }
-
 
 
     if (isServer){
@@ -440,12 +297,13 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
         }
     }
 
-    if (mapas.enemyCount){
+    if (mapas.enemyCount)
+    {
         for (int i=0; i<mapas.enemyCount; i++)
         {
 
-            if ((round(mapas.mons[i].y)<psky*32)&&(round(mapas.mons[i].y)>=((psky-scry)*32))&&
-                ((round(mapas.mons[i].x)<pskx*32))&&(round(mapas.mons[i].x)>=((pskx-scrx)*32)))
+            if ((round(mapas.mons[i].y)<psky*32) && (round(mapas.mons[i].y)>=((psky-scry)*32))&&
+                ((round(mapas.mons[i].x)<pskx*32)) && (round(mapas.mons[i].x)>=((pskx-scrx)*32)))
             {
 
                 mapas.mons[i].draw(pics, mapas.mons[i].race+1, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
@@ -495,24 +353,22 @@ void Game::DrawMiniMap(int x, int y)
 
 //---------------------
 //sudelioja 3zenkli skaiciu is bmp
-void DrawNum(int x, int y,int num){
+void Game::DrawNum(int x, int y,int num)
+{
     int arr[3]={0};
 
     int i=2;
-    while (num!=0){
+    while (num!=0)
+    {
         arr[i]=num%10;
         num=num/10;
         i--;
     }
 
-    for (int a=0; a<3; a++)
+    for (int a = 0; a < 3; a++)
     {
-        pics.draw(8, x+a*16, y, arr[a], false, 0.6f,0.98f);
+        pics.draw(8, x + a*16, y, arr[a], false, 0.6f,0.98f);
     }
-
-
-
-
 }
 //-------------------------------
 void Game::SendItemCreation(float x, float y, int value, unsigned int clientIndex)
@@ -910,8 +766,8 @@ void Game::PutExit(){
     int ex = mapas.exit.x;
     int ey = mapas.exit.y;
 
-    mapas.addItem(ex*32.0f,ey*32.0f,4);
-    ext=true;
+    mapas.addItem(ex*32.0f,ey*32.0f, ITEM_EXIT);
+    ext = true;
 }
 
 //----------------------------
@@ -1137,53 +993,14 @@ void Game::ItemPickup()
 }
 
 
-
-//---------------------------------
-//serverio threadas laukiantis prisijungimu
-void Game::Threadproc()
-{
-
-    while (!killthread)
-    {
-
-        if (serveris.serverState())
-        {
-            int res = serveris.waitForClient();
-
-            if (res)
-            {
-
-                printf("CLIENT CONNECTED!\n");
-
-                Dude naujas;
-                mapas.mons.add(naujas);
-
-                mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id+1;
-
-                for (int i=0; i < (int)serveris.clientCount(); i++)
-                {
-                    SendMapInfo(i, mapas);
-                }
-
-                SendMapData(serveris.clientCount()-1, mapas);
-                //----end
-
-            }
-        }
-    }
-}
-
-
 //---------------------------------
 void Game::InitServer()
 {
     isServer=true;
-    killthread=false;
     printf("Launching server on port: %d\n", NetPort);
     if (serveris.launch(NetPort))
     {
         printf("Server launched!\n");
-        serverThread.detach();
     }
     else
     {
@@ -1193,8 +1010,7 @@ void Game::InitServer()
 //--------------------------------
 void Game::StopServer()
 {
-    isServer=false;
-    killthread=true;
+    isServer = false;
     serveris.shutDown();
 }
 //---------------------------------
@@ -1447,7 +1263,8 @@ void Game::MonsterAI(int index){
             {
                 if (i != (unsigned)index)
                 {
-                    if (CirclesColide(mapas.mons[index].x,mapas.mons[index].y,10.0f,mapas.mons[i].x,mapas.mons[i].y,8.0f)){
+                    if (CirclesColide(mapas.mons[index].x,mapas.mons[index].y,10.0f,mapas.mons[i].x,mapas.mons[i].y,8.0f))
+                    {
                         if (i < (unsigned)mapas.enemyCount)
                             KillEnemy(i);
                         else
@@ -1464,17 +1281,15 @@ void Game::MonsterAI(int index){
     {//jei nieks nepashove tai lets go :)
 
         int dx=0,dy=0;
-        mapas.mons[index].move(1.0f,0.0f,8.0f,mapas.colide,mapas.width,mapas.height,mapas.mons,mapas.enemyCount+1+serveris.clientCount(),&dx,&dy);
-        
-        
-        
+        mapas.mons[index].move(1.0f, 0.0f, 8.0f, 
+                               mapas.colide, mapas.width, mapas.height,
+                               mapas.mons,mapas.enemyCount+1+serveris.clientCount(),&dx,&dy);
+
 
         if ((dx==0)||(dy==0))
         {
             mapas.mons[index].rotate(0.1f);
         }
-
-
 
 
         //1 kas kolidina super duper figuroje
@@ -1489,8 +1304,9 @@ void Game::MonsterAI(int index){
                 break;
             }
         }
-        
-        if (victimindex){
+
+        if (victimindex)
+        {
             //2 rask spindulio kelia iki pirmojo kolidinancio
             Vector3D * line = Line(round(mapas.mons[index].x),round(mapas.mons[index].y),
                 round(mapas.mons[victimindex].x),round(mapas.mons[victimindex].y),
@@ -1499,32 +1315,31 @@ void Game::MonsterAI(int index){
             if (linijosIlgis)
             {
                 bool colide=false;
-                for(int i=0;i<linijosIlgis;i++){
-                    if (mapas.colide[(unsigned)line[i].y][(unsigned)line[i].x]){
-                     colide=true;
-                     
+                for(int i=0; i < linijosIlgis; i++)
+                {
+                    if (mapas.colide[(unsigned)line[i].y][(unsigned)line[i].x])
+                    {
+                     colide = true;
                      break;
                     }
 
                 }
-                if (!colide){
-                    mapas.mons[index].enemyseen=true;
-                //yessss!!!! veikia
-                    mapas.mons[index].angle=atan2(mapas.mons[victimindex].y -mapas.mons[index].y  , mapas.mons[victimindex].x - mapas.mons[index].x);
-                //pakeiciam monstro kampa taip kad judetu link aukos
+                if (!colide)
+                {
+                    mapas.mons[index].enemyseen = true;
+                    mapas.mons[index].angle = atan2(mapas.mons[victimindex].y - mapas.mons[index].y,
+                                                    mapas.mons[victimindex].x - mapas.mons[index].x);
                 }
                 delete []line;
             }
-            
         }
-        
 
+        if ((mapas.mons[index].enemyseen))
+        {
+            if (mapas.mons[index].race == 3)
+            {//jei mentas, tai pasaudom
+                mapas.mons[index].enemyseen = false;
 
-
-        
-        if ((mapas.mons[index].enemyseen)){
-            if (mapas.mons[index].race==3){//jei mentas, tai pasaudom
-                mapas.mons[index].enemyseen=false;
                 if (mapas.mons[index].canAtack)
                 {
                     mapas.mons[index].shoot(true,false,&bulbox);
@@ -1541,8 +1356,6 @@ void Game::MonsterAI(int index){
                 {
                     mapas.mons[index].reload(50);
                 }
-                
-
             }
             else
             {//baigiam saudima ;)
@@ -1558,62 +1371,66 @@ void Game::MonsterAI(int index){
 
     }
 
-    else 
-        if (mapas.mons[index].shot){ //jei mus kazkas pasove shot=true
-            mapas.mons[index].splatter();
+    else if (mapas.mons[index].shot)
+    { //jei mus kazkas pasove shot=true
+        mapas.mons[index].splatter();
 
-            if (!mapas.mons[index].shot)
-            {
-                mapas.mons[index].hp = MONSTER_BASE_HP + rand() % 10;
-                mapas.mons[index].appearInRandomPlace(mapas.colide,mapas.width,mapas.height);
-            }
+        if (!mapas.mons[index].shot)
+        {
+            mapas.mons[index].hp = MONSTER_BASE_HP + rand() % 10;
+            mapas.mons[index].appearInRandomPlace(mapas.colide,mapas.width,mapas.height);
         }
+    }
 
 //visa sita slamasta reiks sukrauti i virsu kur tikrinama ar ne shot
 
-    if ((!mapas.mons[index].shot)&&(!mapas.mons[index].spawn)){
+    if ((!mapas.mons[index].shot)&&(!mapas.mons[index].spawn))
+    {
 
-        if (mapas.mons[index].hit){
+        if (mapas.mons[index].hit)
+        {
             mapas.mons[index].damageAnim();
             if (!mapas.mons[index].hit)
             {
                 AdaptSoundPos(11,mapas.mons[index].x,mapas.mons[index].y);
                 ss->playsound(11);
-
-                
             }
         }
 
-            //vagia daiktus
+        //eats items
 
-            if (mapas.mons[index].race == 2)
+        if (mapas.mons[index].race == 2)
+        {
+            for (unsigned i=0; i < mapas.items.count(); i++)
             {
-                for (unsigned i=0;i<mapas.items.count();i++)
+                if ((!mapas.mons[index].item) && (mapas.items[i].value != ITEM_EXIT))
                 {
-                    if ((!mapas.mons[index].item)&&(mapas.items[i].value!=4)&&(mapas.items[i].value!=3)){
-                        if (CirclesColide(mapas.items[i].x, mapas.items[i].y, 8.0f, mapas.mons[index].x,mapas.mons[index].y,16.0f)){
-                            mapas.mons[index].item=mapas.items[i].value;
-                            AdaptSoundPos(5,mapas.items[i].x,mapas.items[i].y);
-                            ss->playsound(5);
-                            
-                            if (isServer)
-                            {
-                                for (unsigned a=0; a<serveris.clientCount();a++)
-                                {
-                                    SendItemSRemove(i,a,false);
-                                }
-                            }
-                            mapas.removeItem(i);
-                        }
-                    }
+                    if (CirclesColide(mapas.items[i].x, mapas.items[i].y, 8.0f, mapas.mons[index].x,mapas.mons[index].y,16.0f))
+                    {
+                        mapas.mons[index].item = mapas.items[i].value;
+                        AdaptSoundPos(5,mapas.items[i].x,mapas.items[i].y);
+                        ss->playsound(5);
 
+                        if (isServer)
+                        {
+                            for (unsigned a=0; a < serveris.clientCount(); a++)
+                            {
+                                SendItemSRemove(i,a,false);
+                            }
+                        }
+
+                        mapas.removeItem(i);
+                    }
                 }
-            
+
             }
+
+        }
 
     }
 
-    if (bulbox.count()>tmpcnt){
+    if (bulbox.count()>tmpcnt)
+    {
         AdaptSoundPos(0,mapas.mons[index].x,mapas.mons[index].y);
         ss->playsound(0);
     }
@@ -2006,6 +1823,36 @@ void Game::logic(){
         }
     }
 
+    if (isServer)
+    {
+        if (serveris.serverState())
+        {
+            int res = serveris.waitForClient();
+
+            if (res)
+            {
+
+                printf("CLIENT CONNECTED!\n");
+
+                Dude naujas;
+                mapas.mons.add(naujas);
+
+                mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id+1;
+
+                for (int i=0; i < (int)serveris.clientCount(); i++)
+                {
+                    SendMapInfo(i, mapas);
+                }
+
+                SendMapData(serveris.clientCount()-1, mapas);
+                //----end
+
+            }
+        }
+
+    }
+
+
     if ((isServer)||(isClient))
     {
         SendData();
@@ -2318,7 +2165,8 @@ void Game::CoreGameLogic()
 
 
 //------------------------------------
-void DrawHelp(){
+void Game::DrawHelp()
+{
     pics.draw(13, 320, 240, 0, true);
     WriteShadedText(130, 70, pics, 10, "Colect these:");
     pics.draw(11, 150, 90, itmframe, false);
@@ -2353,7 +2201,8 @@ void DrawHelp(){
 
 }
 //-------------------------------------
-void DrawIntro(){
+void Game::DrawIntro()
+{
     pics.draw(13, 320, 240, 0, true);
 
     char buf[2];
@@ -3407,11 +3256,6 @@ void Game::init()
     MatrixOrtho(0.0, ScreenWidth, ScreenHeight, 0.0, -400, 400, OrthoMatrix);
 
     pics.load("pics/imagesToLoad.xml"); 
-
-
-    
-
-    LoadKeyData();
 
 
     Smenu menu;
