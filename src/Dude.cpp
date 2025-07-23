@@ -1,7 +1,7 @@
 #include <cmath>
 
 #include "Usefull.h"
-#include "dude.h"
+#include "Dude.h"
 //
 
 
@@ -22,12 +22,14 @@ void Dude::heal(){
 
 
 //-------------------------------------
-bool Dude::arkolidina( DArray<Dude>& chars, int count, float newx, float newy){
+bool Dude::isColideWithOthers( DArray<Dude>& chars, int count, float newx, float newy)
+{
 
-    for (int i=0;i<count;i++){
-            
-        if ((CirclesColide(newx,newy,10.0f,chars[i].x,chars[i].y,10.0f))&&(chars[i].id!=id)){
-            
+    for (int i=0;i<count;i++)
+    {
+        if ((CirclesColide(newx,newy,10.0f,chars[i].x,chars[i].y,10.0f))&&(chars[i].id!=id))
+        {
+
             if ((!chars[i].spawn)&&(!chars[i].shot))
                 return true;
         }
@@ -158,7 +160,7 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
         (!map[(int)p2.y][(int)p2.x]) &&
         (!map[(int)p3.y][(int)p3.x]) &&
         (!map[(int)p4.y][(int)p4.x]) && 
-        (!arkolidina(chars,charcount,newposx,y)) &&
+        (!isColideWithOthers(chars,charcount,newposx,y)) &&
         ((newposx)<=(mapsizex-1)*32.0f) &&
         ((newposy)<((mapsizey-1)*32.0f)) &&
         ((newposx-radius)>=-radius) &&
@@ -166,9 +168,9 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
 
        )
     {
-        if ((x>newposx)&&(dirx))
+        if ((x > newposx)&&(dirx))
         {
-                *dirx=1;
+            *dirx=1;
         }
         else if ((x<newposx)&&(dirx))
         {
@@ -183,7 +185,7 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
         (!map[(int)p6.y][(int)p6.x]) &&
         (!map[(int)p7.y][(int)p7.x]) &&
         (!map[(int)p8.y][(int)p8.x]) &&
-        (!arkolidina(chars,charcount,x,newposy)) &&
+        (!isColideWithOthers(chars,charcount,x,newposy)) &&
         ((newposx)<=(mapsizex-1)*32.0f) &&
         ((newposy)<((mapsizey-1)*32.0f))&&
         ((newposx-radius)>=-radius) &&
@@ -225,20 +227,24 @@ void Dude::draw(PicsContainer& pics, unsigned index,
 
 }
 //----------------------------------------------------------
-bool Dude::atack(bool useBullets, bool isMine, CBulletContainer* bulcon){
+bool Dude::shoot(bool useBullets, bool isMine, CBulletContainer* bulcon)
+{
 
-    if ((useBullets)&&(ammo<=0))
+    if ((useBullets) && (ammo<=0))
     {
         return false;
     }
 
 
-    canAtack=false;
-    frame=(currentWeapon+1)*4-1;
+    canAtack = false;
+    frame = (currentWeapon+1)*4-1;
 
-    if (useBullets){
-        if (ammo<=0)
+    if (useBullets)
+    {
+        if (ammo <= 0)
+        {
             return false;
+        }
 
 
         Bullet newbul;
@@ -251,7 +257,7 @@ bool Dude::atack(bool useBullets, bool isMine, CBulletContainer* bulcon){
         newbul.frame=isMine;
         newbul.exists=true;
         newbul.explode=false;
-        newbul.explodetim=0; 
+        newbul.explodetim = 0; 
         newbul.isMine=isMine;
 
 
@@ -263,15 +269,18 @@ bool Dude::atack(bool useBullets, bool isMine, CBulletContainer* bulcon){
     return true;
 }
 //-------------------------------
-int Dude::hitIt(Dude& enemy, float vectorx, float vectory, int damage){
+int Dude::hitIt(Dude& enemy, float vectorx, float vectory, int damage)
+{
 
- if ((CirclesColide(x+vectorx,y-vectory,4.0f,   enemy.x,enemy.y,8.0f))
-     &&(enemy.id!=id)){
-        enemy.hp-=damage;
-        enemy.hit=true;
+    if ((CirclesColide(x+vectorx, y-vectory, 4.0f, enemy.x,enemy.y, 8.0f))
+            &&(enemy.id!=id))
+    {
+        enemy.hp -= damage;
+        enemy.hit = true;
         return enemy.id;
- }
- return -1;
+    }
+
+    return -1;
 }
 
 //-------------------------------

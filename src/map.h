@@ -3,7 +3,7 @@
 
 
 #include "DArray.h"
-#include "dude.h"
+#include "Dude.h"
 #include "Decal.h"
 
 

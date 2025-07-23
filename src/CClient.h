@@ -2,10 +2,7 @@
 #define _CCLIENT_H_
 
 
-/*Client class
- jrs0ul
- 2007 03 23
-*/
+//Client class
 
 #ifdef _WIN32
     #include <winsock2.h>
@@ -26,19 +23,18 @@ class CClient{
     bool isJoinedServer;
 
 public:
-    //konstruktorius
     CClient(){
         isJoinedServer=false;
     }
-    //prisijungia prie serverio
+    //connect to the server with such ip and port
     bool connectServer(const char* ip, unsigned port);
-    //atsijungia
+    //disconnect the server
     void disconnectServer();
-    //siuncia duomenis
+    //sends bytes to the server
     void sendData(const char* data, int len);
-    //gauna duomenis
+    //receives bytes
     int getData(char* data);
-    //ar prisijunges
+    //is the client conneted to the server
     bool isJoined(){return isJoinedServer;}
 
 };

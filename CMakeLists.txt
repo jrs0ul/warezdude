@@ -14,7 +14,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_executable(warezdude3
                     src/mainer.cpp
-                    src/dude.cpp
+                    src/Dude.cpp
                     src/map.cpp
                     src/bullet.cpp
                     src/Decal.cpp

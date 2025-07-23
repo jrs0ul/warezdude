@@ -330,8 +330,8 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
                                 naujas.startY = sy*32;
                                 naujas.x=(float)naujas.startX;
                                 naujas.y=(float)naujas.startY;
-                                naujas.race=rand()%3+1; 
-                                naujas.hp=30+rand()%10;
+                                naujas.race=rand() % MONSTER_MAX_RACE + 1; 
+                                naujas.hp = MONSTER_BASE_HP + rand()%10;
                                 mons.add(naujas);
 
                             }

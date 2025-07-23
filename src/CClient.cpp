@@ -88,7 +88,7 @@ void CClient::disconnectServer()
 
 void CClient::sendData(const char *data, int len)
 {
-    send(clientSock,data,len,0);
+    send(clientSock, data, len, 0);
 }
 
 //-----------------------------------

@@ -5,7 +5,7 @@
 #include <ctime>
 
 
-#include "dude.h"
+#include "Dude.h"
 #include "maplist.h"
 #include "BulletContainer.h"
 #include "SelectMenu.h"
@@ -16,6 +16,7 @@
 #include "TextureLoader.h"
 #include "Matrix.h"
 #include "audio/OggStream.h"
+#include "Consts.h"
 
 
 
@@ -415,22 +416,10 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 
     }
 
-    
 
-    
+    bulbox.draw(pics, pskx, psky, pushx, pushy, scrx, scry, posx, posy);
 
-    for (int z=0; z < bulbox.count(); z++)
-    {
-        pics.draw(6,
-                  round(bulbox.buls[z].x)-((pskx-scrx)*32)+pushx-posx,
-                  round(bulbox.buls[z].y)-((psky-scry)*32)+pushy-posy,
-                  bulbox.buls[z].frame,
-                  true,
-                  1.0f,1.0f,
-                  (bulbox.buls[z].angle + (3.14f/2.0f)) * (180/M_PI)
-                 ); 
-    }
-
+   
 
     for (int i=0;i<klientai+2;i++){
         if (mapas.mons[mapas.enemyCount+i].alive)
@@ -615,38 +604,44 @@ void Game::KillEnemy(int ID)
 bool Game::OnHit(Bullet& bul)
 {
 
-    int dmg=1;
+    int dmg = PROJECTILE_BULLET_DAMAGE;
+
     if (bul.isMine)
     {
-        dmg=3;
+        dmg = PROJECTILE_MINE_DAMAGE;
     }
 
-    bool hit=false;
+    bool hit = false;
     int tmpID=0;
-    int players=1;
+
+    int players = 1;
+
     if (isServer)
-        players+=serveris.clientCount();
+    {
+        players += serveris.clientCount();
+    }
     if (isClient)
     {
         players+=klientai;
     }
 
-    for (int i=0;i<mapas.enemyCount+players;i++)
+    for (int i=0; i < mapas.enemyCount + players; i++)
     {
         if (CirclesColide(mapas.mons[i].x,mapas.mons[i].y,8,bul.x,bul.y,8))
         {
 
-            tmpID=mapas.mons[i].id;
+            tmpID = mapas.mons[i].id;
 
             if ((bul.parentID!=tmpID)&&(!mapas.mons[i].shot)&&(!mapas.mons[i].spawn))
             {
                 if (!hit)
                 {
-                    hit=true;
+                    hit = true;
                 }
 
-                mapas.mons[i].hit=true;
-                mapas.mons[i].hp-=dmg;
+                mapas.mons[i].hit = true;
+                mapas.mons[i].hp -= dmg;
+                printf("DID %d DMG (hp: %d)\n", dmg, mapas.mons[i].hp);
 
             }
         }
@@ -1110,10 +1105,11 @@ void Game::ItemPickup()
                 //exitas
                 if (item==4){
                     mapai.current++;
-                    if (mapai.current==mapai.count()){
+                    if (mapai.current == mapai.count())
+                    {
                         mapai.current=0;
                         state = GAMESTATE_ENDING;
-                        PlayNewSong("Crazy.ogg");
+                        PlayNewSong("crazy.ogg");
 
                     }
 
@@ -1389,7 +1385,7 @@ void Game::BeatEnemy(int aID, int damage)
 {
     if (mapas.mons[aID].canAtack)
     {
-        mapas.mons[aID].atack(false,false,&bulbox);
+        mapas.mons[aID].shoot(false,false,&bulbox);
         Vector3D vec = MakeVector(16.0f,0,mapas.mons[aID].angle);
 
         for (unsigned long i=0; i < mapas.mons.count(); i++)
@@ -1421,16 +1417,7 @@ void Game::BeatEnemy(int aID, int damage)
                 if (isClient)
                 {//turbut atakavo playeris
 
-                    SendClientAtackImpulse(mapas.mons[i].id,mapas.mons[i].hp);
-                }
-
-
-                if (mapas.mons[i].hp<=0){
-                    //if (i>mapas.enemyCount)
-                    //  KillPlayer(i-mapas.enemyCount);
-                    //else
-                    //  if (i<mapas.enemyCount)
-                    //      KillEnemy(i);
+                    SendClientAtackImpulse(mapas.mons[i].id, mapas.mons[i].hp);
                 }
 
             }
@@ -1448,11 +1435,14 @@ void Game::MonsterAI(int index){
 
     int linijosIlgis=0;
 
-    int tmpcnt=bulbox.count();
+    int tmpcnt = bulbox.count();
 
-    if (mapas.mons[index].spawn){
+    if (mapas.mons[index].spawn)
+    {
         mapas.mons[index].respawn();
-        if (!mapas.mons[index].spawn){
+
+        if (!mapas.mons[index].spawn)
+        {
             for (unsigned i=0; i< mapas.mons.count(); i++)
             {
                 if (i != (unsigned)index)
@@ -1470,7 +1460,8 @@ void Game::MonsterAI(int index){
     }
 
     
-    if ((!mapas.mons[index].shot)&&(!mapas.mons[index].spawn)){//jei nieks nepashove tai lets go :)
+    if ((!mapas.mons[index].shot)&&(!mapas.mons[index].spawn))
+    {//jei nieks nepashove tai lets go :)
 
         int dx=0,dy=0;
         mapas.mons[index].move(1.0f,0.0f,8.0f,mapas.colide,mapas.width,mapas.height,mapas.mons,mapas.enemyCount+1+serveris.clientCount(),&dx,&dy);
@@ -1479,7 +1470,9 @@ void Game::MonsterAI(int index){
         
 
         if ((dx==0)||(dy==0))
+        {
             mapas.mons[index].rotate(0.1f);
+        }
 
 
 
@@ -1532,22 +1525,27 @@ void Game::MonsterAI(int index){
         if ((mapas.mons[index].enemyseen)){
             if (mapas.mons[index].race==3){//jei mentas, tai pasaudom
                 mapas.mons[index].enemyseen=false;
-                if (mapas.mons[index].canAtack){
-                    mapas.mons[index].atack(true,false,&bulbox);
+                if (mapas.mons[index].canAtack)
+                {
+                    mapas.mons[index].shoot(true,false,&bulbox);
                     mapas.mons[index].ammo++;
                     mapas.mons[index].reloadtime=0;
                     if (isServer){ //pasiunciam klientui
-                        for (unsigned int i=0;i<serveris.clientCount();i++){
+                        for (unsigned int i=0;i<serveris.clientCount();i++)
+                        {
                             SendBulletImpulse(index,mapas.mons[index].ammo,i,false);
                         }
                     }
                 }
                 else
+                {
                     mapas.mons[index].reload(50);
+                }
                 
 
             }
-            else{//baigiam saudima ;)
+            else
+            {//baigiam saudima ;)
                 if ((linijosIlgis<2)&&(linijosIlgis)){
                     BeatEnemy(index,10);
                     mapas.mons[index].enemyseen=false;
@@ -1564,8 +1562,9 @@ void Game::MonsterAI(int index){
         if (mapas.mons[index].shot){ //jei mus kazkas pasove shot=true
             mapas.mons[index].splatter();
 
-            if (!mapas.mons[index].shot){
-                mapas.mons[index].hp=30+rand()%10;
+            if (!mapas.mons[index].shot)
+            {
+                mapas.mons[index].hp = MONSTER_BASE_HP + rand() % 10;
                 mapas.mons[index].appearInRandomPlace(mapas.colide,mapas.width,mapas.height);
             }
         }
@@ -1584,15 +1583,10 @@ void Game::MonsterAI(int index){
                 
             }
         }
-        //else{
-        //  BeatPlayer(index);
-                
-        //}
-    
 
             //vagia daiktus
 
-            if (mapas.mons[index].race==2)
+            if (mapas.mons[index].race == 2)
             {
                 for (unsigned i=0;i<mapas.items.count();i++)
                 {
@@ -1634,8 +1628,9 @@ void Game::HandleBullets()
         bulbox.buls[i].ai(mapas.colide,mapas.width,mapas.height);
 
         if (OnHit(bulbox.buls[i]))
-            if (!bulbox.buls[i].explode){
-                bulbox.buls[i].explode=true;
+            if (!bulbox.buls[i].explode)
+            {
+                bulbox.buls[i].explode = true;
                 bulbox.buls[i].frame=2;
             }
 
@@ -2151,8 +2146,6 @@ void Game::CoreGameLogic()
         Vector3D dir = gamepad;
         //dir.normalize();
 
-        //printf("%f %f\n", dir.x, dir.y);
-
         player->angle = M_PI / 2 - atan2(dir.x, dir.y);
     }
 
@@ -2204,18 +2197,18 @@ void Game::CoreGameLogic()
 
     //saunam
     if ((Keys[ACTION_FIRE]) && (!mapas.mons[mapas.enemyCount].shot) && 
-            (mapas.mons[mapas.enemyCount].alive)&&(!mapas.mons[mapas.enemyCount].spawn))
+            (mapas.mons[mapas.enemyCount].alive) && (!mapas.mons[mapas.enemyCount].spawn))
     {
 
         if (mapas.mons[mapas.enemyCount].canAtack)
         {
-            bool res=false;
+            bool res = false;
 
             switch(mapas.mons[mapas.enemyCount].currentWeapon)
             {
-                case 1: res=mapas.mons[mapas.enemyCount].atack(true,false,&bulbox); break;
-                case 2: res=mapas.mons[mapas.enemyCount].atack(true,true,&bulbox); break;
-                case 0: BeatEnemy(mapas.enemyCount,20); break;
+                case 1: res = mapas.mons[mapas.enemyCount].shoot(true, false, &bulbox); break;
+                case 2: res = mapas.mons[mapas.enemyCount].shoot(true, true, &bulbox); break;
+                case 0: BeatEnemy(mapas.enemyCount, PLAYER_MELEE_DAMAGE); break;
             }
 
             if ((mapas.mons[mapas.enemyCount].currentWeapon>0)&&(res)){
@@ -2230,23 +2223,28 @@ void Game::CoreGameLogic()
                     SoundSystem::getInstance()->playsound(12);
                 }
 
-                if (isClient){
+                if (isClient)
+                {
                     char buf[10];
                     buf[0]='s'; buf[1]='h'; buf[2]='t';
-                    memcpy(&buf[3],&mapas.mons[mapas.enemyCount].ammo,sizeof(int));
+                    memcpy(&buf[3], &mapas.getPlayer()->ammo, sizeof(int));
                     unsigned char isMine=0;
                     if (mapas.mons[mapas.enemyCount].currentWeapon==2)
                         isMine=1;
                     memcpy(&buf[7],&isMine,sizeof(unsigned char));
                     clientas.sendData(buf,8);
                 }
-                bool isMine=false;
+
+                bool isMine = false;
                 if (mapas.mons[mapas.enemyCount].currentWeapon==2)
 
                     isMine=true;
-                if (isServer){
+                if (isServer)
+                {
                     for (int i=0;i<(int)serveris.clientCount();i++)
+                    {
                         SendBulletImpulse(255,mapas.mons[mapas.enemyCount].ammo,i,isMine);
+                    }
                 }
 
             }
@@ -2308,7 +2306,7 @@ void Game::CoreGameLogic()
 
     for (unsigned i=0;i<mapas.mons.count();i++)
     {
-        if ((mapas.mons[i].hp<=0)&&(!mapas.mons[i].shot))
+        if ((mapas.mons[i].hp <= 0) && (!mapas.mons[i].shot))
         {
             KillEnemy(mapas.mons[i].id);
         }
@@ -2321,13 +2319,12 @@ void Game::CoreGameLogic()
 
 //------------------------------------
 void DrawHelp(){
-    pics.draw(13, 320, 240, 0, true, 1.25f,1.9f);
-    WriteText(30, 30, pics, 10, "Colect these and...");
-    pics.draw(11, 50,50, itmframe, false);
-    pics.draw(11, 100,50, itmframe+4, false);
-    WriteText(200,80, pics, 10, "Save those guys...");
-    pics.draw(11, 200,100, itmframe+8, false);
-    WriteText(200,150, pics, 10, "to unlock exit ");
+    pics.draw(13, 320, 240, 0, true);
+    WriteShadedText(130, 70, pics, 10, "Colect these:");
+    pics.draw(11, 150, 90, itmframe, false);
+    pics.draw(11, 200, 90, itmframe + 4, false);
+    pics.draw(11, 250, 90, itmframe + 8, false);
+    WriteText(200,150, pics, 10, "to unlock the exit ");
     pics.draw(11, 420,150, itmframe+12, false);
 
     pics.draw(7, 100,210, 0, false);
@@ -2335,45 +2332,50 @@ void DrawHelp(){
     pics.draw(7, 100, 230, 1, false);
     WriteText(140,240, pics, 10,"Health Up");
 
-    WriteText(140,320, pics, 10, "Controls:");
-    WriteText(140,340, pics, 10, "Arrow keys: controls character");
-    WriteText(140,355, pics, 10, "Tab: minimap");
-    WriteText(140,370, pics, 10, "CTRL: fire");
-    WriteText(140,385, pics, 10, "SPACE: opens door");
+    WriteShadedText(140,320, pics, 10, "Controls:");
+    WriteShadedText(140,340, pics, 10, "Aim with the mouse, and move with arrows");
+    WriteShadedText(140,355, pics, 10, "Tab: minimap");
+    WriteShadedText(140,370, pics, 10, "CTRL: fire");
+    WriteShadedText(140,385, pics, 10, "SPACE: opens door");
     int monframe=itmframe;
-    if (monframe==3)
-        monframe=0;
-    pics.draw(3, 100,270, monframe, false);
-    WriteText(140,270, pics, 10, "These monsters can eat items");
-    WriteText(140,290, pics, 10, "kill them to retrieve items back.");
 
-    WriteText(300,460, pics, 10, "press CTRL to play...");
+    if (monframe==3)
+    {
+        monframe=0;
+    }
+
+    pics.draw(3, 100,270, monframe, false);
+    WriteShadedText(140,270, pics, 10, "These monsters can eat items");
+    WriteShadedText(140,290, pics, 10, "kill them to retrieve items back.");
+
+    WriteShadedText(300,460, pics, 10, "hit RETURN to play...");
 
 
 }
 //-------------------------------------
 void DrawIntro(){
-    pics.draw(13, 320, 240, 0, true,1.25f,1.9f);
+    pics.draw(13, 320, 240, 0, true);
+
+    char buf[2];
 
     for (int i=0;i<intro_cline;i++)
     {
-        WriteText(30, 25 * i + 20, pics, 10, IntroText[i+18*(intro_gline/18)]);
+        WriteShadedText(30, 25 * i + 20, pics, 10, IntroText[i+18*(intro_gline/18)]);
     }
 
     for (int a=0; a<intro_cchar; a++)
     {
-        pics.draw(10, 
+        sprintf(buf, "%c", IntroText[intro_gline][a]);
+        WriteShadedText(
                   30 + a * 11, 
                   25 * intro_cline + 20,
-                  (IntroText[intro_gline][a]) - 32,
-                  false,
-                  1.0, 
-                  1.0f,
-                  0.0f
+                  pics,
+                  10,
+                  buf
                   );
     }
 
-    WriteText(30,450, pics, 10, "Press CTRL to skip this boring stuff...");
+    WriteShadedText(30,450, pics, 10, "hit RETURN to skip ...");
 }
 
 
@@ -2518,7 +2520,7 @@ void Game::DrawTitleScreen()
 //------------------------------------
 void Game::DrawEndScreen()
 {
-    pics.draw(15, 320, 240, 0, true,  1.25f,1.9f);
+    pics.draw(14, 320, 240, 0, true,  1.25f,1.9f);
     WriteText(260,430, pics, 10, "The End...to be continued ?");
 }
 //------------------------------------
@@ -3095,20 +3097,24 @@ void Game::GetData()
                         GetClientCoords(bufer,&index,i);
                     }
                     else
-                        if (strcmp(hdr,"sht")==0){
+                        if (strcmp(hdr,"sht")==0)
+                        {
                             unsigned char cisMine=0;
-                            
+
                             index+=3;
                             memcpy(&mapas.mons[mapas.enemyCount+1+i].ammo,&bufer[index],sizeof(int));
                             index+=sizeof(int);
                             memcpy(&cisMine,&bufer[index],sizeof(unsigned char));
                             index+=sizeof(unsigned char);
-                            bool isMine=false;
-                            if (cisMine)
-                                isMine=true;
-                            mapas.mons[mapas.enemyCount+1+i].atack(true,isMine,&bulbox);
+                            bool isMine = false;
 
-                            
+                            if (cisMine)
+                            {
+                                isMine=true;
+                            }
+
+                            mapas.mons[mapas.enemyCount+1+i].shoot(true,isMine,&bulbox);
+
 
                             for (unsigned int a=0;a<serveris.clientCount();a++){//isiunciam isovimo impulsa kitiems
                                 if (a!=i){
@@ -3224,39 +3230,43 @@ void Game::GetData()
                             else 
                                 if (strcmp(hdr,"sht")==0){
                                     index+=3;
-                                    int ind=0;
+                                    int ind = 0;
                                     memcpy(&ind,&bufer[index],sizeof(int));
                                     index+=sizeof(int);
-                                    
-                                    if (ind<254){
+
+                                    if (ind < 254){
                                         memcpy(&mapas.mons[ind].ammo,&bufer[index],sizeof(int));
                                         index+=sizeof(int);
                                         unsigned char cisMine=0;
                                         memcpy(&cisMine,&bufer[index],sizeof(unsigned char));
                                         index+=sizeof(unsigned char);
                                         bool isMine=false;
+
                                         if (cisMine)
+                                        {
                                             isMine=true;
-                                        mapas.mons[ind].atack(true,isMine,&bulbox);
+                                        }
+
+                                        mapas.mons[ind].shoot(true,isMine,&bulbox);
                                     }
-                                    else{
+                                    else
+                                    {
                                         memcpy(&mapas.mons[mapas.enemyCount+(ind-254)].ammo,&bufer[index],sizeof(int));
                                         index+=sizeof(int);
                                         unsigned char cisMine=0;
                                         memcpy(&cisMine,&bufer[index],sizeof(unsigned char));
-                                        index+=sizeof(unsigned char);
+                                        index += sizeof(unsigned char);
                                         bool isMine=false;
                                         if (cisMine)
                                             isMine=true;
-                                        mapas.mons[mapas.enemyCount+(ind-254)].atack(true,isMine,&bulbox);
+                                        mapas.mons[mapas.enemyCount+(ind-254)].shoot(true,isMine,&bulbox);
                                     }
-                                    
 
 
                                 }
 
-                            else
-                                if (strcmp(hdr,"itm")==0){
+                            else if (strcmp(hdr,"itm")==0)
+                            {
                                     index+=3;
                                     int itmindex=0;
                                     memcpy(&itmindex,&bufer[index],sizeof(int));
@@ -3269,13 +3279,10 @@ void Game::GetData()
                                         (isPlayerTaked))
                                         goods--;
                                     mapas.removeItem(itmindex);
-                                        
-                                    
 
-                                }
-                                else
-
-                                    if (strcmp(hdr,"dor")==0){
+                            }
+                            else if (strcmp(hdr,"dor") == 0)
+                            {
                                         index+=3;
                                         GetDoorInfo(bufer,&index,0,0,0);
                                     }

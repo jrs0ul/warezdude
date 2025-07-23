@@ -5,6 +5,7 @@
 #include "BulletContainer.h"
 #include "TextureLoader.h"
 #include "Vectors.h"
+#include "Consts.h"
 
 
 
@@ -56,12 +57,12 @@ class Dude
             angle=0;
             shot=false;
             stim=0;
-            ammo=20;
+            ammo = ENTITY_INITIAL_AMMO;
             alive=true;
             canAtack=true;
             reloadtime=0;
-            hp=100;
-            r=g=b=1.0f;
+            hp = ENTITY_INITIAL_HP;
+            r = g = b = 1.0f;
             hit=false;
             hittim=0;
             id=254;
@@ -82,7 +83,7 @@ class Dude
 
 
         //ar kolidina su kokiu nors monstru; count - kiek monstru
-        bool arkolidina(DArray<Dude>& chars, int count, float newx, float newy);
+        bool isColideWithOthers(DArray<Dude>& chars, int count, float newx, float newy);
         void rotate(float angle);
         void move(float walkSpeed,float strifeSpeed,float radius, bool** map, int mapsizex, int mapsizey,
                 DArray<Dude>& chars,int charcount, int* dirx, int* diry);
@@ -92,8 +93,8 @@ class Dude
                 int pskx, int scrx, int psky, int scry,
                 int pushx, int posx, int pushy, int posy);
 
-        //sauna, jei yra soviniu true, jei ne false;
-        bool atack(bool useBullets, bool isMine, CBulletContainer* bulcon);
+        /* shoots or deploys a mine if the entity has some ammo */
+        bool shoot(bool useBullets, bool isMine, CBulletContainer* bulcon);
         //atakuoja, jei kolidina tai true jei ne false
         int hitIt(Dude& enemy, float vectorx, float vetory, int damage);
         //gydosi

@@ -1,0 +1,77 @@
+Client sends:
+=======================
+Player_shoots 8 bytes
+----
+sht     - 3 bytes header
+ammo    - 4 bytes int
+is mine - 1 byte bool
+-----------------------
+Player_location 17 bytes
+----
+chr     - 3 bytes header
+x       - 4 bytes float
+y       - 4 bytes float
+angle   - 4 bytes float
+frame   - 1 byte
+stats   - 1 byte
+------------------------
+nop
+srv
+dat
+------------------------
+Item_taken
+----
+itm     - 3 bytes header
+item idx- 4 bytes int
+------------------------
+dor
+itc
+atk
+-----------------------
+Next_Level
+----
+nxt    - 3 bytes header
+--------------------------
+Attack
+----
+atk             - 3 byte header
+victimID        - 4 byte int
+victimHP        - 4 byte int
+
+
+=======================
+Server sends:
+=======================
+
+Client_info
+---
+pin               - 3 bytes header
+[Player_location] - 17 bytes        |  x Client_count
+hp(if spawned)    - 4 bytes         |
+------------------------
+Item_taken
+----
+itm             - 3 byte header 
+item idx        - 4 bytes
+isPlayer        - 1 byte
+------------------------
+Map_Info
+----
+srv             - 3 byte header
+map_name_len    - 4 bytes
+map_name        - map_name_len bytes
+client_count    - 4 bytes
+-------------------------
+Map_Data
+----
+dat
+enemy_count     - 4 bytes
+--------------------------
+Attack
+----
+atk             - 3 byte header
+victimID        - 4 byte int
+victimHP        - 4 byte int
+
+
+
