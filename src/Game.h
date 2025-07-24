@@ -12,8 +12,8 @@
 #include "TouchData.h"
 #include "SysConfig.h"
 #include "ShaderProgram.h"
-#include "CClient.h"
-#include "CServer.h"
+#include "network/CClient.h"
+#include "network/CServer.h"
 #include "map.h"
 #include "maplist.h"
 
@@ -58,8 +58,9 @@ class Game
 
     MapList mapai;
     CMap mapas;
-    CClient clientas;
-    CServer serveris;
+    Address serverAddress;
+    Socket udpClient;
+    Server serveris;
     SystemConfig sys;
     OggStream music;
     CBulletContainer bulbox;

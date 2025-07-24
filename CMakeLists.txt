@@ -26,8 +26,9 @@ add_executable(warezdude3
                     src/ScroollControl.cpp
                     src/EditBox.cpp
                     src/SysConfig.cpp
-                    src/CServer.cpp
-                    src/CClient.cpp
+                    src/network/Socket.cpp
+                    src/network/CServer.cpp
+                    src/network/CClient.cpp
                     src/Vectors.cpp
                     src/Xml.cpp
                     src/Matrix.cpp

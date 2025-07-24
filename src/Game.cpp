@@ -16,14 +16,14 @@
 #include "Matrix.h"
 #include "audio/OggStream.h"
 #include "Consts.h"
-
+#include <arpa/inet.h>
 
 
 //===================================GLOBALS
 
 const int slime=35;
 
-const unsigned NetPort=66666;
+const unsigned NetPort=6666;
 
 
 int slimtim=0;
@@ -800,7 +800,7 @@ void Game::SendItemCRemove(int itemIndex){
     index+=3;
     memcpy(&bufer[index],&itemIndex,sizeof(int));
     index+=sizeof(int);
-    clientas.sendData(bufer,index);
+    udpClient.sendData(bufer,index, serverAddress);
 }
 
 //-----------------------------------
@@ -888,7 +888,7 @@ void Game::SendWarpMessage()
     int index=0;
     buferis[0]='n'; buferis[1]='x'; buferis[2]='t';
     index+=3;
-    clientas.sendData(buferis, index);
+    udpClient.sendData(buferis, index, serverAddress);
 }
 
 
@@ -1016,8 +1016,15 @@ void Game::StopServer()
 //---------------------------------
 bool Game::JoinServer(const char* ip, unsigned port)
 {
-    if (clientas.connectServer(ip,port)){
-        isClient=true;
+    if (udpClient.openAsClient())
+    {
+        char buf[4] = {'c','o','n'};
+
+        serverAddress.address = inet_addr(ip);
+        serverAddress.port = port;
+        udpClient.sendData(buf, 3, serverAddress);
+
+        isClient = true;
         return true;
     }
 
@@ -1029,8 +1036,8 @@ void Game::QuitServer()
     isClient = false;
     char buf[4];
     buf[0]='q'; buf[1]='u'; buf[2]='t';
-    clientas.sendData(buf,3);
-    clientas.disconnectServer();
+    udpClient.sendData(buf, 3, serverAddress);
+    udpClient.shutdown();
 }
 
 //--------------------------------
@@ -1046,7 +1053,7 @@ void Game::SendClientDoorState(int doorx,int doory, unsigned char doorframe)
     index+=sizeof(int);
     memcpy(&bufer[index],&doorframe,sizeof(unsigned char));
     index+=sizeof(unsigned char);
-    clientas.sendData(bufer,index);
+    udpClient.sendData(bufer, index, serverAddress);
 }
 //--------------------------------
 void Game::SendServerDoorState(unsigned int clientIndex, int doorx,int doory, unsigned char doorframe)
@@ -1179,7 +1186,7 @@ void Game::SendClientAtackImpulse(int victimID, int hp)
     index+=sizeof(int);
     memcpy(&buferis[index],&hp,sizeof(int));
     index+=sizeof(int);
-    clientas.sendData(buferis,index);
+    udpClient.sendData(buferis, index, serverAddress);
 }
 //----------------------------------------
 void Game::SendAtackImpulse(unsigned int clientIndex, int victim, int hp)
@@ -1595,15 +1602,12 @@ void Game::TitleMenuLogic()
         }
     }
 
-
-        
         //-------IP EDIT    
         if (ipedit.active()){
-            if (!ipedit.entered){
-                
+            if (!ipedit.entered)
+            {
                 ipedit.getInput(EditText, globalKEY);
                 leterKey=0;
-                
             }
             else{
                 netmenu.reset();
@@ -1613,10 +1617,10 @@ void Game::TitleMenuLogic()
                 ipedit.reset();
             }
 
-            if (ipedit.canceled){
+            if (ipedit.canceled)
+            {
                 ipedit.deactivate();
                 ipedit.reset();
-                //netmenu.reset();
                 netmenu.activate();
                 
             }
@@ -1825,38 +1829,20 @@ void Game::logic(){
 
     if (isServer)
     {
-        if (serveris.serverState())
+        if (serveris.isRunning())
         {
-            int res = serveris.waitForClient();
+            SendData();
+            GetData();
 
-            if (res)
-            {
-
-                printf("CLIENT CONNECTED!\n");
-
-                Dude naujas;
-                mapas.mons.add(naujas);
-
-                mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id+1;
-
-                for (int i=0; i < (int)serveris.clientCount(); i++)
-                {
-                    SendMapInfo(i, mapas);
-                }
-
-                SendMapData(serveris.clientCount()-1, mapas);
-                //----end
-
-            }
         }
-
     }
-
-
-    if ((isServer)||(isClient))
+    else if (isClient)
     {
-        SendData();
-        GetData();
+        if (udpClient.isOpen())
+        {
+            SendData();
+            GetData();
+        }
     }
 
     if (music.playing()) //updeitinam muzona
@@ -2079,13 +2065,14 @@ void Game::CoreGameLogic()
                     if (mapas.mons[mapas.enemyCount].currentWeapon==2)
                         isMine=1;
                     memcpy(&buf[7],&isMine,sizeof(unsigned char));
-                    clientas.sendData(buf,8);
+                    udpClient.sendData(buf, 8, serverAddress);
                 }
 
                 bool isMine = false;
                 if (mapas.mons[mapas.enemyCount].currentWeapon==2)
-
+                {
                     isMine=true;
+                }
                 if (isServer)
                 {
                     for (int i=0;i<(int)serveris.clientCount();i++)
@@ -2616,7 +2603,7 @@ void Game::SendClientCoords()
     cnt++;
 
 
-    clientas.sendData(coords,cnt);
+    udpClient.sendData(coords, cnt, serverAddress);
 }
 //-----------------------------------------
 void Game::SendPlayerInfoToClient(int clientindex)
@@ -2924,129 +2911,161 @@ void Game::GetAtackImpulse(const char* buf,int* index)
 //---------------------------------
 void Game::GetData()
 {
-    if (isServer){
+    if (isServer)
+    {
 
         char bufer[1024];
+        Address addr;
+        int siz = serveris.getData(bufer, 1024, addr);
 
-        for (unsigned int i=0;i<serveris.clientCount();i++){
-            int siz=serveris.getData(i,bufer);
-            if (siz){
-                int index=0;
-                while (index<siz){
-                    
-                    char hdr[4];
-                    strcpy(hdr,"nop"); //pradine reiksme
-                    if (siz-index>3){
-                        memcpy(&hdr,&bufer[index],3);
-                        hdr[3]=0;
+
+        if (siz)
+        {
+
+            int index=0;
+
+            while (index < siz)
+            {
+
+                char hdr[4];
+                strcpy(hdr,"nop"); //pradine reiksme
+                if (siz-index>3){
+                    memcpy(&hdr,&bufer[index],3);
+                    hdr[3] = 0;
+                }
+
+                if (strcmp(hdr, "con") == 0)
+                {
+                    printf("CLIENT CONNECTED!\n");
+
+                    Dude naujas;
+                    mapas.mons.add(naujas);
+
+
+                    ClientFootprint fp;
+                    fp.address = addr;
+                    serveris.addClient(fp);
+
+                    mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id+1;
+
+                    for (int i=0; i < (int)serveris.clientCount(); i++)
+                    {
+                        SendMapInfo(i, mapas);
                     }
 
-                    if(strcmp(hdr,"chr")==0){
-                        index+=3;
-                        GetClientCoords(bufer,&index,i);
+                    SendMapData(serveris.clientCount()-1, mapas);
+
+                }
+                else if(strcmp(hdr,"chr")==0){
+                    index+=3;
+                    GetClientCoords(bufer,&index,0);
+                }
+                else if (strcmp(hdr,"sht")==0)
+                {
+                    unsigned char cisMine=0;
+
+                    index+=3;
+                    memcpy(&mapas.mons[mapas.enemyCount+1/*+i*/].ammo,&bufer[index],sizeof(int));
+                    index+=sizeof(int);
+                    memcpy(&cisMine,&bufer[index],sizeof(unsigned char));
+                    index+=sizeof(unsigned char);
+                    bool isMine = false;
+
+                    if (cisMine)
+                    {
+                        isMine=true;
                     }
-                    else
-                        if (strcmp(hdr,"sht")==0)
-                        {
-                            unsigned char cisMine=0;
 
-                            index+=3;
-                            memcpy(&mapas.mons[mapas.enemyCount+1+i].ammo,&bufer[index],sizeof(int));
-                            index+=sizeof(int);
-                            memcpy(&cisMine,&bufer[index],sizeof(unsigned char));
-                            index+=sizeof(unsigned char);
-                            bool isMine = false;
-
-                            if (cisMine)
-                            {
-                                isMine=true;
-                            }
-
-                            mapas.mons[mapas.enemyCount+1+i].shoot(true,isMine,&bulbox);
+                    mapas.mons[mapas.enemyCount+1/*+i*/].shoot(true,isMine,&bulbox);
 
 
-                            for (unsigned int a=0;a<serveris.clientCount();a++){//isiunciam isovimo impulsa kitiems
-                                if (a!=i){
-                                    if ((a<i)&&(i>0))
-                                        SendBulletImpulse(255+i,mapas.mons[mapas.enemyCount+i].ammo,a,isMine);
-                                    else
-                                        SendBulletImpulse(256+i,mapas.mons[mapas.enemyCount+i].ammo,a,isMine);
-
-                                }
-
-                            }
-                        }
-                        else
-                            if (strcmp(hdr,"itm")==0){
-                                index+=3;
-                                int itmindex=0;
-                                memcpy(&itmindex,&bufer[index],sizeof(int));
-                                index+=sizeof(int);
-                                if ((mapas.items[itmindex].value<5)&&(mapas.items[itmindex].value>0))
-                                    goods--;
-                                mapas.removeItem(itmindex);
-                                for (unsigned int a=0;a<serveris.clientCount();a++){
-                                    if (a!=i)
-                                        SendItemSRemove(itmindex,a,true);
-                                }
-
-                            }
+                    for (unsigned int a=0;a<serveris.clientCount();a++)
+                    {//isiunciam isovimo impulsa kitiems
+                    /*    if (a!=i){
+                            if ((a<i)&&(i>0))
+                                SendBulletImpulse(255+i,mapas.mons[mapas.enemyCount+i].ammo,a,isMine);
                             else
-                                if (strcmp(hdr,"dor")==0){
-                                    index+=3;
-                                    int dx,dy;
-                                    unsigned char frame;
-                                    GetDoorInfo(bufer,&index,&dx,&dy,&frame);
-                                    for (unsigned int a=0;a<serveris.clientCount();a++){
-                                    if (a!=i)
-                                        SendServerDoorState(a,dx,dy,frame);
-                                    }
-                                }
-                                else
-                                    if (strcmp(hdr,"nxt")==0)
-                                    {
-                                        index+=3;
-                                        mapai.current++;
-                                        int kiek = serveris.clientCount();
+                                SendBulletImpulse(256+i,mapas.mons[mapas.enemyCount+i].ammo,a,isMine);
 
-                                        GoToLevel(mapai.current,kiek);
-                                        for (int a =0; a<(int)serveris.clientCount();a++){
-                                            SendMapInfo(a, mapas);
-                                            SendMapData(a, mapas);
-                                        }
-                                        
+                        }*/
 
-                                    }
-                                else
-                                    if (strcmp(hdr,"atk")==0){
-                                        index+=3;
-                                        GetClientAtackImpulse(bufer,&index,i);
-                                    }
+                    }
+                }
+                else if (strcmp(hdr,"itm")==0)
+                {
+                    index+=3;
+                    int itmindex=0;
+                    memcpy(&itmindex,&bufer[index],sizeof(int));
+                    index+=sizeof(int);
+                    if ((mapas.items[itmindex].value<5)&&(mapas.items[itmindex].value>0))
+                        goods--;
+                    mapas.removeItem(itmindex);
+                    for (unsigned int a=0;a<serveris.clientCount();a++)
+                    {
+                    /*    if (a!=i)
+                            SendItemSRemove(itmindex,a,true);*/
+                    }
 
-                                    else
-                                        if (strcmp(hdr,"qut")==0){
-                                            index+=3;
-                                            serveris.removeClient(i);
-                                            mapas.mons.remove(mapas.enemyCount+i);
-                                        }
+                }
+                else if (strcmp(hdr,"dor")==0)
+                {
+                    index+=3;
+                    int dx,dy;
+                    unsigned char frame;
+                    GetDoorInfo(bufer,&index,&dx,&dy,&frame);
+                    for (unsigned int a=0;a<serveris.clientCount();a++)
+                    {
+                    /*    if (a!=i)
+                            SendServerDoorState(a,dx,dy,frame);*/
+                    }
+                }
+                else if (strcmp(hdr,"nxt")==0)
+                {
+                    index+=3;
+                    mapai.current++;
+                    int kiek = serveris.clientCount();
 
-                                    else
-                                    if (strcmp(hdr,"pon")==0){
-                                        index+=3;
+                    GoToLevel(mapai.current,kiek);
+                    for (int a =0; a<(int)serveris.clientCount();a++){
+                        SendMapInfo(a, mapas);
+                        SendMapData(a, mapas);
+                    }
 
-                                    }
-                                    else
 
-                            index++;
+                }
+                else if (strcmp(hdr,"atk")==0)
+                {
+                    index+=3;
+                    //GetClientAtackImpulse(bufer,&index,i);
+                }
+
+                else if (strcmp(hdr,"qut")==0)
+                {
+                    index+=3;
+                    //serveris.removeClient(i);
+                    //mapas.mons.remove(mapas.enemyCount+i);
+                }
+
+                else if (strcmp(hdr,"pon")==0)
+                {
+                    index+=3;
+
+                }
+                else
+                {
+                    index++;
                 }
             }
         }
+
     }
 
-    else//----------------------------------------------------------------------------
-        if (isClient){ //jei klientas
-            char bufer[1024];
-            int siz=clientas.getData(bufer);
+    //-------------------------------
+    else if (isClient)
+    { //jei klientas
+        char bufer[1024];
+        Address addr;
+        int siz = udpClient.getData(bufer, 1024, addr);
 
 
             if (siz){
@@ -3151,7 +3170,7 @@ void Game::GetData()
                                         else
                                         if(strcmp(hdr,"pin")==0){
                                             index+=3;
-                                            clientas.sendData("pon",3);
+                                            udpClient.sendData("pon", 3, serverAddress);
 
                                         }
                                         else
