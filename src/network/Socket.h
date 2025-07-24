@@ -9,12 +9,6 @@
 #endif
 
 
-struct Address
-{
-    uint32_t address;
-    int port;
-};
-
 
 class Socket
 {
@@ -37,9 +31,9 @@ public:
 
     bool isOpen(){return _open;}
 
-    int getData(void *data, size_t dataSize, Address& sender);
+    int getData(void *data, size_t dataSize, sockaddr_in& sender);
 
-    void sendData( const void* data, int len, Address& destination);
+    void sendData( const void* data, int len, sockaddr_in& destination);
 
     void shutdown();
 

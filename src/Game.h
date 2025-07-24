@@ -58,7 +58,7 @@ class Game
 
     MapList mapai;
     CMap mapas;
-    Address serverAddress;
+    sockaddr_in serverAddress;
     Socket udpClient;
     Server serveris;
     SystemConfig sys;

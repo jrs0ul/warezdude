@@ -18,7 +18,7 @@
 
 struct ClientFootprint
 {
-    Address address;
+    sockaddr_in address;
     unsigned ID;
     long lastMsgTimestamp;
 };
@@ -41,9 +41,7 @@ public:
 
     bool launch(int port);
 
-    int waitForClient();
-
-    int getData(void *data, size_t dataSize, Address& senderAddress);
+    int getData(void *data, size_t dataSize, sockaddr_in& senderAddress);
 
     void sendData(unsigned clientIndex, const char* data, int len);
 

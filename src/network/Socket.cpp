@@ -80,6 +80,32 @@ bool Socket::openAsClient()
         return false;
     }
 
+
+#ifdef _WIN32
+    DWORD nonBlocking = 1;
+    if ( ioctlsocket(sock,
+                     FIONBIO,
+                     &nonBlocking ) != 0 )
+    {
+        printf( "failed to set non-blocking\n" );
+        return false;
+    }
+#else
+
+    int nonBlocking = 1;
+    if ( fcntl(sock,
+               F_SETFL,
+               O_NONBLOCK,
+               nonBlocking ) == -1 )
+    {
+        printf( "failed to set non-blocking\n" );
+        return false;
+    }
+
+
+#endif
+
+
     _open = true;
     return _open;
 
@@ -109,7 +135,7 @@ void Socket::shutdown()
 }
 
 //-----------------------------------
-int Socket::getData(void *data, size_t dataSize, Address& sender)
+int Socket::getData(void *data, size_t dataSize, sockaddr_in& sender)
 {
 #ifdef _WIN32
     typedef int socklen_t;
@@ -126,21 +152,16 @@ int Socket::getData(void *data, size_t dataSize, Address& sender)
         return 0;
     }
 
-    sender.address = ntohl(sadd.sin_addr.s_addr);
+    sender = sadd;
 
     return bytes;
 
 }
 
 //------------------------------------
-void Socket::sendData( const void* data, int len, Address& destination)
+void Socket::sendData( const void* data, int len, sockaddr_in& destination)
 {
 
-    sockaddr_in address;
-    address.sin_family = AF_INET;
-    address.sin_port = htons(destination.port);
-    address.sin_addr.s_addr = destination.address;
-
-    sendto(sock, data, len, 0, (sockaddr*)&address, sizeof(sockaddr_in));
+    sendto(sock, data, len, 0, (sockaddr*)&destination, sizeof(sockaddr_in));
 
 }
