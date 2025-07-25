@@ -61,3 +61,18 @@ void Server::addClient(const ClientFootprint& fp)
 {
     connectedClientAddreses.add(fp);
 }
+//-----------------------------------
+int Server::findClientByAddress(const sockaddr_in& addr)
+{
+
+    for (unsigned i = 0; i < connectedClientAddreses.count(); ++i)
+    {
+        if ((connectedClientAddreses[i].address.sin_port == addr.sin_port) &&
+            (connectedClientAddreses[i].address.sin_addr.s_addr == addr.sin_addr.s_addr))
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}

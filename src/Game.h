@@ -176,6 +176,7 @@ private:
     void AnimateSlime();
     void ResetVolume();
     bool InitAudio();
+    void ParseMessagesServerGot();
     void GetData();
     void GetClientAtackImpulse(const char* buf, int * index, int ClientIndex);
     void QuitApp();
@@ -194,7 +195,7 @@ private:
     void KillEnemy(int ID);
     int FPS();
     void DrawSomeText();
-    void GetClientCoords(const char* bufer, int * buferindex, unsigned int clientIndex);
+    void UpdateClientPosition(const char* bufer, int * buferindex, unsigned int clientIndex);
     void GetCharData(const char* bufer, int bufersize, int* index);
     void DrawMiniMap(int x, int y);
     void LoadMap(const char* mapname, int otherplayers);

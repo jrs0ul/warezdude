@@ -47,6 +47,8 @@ public:
 
     void addClient(const ClientFootprint& fp);
     void removeClient(unsigned index);
+
+    int findClientByAddress(const sockaddr_in& addr);
 };
 
 
