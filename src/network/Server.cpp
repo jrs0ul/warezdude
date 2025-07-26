@@ -83,7 +83,11 @@ Message* Server::fetchPacket(unsigned idx)
 
     return 0;
 }
-
+//-----------------------------------
+void Server::discardPacket(unsigned idx)
+{
+    receivedPackets.remove(idx);
+}
 //-----------------------------------
 int Server::findClientByAddress(const sockaddr_in& addr)
 {

@@ -1027,7 +1027,9 @@ void Game::InitServer()
 
         std::thread t([&]
         {
-            while(true){
+            while(true)
+            {
+                std::lock_guard<std::mutex> lock(messageMutex);
                 serveris.getData();
             }
         });
@@ -2982,10 +2984,16 @@ void Game::GetAtackImpulse(const unsigned char* buf,int* index)
 
 void Game::ParseMessagesServerGot()
 {
+
+
     if (!serveris.storedPacketCount())
     {
         return;
     }
+
+    std::lock_guard<std::mutex> lock(messageMutex);
+
+    printf("packets after %u\n", serveris.storedPacketCount());
 
     for (int msgIdx = serveris.storedPacketCount() - 1; msgIdx >= 0; --msgIdx)
     {
@@ -3157,6 +3165,17 @@ void Game::ParseMessagesServerGot()
         msg->parsed = true;
 
     }
+
+    for (int i = serveris.storedPacketCount() - 1; i >= 0 ; --i)
+    {
+        Message* msg = serveris.fetchPacket(i);
+        if (msg->parsed)
+        {
+            serveris.discardPacket(i);
+        }
+    }
+
+    printf("packets after %u\n", serveris.storedPacketCount());
 
 
 }
