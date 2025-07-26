@@ -14,6 +14,7 @@
 #include "SysConfig.h"
 #include "ShaderProgram.h"
 #include "network/Server.h"
+#include "network/Client.h"
 #include "map.h"
 #include "maplist.h"
 
@@ -58,10 +59,11 @@ class Game
 
     MapList mapai;
     CMap mapas;
-    sockaddr_in serverAddress;
-    Socket udpClient;
+
+    Client client;
     Server serveris;
     std::mutex messageMutex;
+
     SystemConfig sys;
     OggStream music;
     CBulletContainer bulbox;
@@ -178,10 +180,9 @@ private:
     void ResetVolume();
     bool InitAudio();
     void ParseMessagesServerGot();
-    void GetData();
+    void ParseMessagesClientGot();
     void GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int ClientIndex);
     void QuitApp();
-    void SendData();
     bool OnHit(Bullet& bul);
     void DrawStats();
     void SendPlayerInfoToClient(int clientindex);
