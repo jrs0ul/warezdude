@@ -12,8 +12,7 @@
 #include "TouchData.h"
 #include "SysConfig.h"
 #include "ShaderProgram.h"
-#include "network/CClient.h"
-#include "network/CServer.h"
+#include "network/Server.h"
 #include "map.h"
 #include "maplist.h"
 
@@ -178,25 +177,25 @@ private:
     bool InitAudio();
     void ParseMessagesServerGot();
     void GetData();
-    void GetClientAtackImpulse(const char* buf, int * index, int ClientIndex);
+    void GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int ClientIndex);
     void QuitApp();
     void SendData();
     bool OnHit(Bullet& bul);
     void DrawStats();
     void SendPlayerInfoToClient(int clientindex);
-    void GetMapInfo(const char* bufer, int bufersize, int* index);
+    void GetMapInfo(const unsigned char* bufer, int bufersize, int* index);
     void KillPlayer(int index);
-    void GetAtackImpulse(const char* buf,int* index);
+    void GetAtackImpulse(const unsigned char* buf,int* index);
     void SendItemCreation(float x, float y, int value, unsigned int clientIndex);
-    void GetNewItemInfo(char* bufer, int* index);
-    void GetMapData(const char* bufer, int* index);
+    void GetNewItemInfo(unsigned char* bufer, int* index);
+    void GetMapData(const unsigned char* bufer, int* index);
     void DrawMap(float r,float g, float b);
-    void GetDoorInfo(const char* bufer,int * index, int* dx, int* dy, unsigned char* frame);
+    void GetDoorInfo(const unsigned char* bufer, unsigned * index, int* dx, int* dy, unsigned char* frame);
     void KillEnemy(int ID);
     int FPS();
     void DrawSomeText();
-    void UpdateClientPosition(const char* bufer, int * buferindex, unsigned int clientIndex);
-    void GetCharData(const char* bufer, int bufersize, int* index);
+    void UpdateClientPosition(const unsigned char* bufer, unsigned * buferindex, unsigned int clientIndex);
+    void GetCharData(const unsigned char* bufer, int bufersize, int* index);
     void DrawMiniMap(int x, int y);
     void LoadMap(const char* mapname, int otherplayers);
     void HelpScreenLogic();

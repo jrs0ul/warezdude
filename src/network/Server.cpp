@@ -1,4 +1,4 @@
-#include "CServer.h"
+#include "Server.h"
 #include <cstdio>
 #include <arpa/inet.h>
 
@@ -21,9 +21,21 @@ bool Server::launch(int port)
     return server.openAsServer(port);
 }
 //----------------------------------------------
-int Server::getData(void *data, size_t dataSize, sockaddr_in& senderAddress)
+void Server::getData()
 {
-    return server.getData(data, dataSize, senderAddress);
+    Message msg;
+    memset(&msg.senderAddress, 0, sizeof(sockaddr_in));
+
+    int len = server.getData(msg.data, MAX_MESSAGE_DATA_SIZE, msg.senderAddress);
+
+    if (len)
+    {
+
+        msg.length = len;
+        msg.parsed = false;
+        receivedPackets.add(msg);
+
+    }
 }
 
 //----------------------------------------------
@@ -61,6 +73,17 @@ void Server::addClient(const ClientFootprint& fp)
 {
     connectedClientAddreses.add(fp);
 }
+//----------------------------------
+Message* Server::fetchPacket(unsigned idx)
+{
+    if (idx < receivedPackets.count())
+    {
+        return &receivedPackets[idx];
+    }
+
+    return 0;
+}
+
 //-----------------------------------
 int Server::findClientByAddress(const sockaddr_in& addr)
 {

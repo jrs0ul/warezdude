@@ -27,8 +27,7 @@ add_executable(warezdude3
                     src/EditBox.cpp
                     src/SysConfig.cpp
                     src/network/Socket.cpp
-                    src/network/CServer.cpp
-                    src/network/CClient.cpp
+                    src/network/Server.cpp
                     src/Vectors.cpp
                     src/Xml.cpp
                     src/Matrix.cpp

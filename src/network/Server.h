@@ -13,7 +13,7 @@
 
 #include "../DArray.h"
 #include "Socket.h"
-
+#include "Message.h"
 
 
 struct ClientFootprint
@@ -30,6 +30,8 @@ class Server
     Socket server;
     DArray<ClientFootprint> connectedClientAddreses;
 
+    DArray<Message> receivedPackets;
+
 public:
 
 
@@ -41,12 +43,16 @@ public:
 
     bool launch(int port);
 
-    int getData(void *data, size_t dataSize, sockaddr_in& senderAddress);
+    void getData();
 
     void sendData(unsigned clientIndex, const char* data, int len);
 
     void addClient(const ClientFootprint& fp);
     void removeClient(unsigned index);
+
+    unsigned storedPacketCount(){return receivedPackets.count();}
+    Message* fetchPacket(unsigned idx);
+    void discardPacket(unsigned idx);
 
     int findClientByAddress(const sockaddr_in& addr);
 };

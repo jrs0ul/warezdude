@@ -3,7 +3,7 @@
 
 #include <cstdio>     //sprinf
 #include <ctime>
-
+#include <thread>
 
 #include "Dude.h"
 #include "BulletContainer.h"
@@ -1019,11 +1019,20 @@ void Game::ItemPickup()
 //---------------------------------
 void Game::InitServer()
 {
-    isServer=true;
+    isServer = true;
     printf("Launching server on port: %d\n", NetPort);
     if (serveris.launch(NetPort))
     {
         printf("Server launched!\n");
+
+        std::thread t([&]
+        {
+            while(true){
+                serveris.getData();
+            }
+        });
+
+        t.detach();
     }
     else
     {
@@ -1352,20 +1361,30 @@ void Game::MonsterAI(int index)
         {
             //2 rask spindulio kelia iki pirmojo kolidinancio
             Vector3D * line = Line(round(mapas.mons[index].x),
-                                   round(mapas.mons[index].y),
-                                   round(mapas.mons[victimindex].x),
-                                   round(mapas.mons[victimindex].y),
-                                   linijosIlgis, 32);
+                    round(mapas.mons[index].y),
+                    round(mapas.mons[victimindex].x),
+                    round(mapas.mons[victimindex].y),
+                    linijosIlgis, 32);
 
             if (linijosIlgis)
             {
                 bool colide=false;
                 for(int i=0; i < linijosIlgis; i++)
                 {
-                    if (mapas.colide[(unsigned)line[i].y][(unsigned)line[i].x])
+
+                    unsigned ly = (unsigned)line[i].y;
+                    unsigned lx = (unsigned)line[i].x;
+
+                    if ((ly >= mapas.height) || (lx >= mapas.width))
                     {
-                     colide = true;
-                     break;
+                        colide = true;
+                        break;
+                    }
+
+                    if (mapas.colide[ly][lx])
+                    {
+                        colide = true;
+                        break;
                     }
 
                 }
@@ -1373,7 +1392,7 @@ void Game::MonsterAI(int index)
                 {
                     mapas.mons[index].enemyseen = true;
                     mapas.mons[index].angle = atan2(mapas.mons[victimindex].y - mapas.mons[index].y,
-                                                    mapas.mons[victimindex].x - mapas.mons[index].x);
+                            mapas.mons[victimindex].x - mapas.mons[index].x);
                 }
                 delete []line;
             }
@@ -2730,7 +2749,7 @@ void Game::SendData()
 
 }
 //-----------------------------------
-void Game::GetCharData(const char* bufer, int bufersize, int* index )
+void Game::GetCharData(const unsigned char* bufer, int bufersize, int* index )
 {
     if ((bufersize-(*index))>=14){
 
@@ -2765,7 +2784,7 @@ void Game::GetCharData(const char* bufer, int bufersize, int* index )
     }
 }
 //---------------------------------------------
-void Game::GetMapInfo(const char* bufer, int bufersize, int* index)
+void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
 {
 
     int mapnamelen=0;
@@ -2816,7 +2835,7 @@ void Game::GetMapInfo(const char* bufer, int bufersize, int* index)
     }
 }
 //------------------------------------
-void Game::GetMapData(const char* bufer, int* index)
+void Game::GetMapData(const unsigned char* bufer, int* index)
 {
 
 
@@ -2847,7 +2866,7 @@ void Game::GetMapData(const char* bufer, int* index)
 
 }
 //----------------------------------
-void Game::UpdateClientPosition(const char* bufer, int * buferindex, unsigned int clientIndex)
+void Game::UpdateClientPosition(const unsigned char* bufer, unsigned * buferindex, unsigned int clientIndex)
 {
     memcpy(&mapas.mons[mapas.enemyCount+1+clientIndex].x,&bufer[*buferindex],sizeof(float));
     *buferindex+=sizeof(float);
@@ -2864,7 +2883,7 @@ void Game::UpdateClientPosition(const char* bufer, int * buferindex, unsigned in
 }
 
 //--------------------------------------------------------------
-void Game::GetDoorInfo(const char* bufer,int * index, int* dx, int* dy, unsigned char* frame)
+void Game::GetDoorInfo(const unsigned char* bufer, unsigned * index, int* dx, int* dy, unsigned char* frame)
 {
 
     int doorx,doory;
@@ -2889,7 +2908,7 @@ void Game::GetDoorInfo(const char* bufer,int * index, int* dx, int* dy, unsigned
         *frame=doorframe;
 }
 //---------------------------------------
-void Game::GetNewItemInfo(char* bufer, int* index)
+void Game::GetNewItemInfo(unsigned char* bufer, int* index)
 {
     float x,y;
     int value;
@@ -2903,7 +2922,7 @@ void Game::GetNewItemInfo(char* bufer, int* index)
     mapas.addItem(x,y,value);
 }
 //---------------------------------------
-void Game::GetClientAtackImpulse(const char* buf, int * index, int ClientIndex)
+void Game::GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int ClientIndex)
 {
     int victim;
     int hp;
@@ -2946,7 +2965,7 @@ void Game::GetClientAtackImpulse(const char* buf, int * index, int ClientIndex)
 }
 //----------------------------------
 //klientas paima infa apie atka
-void Game::GetAtackImpulse(const char* buf,int* index)
+void Game::GetAtackImpulse(const unsigned char* buf,int* index)
 {
     int victim;
     int hp;
@@ -2963,26 +2982,34 @@ void Game::GetAtackImpulse(const char* buf,int* index)
 
 void Game::ParseMessagesServerGot()
 {
-    char bufer[1024];
-    sockaddr_in addr;
-    int siz = serveris.getData(bufer, 1024, addr);
+    if (!serveris.storedPacketCount())
+    {
+        return;
+    }
 
-
-    if (siz)
+    for (int msgIdx = serveris.storedPacketCount() - 1; msgIdx >= 0; --msgIdx)
     {
 
-        int clientIdx = serveris.findClientByAddress(addr);
+        Message* msg = serveris.fetchPacket(msgIdx);
 
-        int index = 0;
+        if (msg->parsed)
+        {
+            continue;
+        }
 
-        while (index < siz)
+
+        int clientIdx = serveris.findClientByAddress(msg->senderAddress);
+
+        unsigned index = 0;
+
+        while (index < msg->length)
         {
 
             char hdr[4];
             strcpy(hdr,"nop"); //pradine reiksme
-            if (siz-index >= 3)
+            if (msg->length - index >= 3)
             {
-                memcpy(&hdr,&bufer[index],3);
+                memcpy(&hdr, &(msg->data)[index], 3);
                 hdr[3] = 0;
             }
 
@@ -2996,7 +3023,7 @@ void Game::ParseMessagesServerGot()
 
 
                 ClientFootprint fp;
-                fp.address = addr;
+                fp.address = msg->senderAddress;
                 serveris.addClient(fp);
 
                 mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id+1;
@@ -3012,16 +3039,16 @@ void Game::ParseMessagesServerGot()
             else if(strcmp(hdr,"chr")==0)
             {
                 index += 3;
-                UpdateClientPosition(bufer, &index, clientIdx);
+                UpdateClientPosition(msg->data, &index, clientIdx);
             }
             else if (strcmp(hdr,"sht")==0)
             {
                 unsigned char cisMine=0;
 
                 index+=3;
-                memcpy(&mapas.mons[mapas.enemyCount + 1 + clientIdx].ammo,&bufer[index],sizeof(int));
+                memcpy(&mapas.mons[mapas.enemyCount + 1 + clientIdx].ammo, &(msg->data)[index],sizeof(int));
                 index+=sizeof(int);
-                memcpy(&cisMine,&bufer[index],sizeof(unsigned char));
+                memcpy(&cisMine, &(msg->data)[index],sizeof(unsigned char));
                 index+=sizeof(unsigned char);
                 bool isMine = false;
 
@@ -3053,10 +3080,10 @@ void Game::ParseMessagesServerGot()
             {
                 index += 3;
                 int itmindex = 0;
-                memcpy(&itmindex,&bufer[index],sizeof(int));
+                memcpy(&itmindex, &(msg->data)[index], sizeof(int));
                 index+=sizeof(int);
 
-                if ((mapas.items[itmindex].value<5)&&(mapas.items[itmindex].value>0))
+                if ((mapas.items[itmindex].value < 5) && (mapas.items[itmindex].value>0))
                 {
                     goods--;
                 }
@@ -3077,7 +3104,7 @@ void Game::ParseMessagesServerGot()
                 index+=3;
                 int dx,dy;
                 unsigned char frame;
-                GetDoorInfo(bufer,&index,&dx,&dy,&frame);
+                GetDoorInfo(msg->data, &index, &dx,&dy,&frame);
 
                 for (unsigned int a=0;a<serveris.clientCount();a++)
                 {
@@ -3105,8 +3132,8 @@ void Game::ParseMessagesServerGot()
             }
             else if (strcmp(hdr,"atk")==0)
             {
-                index+=3;
-                GetClientAtackImpulse(bufer, &index, clientIdx);
+                index += 3;
+                GetClientAtackImpulse(msg->data, &index, clientIdx);
             }
 
             else if (strcmp(hdr,"qut")==0)
@@ -3126,7 +3153,11 @@ void Game::ParseMessagesServerGot()
                 index++;
             }
         }
+
+        msg->parsed = true;
+
     }
+
 
 }
 
@@ -3142,7 +3173,7 @@ void Game::GetData()
     //-------------------------------
     else if (isClient)
     { //jei klientas
-        char bufer[1024];
+        unsigned char bufer[1024];
         sockaddr_in addr;
         int siz = udpClient.getData(bufer, 1024, addr);
 
@@ -3231,7 +3262,7 @@ void Game::GetData()
                             else if (strcmp(hdr,"dor") == 0)
                             {
                                         index+=3;
-                                        GetDoorInfo(bufer,&index,0,0,0);
+                                        GetDoorInfo(bufer,(unsigned*)&index,0,0,0);
                                     }
 
                                     else
