@@ -694,26 +694,26 @@ void Game::AddaptMapView()
     pushx=0;
     pushy=0;
 
-    if (mapas.width < 22)
+    if (mapas.width < (sys.ScreenWidth / 2) + 2)
     {
         scrx = mapas.width;
         posx = (sys.ScreenWidth / 2 - ((mapas.width*32)/2))*-1 - 16;
     }
     else{
-        if (mapas.width > 22){
+        if (mapas.width > (sys.ScreenWidth / 2) + 2){
             scrx = sys.ScreenWidth / 32 + 2;
             posx = 16;
         }
     }
 
-    if (mapas.height < 17)
+    if (mapas.height < (sys.ScreenHeight / 32) + 2)
     {
         scry = mapas.height;
         posy = (sys.ScreenHeight / 2 - ((mapas.height*32)/2))*-1 - 16;
     }
     else
     {
-        if (mapas.height>17)
+        if (mapas.height > (sys.ScreenHeight / 32) + 2)
         {
             scry = sys.ScreenHeight / 32 + 2;
             posy = 16;

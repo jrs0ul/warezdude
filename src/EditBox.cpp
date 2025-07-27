@@ -25,13 +25,11 @@ void EditBox::getInput(const char* eventText, unsigned keydown)
         {
             entered = true;
         }
-
-        if ( keydown == SDL_SCANCODE_ESCAPE )
+        else if ( keydown == SDL_SCANCODE_ESCAPE )
         {
             canceled = true;
         }
-
-        if (keydown == SDL_SCANCODE_BACKSPACE)
+        else if (keydown == SDL_SCANCODE_BACKSPACE)
         {
             if (strlen(text))
             {
