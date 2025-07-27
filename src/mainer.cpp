@@ -86,15 +86,7 @@ static void  process_events(){
 
         case SDL_TEXTINPUT:
         {
-            if (strlen(Game.EditText) + strlen(event.text.text) < 254)
-            {
-                strcat(Game.EditText, event.text.text);
-            }
-        } break;
-
-        case SDL_TEXTEDITING:
-        {
-            printf("pos %d\n", event.edit.start);
+            strcpy(Game.EditText, event.text.text);
         } break;
 
         case SDL_KEYUP:

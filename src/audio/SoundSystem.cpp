@@ -269,11 +269,12 @@ void SoundSystem::setupListener(float * position, float * orientation){
 //------------------------------------
 void SoundSystem::setSoundPos(unsigned int index, float* pos)
 {
-
+    alSourcefv(sources[index], AL_POSITION, pos);
 }
 //--------------------------------------
 void SoundSystem::setVolume(unsigned int index, int volume)
 {
+    alSourcef(sources[index], AL_GAIN, volume);
 }
 
 //---------------------------------------------

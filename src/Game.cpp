@@ -683,7 +683,7 @@ void Game::MoveDude(){
 
     SoundSystem::getInstance()->setupListener(Vector3D(mapas.mons[mapas.enemyCount].x,0,mapas.mons[mapas.enemyCount].y).v,
                     Vector3D(mapas.mons[mapas.enemyCount].x,0,mapas.mons[mapas.enemyCount].y).v);
-    
+
 }
 
 
@@ -1589,7 +1589,7 @@ void Game::ResetVolume()
 
     SoundSystem* ss = SoundSystem::getInstance();
 
-    for (unsigned i=0;i<maxwavs;i++)
+    for (unsigned i = 0; i < maxwavs; i++)
     {
         ss->setVolume(i, sys.soundFXVolume);
     }
@@ -1682,13 +1682,15 @@ void Game::TitleMenuLogic()
     }
 
         //-------IP EDIT    
-        if (ipedit.active()){
+        if (ipedit.active())
+        {
             if (!ipedit.entered)
             {
                 ipedit.getInput(EditText, globalKEY);
                 leterKey=0;
             }
-            else{
+            else
+            {
                 netmenu.reset();
                 PlayNewSong("music.ogg");
                 JoinServer(ipedit.text,NetPort);
@@ -1912,9 +1914,9 @@ void Game::logic(){
         {
             for (int a = 0; a < (int)serveris.clientCount(); a++)
             {
-                //char buf[4];
-                //buf[0]='p';buf[1]='i';buf[2]='n';
-                //serveris.sendData(a,buf,3);
+                char buf[4];
+                buf[0]='p';buf[1]='i';buf[2]='n';
+                serveris.sendData(a,buf,3);
 
                 SendPlayerInfoToClient(a);
             }
