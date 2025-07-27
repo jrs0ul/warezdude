@@ -1,7 +1,8 @@
 #include "Server.h"
 #include <cstdio>
+#ifndef _WIN32
 #include <arpa/inet.h>
-
+#endif
 
 
 //--------------------------------------------------------------

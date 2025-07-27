@@ -1,5 +1,6 @@
 #include "Socket.h"
 #include <cstdio>
+#ifndef _WIN32
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -7,6 +8,7 @@
 #include <errno.h>
 #include <sys/select.h>
 #include <sys/types.h>
+#endif
 
 //--------------------------------------------
 
@@ -145,7 +147,7 @@ int Socket::getData(void *data, size_t dataSize, sockaddr_in& sender)
     socklen_t saddLength = sizeof(sadd);
 
 
-    int bytes = recvfrom(sock, data, dataSize, 0, (sockaddr*)&sadd, &saddLength);
+    int bytes = recvfrom(sock, (char*)data, dataSize, 0, (sockaddr*)&sadd, &saddLength);
 
     if (bytes < 0)
     {
@@ -162,6 +164,6 @@ int Socket::getData(void *data, size_t dataSize, sockaddr_in& sender)
 void Socket::sendData( const void* data, int len, sockaddr_in& destination)
 {
 
-    sendto(sock, data, len, 0, (sockaddr*)&destination, sizeof(sockaddr_in));
+    sendto(sock, (const char*)data, len, 0, (sockaddr*)&destination, sizeof(sockaddr_in));
 
 }

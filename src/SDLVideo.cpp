@@ -36,12 +36,7 @@ bool SDLVideo::InitWindow(const char * title, const char * iconPath,
     }
 
     icon = SDL_LoadBMP(iconPath);
-    if (icon)
-    {
-        //SDL_SetColorKey(icon, SDL_SRCCOLORKEY,
-        //                SDL_MapRGB(icon->format, 255, 255, 255));
-        //SDL_WM_SetIcon(icon, 0);
-    }
+   
 
     mainWindow = SDL_CreateWindow(title, 
                          SDL_WINDOWPOS_UNDEFINED,
@@ -53,6 +48,13 @@ bool SDLVideo::InitWindow(const char * title, const char * iconPath,
     {
         puts("can't set video mode");
         return false;
+    }
+
+    if (icon)
+    {
+        //SDL_SetColorKey(icon, SDL_SRCCOLORKEY,
+        //                SDL_MapRGB(icon->format, 255, 255, 255));
+        SDL_SetWindowIcon(mainWindow, icon);
     }
 
     SDL_GL_CreateContext(mainWindow);

@@ -223,7 +223,7 @@ void CheckKeys()
 }
 
 //--------------------
-int main()
+int main(int argc, char* argv[])
 {
 
     srand(time(0));
@@ -252,7 +252,7 @@ int main()
 
     const char* title = "Warez D00ds 3";
 
-    if (!SDL.InitWindow(title, "icon1.ico", Game.windowed)){
+    if (!SDL.InitWindow(title, "icon1.bmp", Game.windowed)){
         Game.Works = false;
     }
 

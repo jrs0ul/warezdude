@@ -16,7 +16,9 @@
 #include "Matrix.h"
 #include "audio/OggStream.h"
 #include "Consts.h"
+#ifndef _WIN32
 #include <arpa/inet.h>
+#endif
 
 
 //===================================GLOBALS
