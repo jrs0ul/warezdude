@@ -5,7 +5,7 @@
 
 
 
-void SelectMeniu::init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel, unsigned char dst,unsigned int dheight){
+void SelectMenu::init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel, unsigned char dst,unsigned int dheight){
  x=dx;
  y=dy;
  strcpy(title,dt);
@@ -34,13 +34,13 @@ void SelectMeniu::init(unsigned int dx, unsigned int dy, const char* dt, Smenu& 
  pressedkey=0;
 }
 //--------------------------------------------
-void SelectMeniu::reset(){
+void SelectMenu::reset(){
  state=defstate;
  selected=false;
  canceled=false;
 }
 //--------------------------------------------
-void SelectMeniu::getInput(const unsigned char* keys, const unsigned char* oldKeys){
+void SelectMenu::getInput(const unsigned char* keys, const unsigned char* oldKeys){
 
         //cia tam kad parinktu kai mygtuka atleidi
         if (keys[4] && !oldKeys[4]) 
@@ -80,7 +80,7 @@ void SelectMeniu::getInput(const unsigned char* keys, const unsigned char* oldKe
 
     }
 //--------------------------------------------
-void SelectMeniu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons)
+void SelectMenu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons)
 {
 
     unsigned newcount=0;

@@ -2,17 +2,18 @@
 #define MAPLIST_H
 
 
-class MapList{
- int _count;
- char**maps;
- 
+class MapList
+{
+    int _count;
+    char**maps;
+
 public:
- //
- int current;
- MapList();
- void Destroy();
- int count(){return _count;}
- void getMapName(int i, char* name);
+
+    int current;
+    MapList();
+    void Destroy();
+    int count(){return _count;}
+    void getMapName(int i, char* name);
 };
 
 

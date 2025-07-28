@@ -20,7 +20,7 @@ enum Items
     ITEM_FLOPPY = 2,
     ITEM_CARTRIDGE = 3,
     ITEM_EXIT = 4,
-    ITEM_AMMO_PACK,
+    ITEM_AMMO_PACK = 5,
     ITEM_MEDKIT
 };
 

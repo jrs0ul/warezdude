@@ -1,6 +1,6 @@
 Client sends:
 =======================
-Player_shoots 8 bytes
+clien shot a bullet 8 bytes
 ----
 sht     - 3 bytes header
 ammo    - 4 bytes int
@@ -16,7 +16,7 @@ frame   - 1 byte
 stats   - 1 byte
 ------------------------
 nop
-srv
+------------------------
 dat
 ------------------------
 Item_taken
@@ -26,13 +26,12 @@ item idx- 4 bytes int
 ------------------------
 dor
 itc
-atk
 -----------------------
 Next_Level
 ----
 nxt    - 3 bytes header
 --------------------------
-Attack
+Melee Attack
 ----
 atk             - 3 byte header
 victimID        - 4 byte int
@@ -61,17 +60,25 @@ srv             - 3 byte header
 map_name_len    - 4 bytes
 map_name        - map_name_len bytes
 client_count    - 4 bytes
+game_type       - 1 byte
 -------------------------
 Map_Data
 ----
 dat
 enemy_count     - 4 bytes
 --------------------------
-Attack
+Melee Attack
 ----
 atk             - 3 byte header
 victimID        - 4 byte int
 victimHP        - 4 byte int
-
+---------------------------
+Bullet has been shot
+----
+sht             - 3 byte header
+shooter index   - 4 byte int
+shooter ammo    - 4 byte int
+is it a mine ?  - 1 byte
+---------------------------
 
 

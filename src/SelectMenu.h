@@ -19,29 +19,30 @@ struct Smenu{
 
 
 
- class SelectMeniu:public ActiveControl{ //selecto objectas
- public:
-  char title[30];  //antraste
-  Smenu selection;   //meniu
-  unsigned int width;        //plotis
-  unsigned int height;       //aukstis
-  unsigned char defstate;     //defaultine opcija
-  unsigned char state;        //parinkta tuo metu opcija
-  
-  bool selected;  //jau viskas pasirinkta, enter paspaustas
-  bool canceled;  //ar menu atshauktas
-  unsigned pressedkey;
-   
+class SelectMenu : public ActiveControl
+{ //selecto objectas
+    public:
+        char title[30];  //antraste
+        Smenu selection;   //meniu
+        unsigned int width;        //plotis
+        unsigned int height;       //aukstis
+        unsigned char defstate;     //defaultine opcija
+        unsigned char state;        //parinkta tuo metu opcija
 
-  //priskiriam data dx,dy:lango metrikos dst:defstate
-  void init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel, unsigned char dst,unsigned int dheight=0);
-  //numusa userio atlikta pasirinkima
-  void reset();
-  //jei keyus i virsu apcia tai keiciasi ir state
-  void getInput(const unsigned char* keys, const unsigned char* oldKeys);
-  //nupaisom
-  void draw( PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons=0);
- 
- };
+        bool selected;  //jau viskas pasirinkta, enter paspaustas
+        bool canceled;  //ar menu atshauktas
+        unsigned pressedkey;
+
+
+        //priskiriam data dx,dy:lango metrikos dst:defstate
+        void init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel, unsigned char dst,unsigned int dheight=0);
+        //numusa userio atlikta pasirinkima
+        void reset();
+        //jei keyus i virsu apcia tai keiciasi ir state
+        void getInput(const unsigned char* keys, const unsigned char* oldKeys);
+        //nupaisom
+        void draw( PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons=0);
+
+};
 
 #endif

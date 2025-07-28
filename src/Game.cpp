@@ -7,7 +7,6 @@
 
 #include "Dude.h"
 #include "BulletContainer.h"
-#include "SelectMenu.h"
 #include "EditBox.h"
 #include "ScroollControl.h"
 #include "gui/Text.h"
@@ -54,7 +53,6 @@ int fadetim=0;
 int objectivetim=200;
 
 
-SelectMeniu mainmenu,netmenu, netgame, options;
 ScroollControl SfxVolumeC, MusicVolumeC;
 EditBox ipedit;
 
@@ -63,8 +61,6 @@ EditBox ipedit;
 
 bool isServer=false;
 bool isClient=false;
-bool IsCoop=true;
-bool IsDeathMatch=false;
 
 
 int klientai=0;
@@ -92,15 +88,17 @@ Game::Game()
     DebugMode = 0;
 
     state = GAMESTATE_TITLE;
+    netGameState = MPMODE_COOP;
 
 
     imgCount=0;
     maxwavs=0;
 
 
-    goods=0;
+    frags = 0;
+    mustCollectItems = 0;
     timeleft=0;
-    ext=false;
+    exitSpawned = false;
     showdebugtext=false;
     FirstTime=true;
     ms=0;
@@ -207,7 +205,8 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
     unsigned tileset = pics.findByName("pics/tileset.tga");
 
 
-    for (int a=psky-scry; a<psky ;a++){
+    for (int a=psky-scry; a<psky ;a++)
+    {
         int tmpx=0; 
         for (int i=pskx-scrx; i<pskx; i++)
         {
@@ -280,25 +279,15 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
     bulbox.draw(pics, pskx, psky, pushx, pushy, scrx, scry, posx, posy);
 
 
-    for (int i=0;i<klientai+2;i++)
+    for (int i = 0; i < PlayerCount(); i++)
     {
-        if (mapas.mons[mapas.enemyCount+i].alive)
+        if (mapas.mons[mapas.enemyCount+i].isAlive())
         {
             mapas.mons[mapas.enemyCount+i].draw(pics, 5, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
         }
     }
 
-
-    if (isServer){
-        for (unsigned int i = 0; i < serveris.clientCount(); i++)
-        {
-            if (mapas.mons[mapas.enemyCount+i+1].alive)
-            {
-                mapas.mons[mapas.enemyCount+i+1].draw(pics, 5, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
-            }
-        }
-    }
-
+ 
     if (mapas.enemyCount)
     {
         for (int i=0; i<mapas.enemyCount; i++)
@@ -369,7 +358,7 @@ void Game::DrawNum(int x, int y,int num)
 
     for (int a = 0; a < 3; a++)
     {
-        pics.draw(8, x + a*16, y, arr[a], false, 0.6f,0.98f);
+        pics.draw(8, x + a*16, y, arr[a], false, 0.98f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
     }
 }
 //-------------------------------
@@ -397,25 +386,25 @@ void Game::KillPlayer(int index)
     mapas.mons[mapas.enemyCount+index].frame=mapas.mons[mapas.enemyCount+index].weaponCount*4;
     AdaptSoundPos(2,mapas.mons[mapas.enemyCount+index].x,mapas.mons[mapas.enemyCount+index].y);
     SoundSystem::getInstance()->playsound(2);
-    
 
     mapas.mons[mapas.enemyCount+index].stim=0;
     timeleft=mapas.timeToComplete;
     mapas.mons[mapas.enemyCount+index].hp=100;
-    
+
     Decal decalas;
-    decalas.x=round(mapas.mons[mapas.enemyCount+index].x);
-    decalas.y=round(mapas.mons[mapas.enemyCount+index].y);
-    decalas.r=1.0f;
-    decalas.g=decalas.b=0.0f;
-    decalas.frame=rand()%2;
+    decalas.x = round(mapas.mons[mapas.enemyCount+index].x);
+    decalas.y = round(mapas.mons[mapas.enemyCount+index].y);
+    decalas.r = 1.0f;
+    decalas.g = decalas.b = 0.0f;
+    decalas.frame = rand()%2;
     mapas.decals.add(decalas);
 }
 
 //------------------
 void Game::KillEnemy(int ID)
 {
-    if (ID<mapas.enemyCount){
+    if (ID < mapas.enemyCount)
+    {
         
         mapas.mons[ID].shot=true;
 
@@ -430,13 +419,16 @@ void Game::KillEnemy(int ID)
         decalas.frame=rand()%2;
         mapas.decals.add(decalas);
 
-        if (mapas.mons[ID].item){ //jei monstras turejo prarijes kazkoki daikta
+        if (mapas.mons[ID].item)
+        { //jei monstras turejo prarijes kazkoki daikta
             CItem swalenitem;
             swalenitem.value=mapas.mons[ID].item;
             swalenitem.x=mapas.mons[ID].x;
             swalenitem.y=mapas.mons[ID].y;
             mapas.addItem(swalenitem.x,swalenitem.y,swalenitem.value);
+
             mapas.mons[ID].item=0;
+
             if (isServer)
             {
                 for (unsigned int i=0;i<serveris.clientCount();i++)
@@ -446,10 +438,11 @@ void Game::KillEnemy(int ID)
             }
 
         }
-    
     }
     else
+    {
         KillPlayer(ID-254);
+    }
 
 
 
@@ -472,16 +465,7 @@ bool Game::OnHit(Bullet& bul)
     bool hit = false;
     int tmpID=0;
 
-    int players = 1;
-
-    if (isServer)
-    {
-        players += serveris.clientCount();
-    }
-    if (isClient)
-    {
-        players+=klientai;
-    }
+    int players = PlayerCount();
 
     for (int i=0; i < mapas.enemyCount + players; i++)
     {
@@ -490,7 +474,9 @@ bool Game::OnHit(Bullet& bul)
 
             tmpID = mapas.mons[i].id;
 
-            if ((bul.parentID!=tmpID)&&(!mapas.mons[i].shot)&&(!mapas.mons[i].spawn))
+            if ((bul.parentID!=tmpID) && //bullet should not hit the shooter
+                (!mapas.mons[i].shot) &&
+                (!mapas.mons[i].spawn))
             {
                 if (!hit)
                 {
@@ -513,23 +499,30 @@ bool Game::OnHit(Bullet& bul)
 void Game::DrawStats()
 {
 
-    pics.draw(9, 30,435,2, false, 0.6f);
+    pics.draw(9, 30,435, 2, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
     DrawNum(58,440,mapas.mons[mapas.enemyCount].hp);
 
 
-    pics.draw(9, 120,440,0, false, 0.6f); 
+    pics.draw(9, 120,440, 0, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f)); 
     DrawNum(155,440,mapas.mons[mapas.enemyCount].ammo);
 
-    if (mapas.misionItems)
+    if (mapas.misionItems && netGameState == MPMODE_COOP)
     {
-        pics.draw(9, 220,440,1, false, 0.6f);
-        DrawNum(255,440,goods);
+        pics.draw(9, 220, 440, 1, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
+        DrawNum(255,440, mustCollectItems);
     }
 
-    if (mapas.timeToComplete)
+    if (netGameState == MPMODE_DEATHMATCH)
     {
-        int min=timeleft/60;
-        int sec=timeleft-min*60;
+        pics.draw(9, 220, 440, 3, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
+        DrawNum(255,440, frags);
+    }
+
+
+    if (mapas.timeToComplete && netGameState == MPMODE_COOP)
+    {
+        int min = timeleft/60;
+        int sec = timeleft-min*60;
         char buf[50];
         sprintf(buf,"%d:%d",min,sec);
         WriteText(450,20, pics, 10, buf, 0.7f,1.5f,COLOR(1.0f,0.5f,0.5f, 1.f), COLOR(1.0f,0.5f,0.5f, 1.f));
@@ -696,26 +689,26 @@ void Game::AddaptMapView()
     pushx=0;
     pushy=0;
 
-    if (mapas.width < (sys.ScreenWidth / 2) + 2)
+    if (mapas.width < (sys.ScreenWidth / TILE_WIDTH) + 2)
     {
         scrx = mapas.width;
         posx = (sys.ScreenWidth / 2 - ((mapas.width*32)/2))*-1 - 16;
     }
     else{
-        if (mapas.width > (sys.ScreenWidth / 2) + 2){
+        if (mapas.width > (sys.ScreenWidth / TILE_WIDTH) + 2){
             scrx = sys.ScreenWidth / 32 + 2;
             posx = 16;
         }
     }
 
-    if (mapas.height < (sys.ScreenHeight / 32) + 2)
+    if (mapas.height < (sys.ScreenHeight / TILE_WIDTH) + 2)
     {
         scry = mapas.height;
         posy = (sys.ScreenHeight / 2 - ((mapas.height*32)/2))*-1 - 16;
     }
     else
     {
-        if (mapas.height > (sys.ScreenHeight / 32) + 2)
+        if (mapas.height > (sys.ScreenHeight / TILE_WIDTH) + 2)
         {
             scry = sys.ScreenHeight / 32 + 2;
             posy = 16;
@@ -789,24 +782,29 @@ void Game::findpskxy()
 //---------------------------
 void Game::PutExit(){
 
+    if (netGameState == MPMODE_DEATHMATCH)
+    {
+        return;
+    }
+
     int ex = mapas.exit.x;
     int ey = mapas.exit.y;
 
-    mapas.addItem(ex*32.0f,ey*32.0f, ITEM_EXIT);
-    ext = true;
+    mapas.addItem(ex * 32.0f, ey * 32.0f, ITEM_EXIT);
+    exitSpawned = true;
 }
 
 //----------------------------
 void Game::GoToLevel(int level, int otherplayer)
 {
-    ext=false;
+    exitSpawned = false;
     bulbox.destroy();
     mapas.Destroy();
     char mapname[255];
     mapai.getMapName(level,mapname);
     mapas.Load(mapname,true,otherplayer);
-    goods=mapas.misionItems;
-    timeleft=mapas.timeToComplete;
+    mustCollectItems = mapas.misionItems;
+    timeleft = mapas.timeToComplete;
     mapas.mons[mapas.enemyCount].x=(float)mapas.start.x;
     mapas.mons[mapas.enemyCount].y=(float)mapas.start.y;
     mapas.mons[mapas.enemyCount].id=254;
@@ -831,7 +829,8 @@ void Game::SendItemCRemove(int itemIndex){
 }
 
 //-----------------------------------
-void Game::SendItemSRemove(int ItemIndex, int clientIndex, bool playerTaked){
+void Game::SendItemSRemove(int ItemIndex, int clientIndex, bool playerTaked)
+{
     char bufer[1024];
     int index=0;
     bufer[0]='i';
@@ -856,16 +855,24 @@ void Game::SendMapInfo(int clientIndex, CMap& map){
 
     index+=3;
     int len = (int)strlen(map.name); 
-    int totalpacketlen = len + sizeof(int)+1;
+    int totalpacketlen = len + sizeof(int) + 1 + 1;
+
     memcpy(&bufer[index], &totalpacketlen,sizeof(int)); //paketo dydis
     index += sizeof(int);
+
     memcpy(&bufer[index], &len, sizeof(int)); //mapo pavadinimo ilgis
     index += sizeof(int);
+
     memcpy(&bufer[index], map.name, strlen(map.name)); //mapo pavadinimas
     index += (int)strlen(map.name);
+
     unsigned int kiekis = serveris.clientCount(); 
     memcpy(&bufer[index], &kiekis, sizeof(unsigned int)); //klientu skaicius
     index += sizeof(unsigned int);
+
+    char gameType = (char)netGameState;
+    bufer[index] = gameType;
+    ++index;
 
     serveris.sendData(clientIndex,bufer,index);
 
@@ -972,8 +979,9 @@ void Game::ItemPickup()
 
 
 
-                if ((item<5)&&(item>0)){
-                    goods--;
+                if ((item < ITEM_AMMO_PACK) && (item > 0))
+                {
+                    mustCollectItems--;
                 }
 
                 else
@@ -1249,7 +1257,7 @@ void Game::SendAtackImpulse(unsigned int clientIndex, int victim, int hp)
     int index=0;
     
     buferis[0]='a';buferis[1]='t';buferis[2]='k';
-    index+=3;
+    index += 3;
     memcpy(&buferis[index],&victim,sizeof(int));
     index+=sizeof(int);
     memcpy(&buferis[index],&hp,sizeof(int));
@@ -1574,8 +1582,8 @@ void Game::LoadFirstMap()
             printf("Can't find first map!\n");
             Works = false;
         }
-        goods=mapas.misionItems;
-        timeleft=mapas.timeToComplete;
+        mustCollectItems = mapas.misionItems;
+        timeleft = mapas.timeToComplete;
         mapas.mons[mapas.enemyCount].x=(float)mapas.start.x;
         mapas.mons[mapas.enemyCount].y=(float)mapas.start.y;
         mapas.mons[mapas.enemyCount].id=254;
@@ -1713,37 +1721,67 @@ void Game::TitleMenuLogic()
         if (netgame.active())
         {
             if (!netgame.selected)
+            {
                 netgame.getInput(Keys, OldKeys);
-            else{
-                if (netgame.state == 1)
+
+                if (netgame.canceled)
                 {
-                  IsCoop=false;
-                  IsDeathMatch=true;
+                    netmenu.activate();
+                    netgame.reset();
+                    netgame.deactivate();
                 }
 
-                if (netgame.state == 1)
-                {
-                  IsCoop=true;
-                  IsDeathMatch=false;
-                }
-
-                netgame.reset();
-                netgame.deactivate();
-
-                state = GAMESTATE_GAME;
-                PlayNewSong("music.ogg");
-                InitServer();
-                LoadFirstMap();
             }
-
-            if (netgame.canceled){
-                netmenu.activate();
-                netgame.reset();
-                netgame.deactivate();
+            else
+            {
+                if (netgame.state == 1)
+                {
+                    netGameState = MPMODE_DEATHMATCH;
+                    mapmenu.activate();
+                    netgame.reset();
+                    netgame.deactivate();
+                }
+                else if (netgame.state == 0)
+                {
+                    netGameState = MPMODE_COOP;
+                    state = GAMESTATE_GAME;
+                    netgame.reset();
+                    netgame.deactivate();
+                    PlayNewSong("music.ogg");
+                    InitServer();
+                    LoadFirstMap();
+                }
             }
         }
 
-        if (options.active()){
+        if (mapmenu.active())
+        {
+            if (!mapmenu.selected)
+            {
+                mapmenu.getInput(Keys, OldKeys);
+
+                if (mapmenu.canceled)
+                {
+                    netgame.activate();
+                    mapmenu.reset();
+                    mapmenu.deactivate();
+                }
+
+            }
+            else
+            {
+                mapai.current = mapmenu.state;
+                state = GAMESTATE_GAME;
+                PlayNewSong("music.ogg");
+                mapmenu.reset();
+                mapmenu.deactivate();
+                InitServer();
+                GoToLevel(mapai.current, serveris.clientCount());
+            }
+        }
+
+        if (options.active())
+        {
             if (!options.selected)
                 options.getInput(Keys, OldKeys);
             else{
@@ -1884,19 +1922,25 @@ void Game::HelpScreenLogic()
 //------------------------------
 int Game::PlayerCount()
 {
-    int kiekplayeriu=1;
+    int players = 1;
+
     if (isServer)
-        kiekplayeriu+=serveris.clientCount();
-    if (isClient)
-        kiekplayeriu+=klientai;
-    return kiekplayeriu;
+    {
+        players += serveris.clientCount();
+    }
+    else if (isClient)
+    {
+        players += klientai;
+    }
+
+    return players;
 }
 
 //===============================================================
 
 void Game::logic(){
 
-    if ((mapas.timeToComplete) && (state == GAMESTATE_GAME))
+    if ((mapas.timeToComplete) && (state == GAMESTATE_GAME) && (netGameState == MPMODE_COOP))
     {
         ms += 10;
 
@@ -2021,7 +2065,7 @@ void Game::CoreGameLogic()
     }
 
 
-    if ((goods < 1) && (!ext))  //  no more items ? Let's spawn exit
+    if ((mustCollectItems < 1) && (!exitSpawned))  //  no more items ? Let's spawn exit
     {
         PutExit();
     }
@@ -2124,7 +2168,7 @@ void Game::CoreGameLogic()
 
     //saunam
     if ((Keys[ACTION_FIRE]) && (!mapas.mons[mapas.enemyCount].shot) && 
-            (mapas.mons[mapas.enemyCount].alive) && (!mapas.mons[mapas.enemyCount].spawn))
+            (mapas.mons[mapas.enemyCount].isAlive()) && (!mapas.mons[mapas.enemyCount].spawn))
     {
 
         if (mapas.mons[mapas.enemyCount].canAtack)
@@ -2420,6 +2464,14 @@ void Game::DrawTitleScreen()
                 );
     }
 
+    if (mapmenu.active())
+    {
+        mapmenu.draw(pics,
+                     pics.findByName("pics/pointer.tga"),
+                     pics.findByName("pics/charai.tga")
+                    );
+    }
+
     if (options.active())
     {
         options.draw(pics,
@@ -2478,15 +2530,19 @@ void Game::DrawGameplay()
                 pics, 10, "Get Ready!", 2,2);
     }
 
-    if (objectivetim)
+    if (objectivetim && netGameState == MPMODE_COOP)
+    {
         DrawMissionObjectives();
+    }
 
     if (mapas.mons.count())
+    {
         DrawStats();
+    }
 
     pics.draw(18, MouseX, MouseY, 0, true);
 
-    if (/*(mapas.width>scrx)&&(mapas.height>scry)&&*/(ShowMiniMap))
+    if (ShowMiniMap)
     {
         DrawMiniMap(sys.ScreenWidth - mapas.width*4, sys.ScreenHeight - mapas.height*4);
     }
@@ -2663,7 +2719,7 @@ void Game::LoadMap(const char* mapname, int otherplayers)
     bulbox.destroy();
     mapas.Destroy();
     mapas.Load(mapname,false, otherplayers);
-    goods=mapas.misionItems;
+    mustCollectItems = mapas.misionItems;
     timeleft=mapas.timeToComplete;
     if ((!isClient)&&(!isServer)){
         mapas.mons[mapas.enemyCount].x=(float)mapas.start.x;
@@ -2801,27 +2857,43 @@ void Game::GetCharData(const unsigned char* bufer, int bufersize, int* index )
 void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
 {
 
-    int mapnamelen=0;
-    if (bufersize-(*index) >= (int)sizeof(int)){
-        int totallen=0;
+    int mapnamelen = 0;
+    if (bufersize-(*index) >= (int)sizeof(int))
+    {
+        int totallen = 0;
         memcpy(&totallen,&bufer[*index],sizeof(int));
-        *index+=sizeof(int);
-        if ((bufersize-(*index)>=totallen)&&(totallen>0)){
-            memcpy(&mapnamelen,&bufer[*index],sizeof(int));
-            if (mapnamelen){
-                *index+=sizeof(int);
+        *index += sizeof(int);
+
+        if ((bufersize-(*index)>=totallen)&&(totallen>0))
+        {
+            memcpy(&mapnamelen, &bufer[*index], sizeof(int));
+
+            if (mapnamelen)
+            {
+                *index += sizeof(int);
                 char mapname[255];
-                if (bufersize-(*index)>=mapnamelen)
+
+                if (bufersize-(*index) >= mapnamelen)
+                {
                     memcpy(mapname,&bufer[*index],mapnamelen);
+                }
+
                 *index+=mapnamelen;
-                mapname[mapnamelen]=0;
+                mapname[mapnamelen] = 0;
 
 
-                int klientaiold=klientai;
+                int klientaiold = klientai;
                 //gaunam klientu skaiciu
                 if (bufersize-(*index) >= (int)sizeof(int))
+                {
                     memcpy(&klientai,&bufer[*index],sizeof(int));
-                *index+=sizeof(unsigned int);
+                }
+
+                *index += sizeof(unsigned int);
+
+                netGameState = (MultiplayerModes)bufer[*index];
+
+                ++(*index);
 
 
                 if (strcmp(mapname,mapas.name)!=0)
@@ -2844,7 +2916,7 @@ void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
                     }
 
                 }
-            }
+            } //maplen
         }
     }
 }
@@ -2965,7 +3037,7 @@ void Game::GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int
 
 
 
-    for (unsigned a=0; a<serveris.clientCount();a++)
+    for (unsigned a = 0; a < serveris.clientCount(); a++)
     {
 
         int z=playerID;
@@ -2973,7 +3045,9 @@ void Game::GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int
             z= playerID+1;
 
         if (ClientIndex != (int)a)
+        {
             SendAtackImpulse(a,z,hp);
+        }
     }
 
 }
@@ -3046,7 +3120,7 @@ void Game::ParseMessagesServerGot()
                 fp.address = msg->senderAddress;
                 serveris.addClient(fp);
 
-                mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id+1;
+                mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id + 1;
 
                 for (int i=0; i < (int)serveris.clientCount(); i++)
                 {
@@ -3080,11 +3154,11 @@ void Game::ParseMessagesServerGot()
                 mapas.mons[mapas.enemyCount+1 + clientIdx].shoot(true,isMine,&bulbox);
 
 
-                for (unsigned int a=0; a < serveris.clientCount(); a++)
+                for (unsigned int a = 0; a < serveris.clientCount(); a++)
                 {//isiunciam isovimo impulsa kitiems
-                    if (a != clientIdx)
+                    if (a != (unsigned)clientIdx)
                     {
-                        if ((a < clientIdx) && ( clientIdx > 0))
+                        if ((a < (unsigned)clientIdx) && ( clientIdx > 0))
                         {
                             SendBulletImpulse(255 + clientIdx, mapas.mons[mapas.enemyCount + clientIdx].ammo, a, isMine);
                         }
@@ -3103,16 +3177,16 @@ void Game::ParseMessagesServerGot()
                 memcpy(&itmindex, &(msg->data)[index], sizeof(int));
                 index+=sizeof(int);
 
-                if ((mapas.items[itmindex].value < 5) && (mapas.items[itmindex].value>0))
+                if ((mapas.items[itmindex].value < ITEM_AMMO_PACK) && (mapas.items[itmindex].value>0))
                 {
-                    goods--;
+                    mustCollectItems--;
                 }
 
                 mapas.removeItem(itmindex);
 
-                for (unsigned int a=0; a<serveris.clientCount();a++)
+                for (unsigned int a = 0; a < serveris.clientCount(); a++)
                 {
-                    if (a != clientIdx)
+                    if (a != (unsigned)clientIdx)
                     {
                         SendItemSRemove(itmindex,a,true);
                     }
@@ -3128,7 +3202,7 @@ void Game::ParseMessagesServerGot()
 
                 for (unsigned int a=0;a<serveris.clientCount();a++)
                 {
-                    if (a != clientIdx)
+                    if (a != (unsigned)clientIdx)
                     {
                         SendServerDoorState(a,dx,dy,frame);
                     }
@@ -3203,7 +3277,7 @@ void Game::ParseMessagesClientGot()
 
     printf("packets after %u\n", client.storedPacketCount());
 
-    for (int msgIdx = 0; msgIdx < client.storedPacketCount(); ++msgIdx)
+    for (unsigned msgIdx = 0; msgIdx < client.storedPacketCount(); ++msgIdx)
     {
 
         Message* msg = client.fetchPacket(msgIdx);
@@ -3216,7 +3290,7 @@ void Game::ParseMessagesClientGot()
 
         int index = 0;
 
-        while (index < msg->length)
+        while ((unsigned)index < msg->length)
         {
             char hdr[4];
             strcpy(hdr, "nop"); //pradine reiksme
@@ -3294,12 +3368,14 @@ void Game::ParseMessagesClientGot()
                 unsigned char isPlayerTaked=0;
                 memcpy(&isPlayerTaked,&(msg->data)[index],sizeof(unsigned char));
                 index++;
-                if ((mapas.items[itmindex].value<5)&&
-                        (mapas.items[itmindex].value>0)&&
+
+                if ((mapas.items[itmindex].value < ITEM_AMMO_PACK) &&
+                        (mapas.items[itmindex].value > 0) &&
                         (isPlayerTaked))
                 {
-                    goods--;
+                    mustCollectItems--;
                 }
+
                 mapas.removeItem(itmindex);
 
             }
@@ -3465,6 +3541,14 @@ void Game::init()
     strcpy(menu.opt[1],"DeathMatch");
     menu.count=2;
     netgame.init(0,sys.ScreenHeight-100,"Game Type:",menu,0);
+
+    for (int i = 0; i < mapai.count(); ++i)
+    {
+        mapai.getMapName(i, menu.opt[i]);
+    }
+
+    menu.count = mapai.count();
+    mapmenu.init(0, sys.ScreenHeight - mapai.count() * 20 - 32, "Select map:", menu, 0);
 
     strcpy(menu.opt[0],"Music Volume");
     strcpy(menu.opt[1],"Sound fx Volume");

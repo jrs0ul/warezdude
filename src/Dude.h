@@ -11,6 +11,7 @@
 
 class Dude
 {
+        bool alive;
     public:
         float x,y;
         float angle;
@@ -33,7 +34,6 @@ class Dude
 
         int race;
 
-        bool alive;
         bool shot;
         bool spawn;
         int ammo;
@@ -97,6 +97,8 @@ class Dude
         bool shoot(bool useBullets, bool isMine, CBulletContainer* bulcon);
         //atakuoja, jei kolidina tai true jei ne false
         int hitIt(Dude& enemy, float vectorx, float vetory, int damage);
+
+        bool isAlive(){return alive;}
         //gydosi
         void heal();
         //isitasko

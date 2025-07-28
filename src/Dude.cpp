@@ -38,22 +38,29 @@ bool Dude::isColideWithOthers( DArray<Dude>& chars, int count, float newx, float
     return false;
 }
 //--------------------------------------
-void Dude::respawn(){
+void Dude::respawn()
+{
 
+    stim++;
 
-        stim++;
-        if (stim%5==0){
-            if (frame==weaponCount*4+2) frame=weaponCount*4+3;
-            else frame=weaponCount*4+2;
+    if (stim%5==0)
+    {
+        if (frame==weaponCount*4+2) 
+        {
+            frame=weaponCount*4+3;
         }
-        if (stim>=80) {
-            spawn=false;
-            stim=0;
-            frame=(currentWeapon+1)*4-2;
-            alive=true;
+        else 
+        {
+            frame=weaponCount*4+2;
+        }
+    }
 
-
-
+    if (stim>=80) 
+    {
+        spawn=false;
+        stim=0;
+        frame=(currentWeapon+1)*4-2;
+        alive = true;
     }
 }
 //--------------------------------------------------
@@ -284,14 +291,17 @@ int Dude::hitIt(Dude& enemy, float vectorx, float vectory, int damage)
 }
 
 //-------------------------------
-void Dude::splatter(){
+void Dude::splatter()
+{
 
     stim++;
-    frame=weaponCount*4;
-    if (stim>30){
-        frame=weaponCount*4+1;  
-        if (stim>50){
-            //alive=false;
+    frame = weaponCount*4;
+    if (stim > 30)
+    {
+        frame = weaponCount * 4 + 1;
+
+        if (stim > 50)
+        {
             shot=false;
             stim=0;
             spawn=true; 

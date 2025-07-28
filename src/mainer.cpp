@@ -226,6 +226,11 @@ void CheckKeys()
 int main(int argc, char* argv[])
 {
 
+    if (argc)
+    {
+        printf("arg: %s/n", argv[0]);
+    }
+
     srand(time(0));
 
     char buf[128];

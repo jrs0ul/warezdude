@@ -13,6 +13,7 @@
 #include "TouchData.h"
 #include "SysConfig.h"
 #include "ShaderProgram.h"
+#include "SelectMenu.h"
 #include "network/Server.h"
 #include "network/Client.h"
 #include "map.h"
@@ -46,6 +47,12 @@ enum GameState
     GAMESTATE_ENDING
 };
 
+enum MultiplayerModes
+{
+    MPMODE_COOP,
+    MPMODE_DEATHMATCH
+};
+
 
 
 class Game
@@ -69,13 +76,21 @@ class Game
     CBulletContainer bulbox;
     PicsContainer pics;
 
+
+    SelectMenu mainmenu;
+    SelectMenu netmenu;
+    SelectMenu netgame;
+    SelectMenu options;
+    SelectMenu mapmenu;
+
     unsigned int imgCount;
     unsigned int maxwavs;
 
 
-    int goods;
+    int frags;
+    int mustCollectItems;
     int timeleft;
-    bool ext;
+    bool exitSpawned;
     bool showdebugtext;
     bool FirstTime;
     int ms;
@@ -101,6 +116,7 @@ class Game
 public:
 
     GameState state;
+    MultiplayerModes netGameState;
 
     char EditText[255];
 
