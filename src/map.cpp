@@ -331,8 +331,8 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
                                 naujas.startY = sy*32;
                                 naujas.x=(float)naujas.startX;
                                 naujas.y=(float)naujas.startY;
-                                naujas.race=rand() % MONSTER_MAX_RACE + 1; 
-                                naujas.hp = MONSTER_BASE_HP + rand()%10;
+                                naujas.race=rand() % MONSTER_MAX_RACE + 1;
+                                naujas.initMonsterHP();
                                 mons.add(naujas);
 
                             }
@@ -357,11 +357,10 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
     {
 
         Dude playeris;
-        playeris.id=254;
-        playeris.hp=100;
+        playeris.id = 254;
         playeris.weaponCount=3;
         playeris.currentWeapon=1;
-        playeris.frame=(playeris.currentWeapon+1)*4-2;
+        playeris.frame = (playeris.currentWeapon+1)*4-2;
         mons.add(playeris);
 
         for (int i=0;i<otherplayers;i++)

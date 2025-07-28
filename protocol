@@ -41,7 +41,18 @@ victimHP        - 4 byte int
 =======================
 Server sends:
 =======================
+Frags
+----
+frg
+frag count
 
+------------------------
+Kill entity
+----
+kil               - 3 bytes header
+victimID          - 4 bytes header
+
+------------------------
 Client_info
 ---
 pin               - 3 bytes header
@@ -80,5 +91,18 @@ shooter index   - 4 byte int
 shooter ammo    - 4 byte int
 is it a mine ?  - 1 byte
 ---------------------------
+Entity data
+----
+chr             - 3 bytes header
+                - 1 byte
+x
+y
+angle
+frame
+shot|spawn
+hp
+
+
+----------------------------
 
 

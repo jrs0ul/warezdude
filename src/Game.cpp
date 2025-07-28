@@ -389,7 +389,7 @@ void Game::KillPlayer(int index)
 
     mapas.mons[mapas.enemyCount+index].stim=0;
     timeleft=mapas.timeToComplete;
-    mapas.mons[mapas.enemyCount+index].hp=100;
+    mapas.mons[mapas.enemyCount+index].setHP(100);
 
     Decal decalas;
     decalas.x = round(mapas.mons[mapas.enemyCount+index].x);
@@ -403,6 +403,8 @@ void Game::KillPlayer(int index)
 //------------------
 void Game::KillEnemy(int ID)
 {
+    printf("KILLED BY %d\n", mapas.mons[ID].lastDamagedBy);
+
     if (ID < mapas.enemyCount)
     {
         
@@ -484,7 +486,8 @@ bool Game::OnHit(Bullet& bul)
                 }
 
                 mapas.mons[i].hit = true;
-                mapas.mons[i].hp -= dmg;
+                mapas.mons[i].damage(dmg);
+                mapas.mons[i].lastDamagedBy = bul.parentID;
 
             }
         }
@@ -500,7 +503,7 @@ void Game::DrawStats()
 {
 
     pics.draw(9, 30,435, 2, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
-    DrawNum(58,440,mapas.mons[mapas.enemyCount].hp);
+    DrawNum(58,440,mapas.mons[mapas.enemyCount].getHP());
 
 
     pics.draw(9, 120,440, 0, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f)); 
@@ -815,7 +818,32 @@ void Game::GoToLevel(int level, int otherplayer)
     if (ShowMiniMap)
         ShowMiniMap=false;
 }
+//----------------------------------
+void Game::SendKillCommandToClient(unsigned clientIdx, int victimId)
+{
+    char buffer[MAX_MESSAGE_DATA_SIZE];
+    int pos = 0;
+    strcpy(buffer, "kil");
+    pos += 3;
 
+
+    memcpy(&buffer[pos], &victimId, sizeof(int));
+    pos += sizeof(int);
+    serveris.sendData(clientIdx, buffer, pos);
+}
+//----------------------------------
+void Game::SendFragsToClient(int clientIdx, int frags)
+{
+    char buffer[MAX_MESSAGE_DATA_SIZE];
+    int len = 0;
+    strcpy(buffer, "frg");
+    len += 3;
+    memcpy(&buffer[len], &frags, sizeof(int));
+    len += sizeof(int);
+
+
+    serveris.sendData(clientIdx, buffer, len);
+}
 //-----------------------------------
 //klientas servui isiuncia infa apie paimta daikta
 void Game::SendItemCRemove(int itemIndex){
@@ -827,7 +855,6 @@ void Game::SendItemCRemove(int itemIndex){
     index += sizeof(int);
     client.sendData(bufer, index);
 }
-
 //-----------------------------------
 void Game::SendItemSRemove(int ItemIndex, int clientIndex, bool playerTaked)
 {
@@ -938,7 +965,7 @@ void Game::ItemPickup()
         {
 
             int item=mapas.items[i].value;
-            if ((item != 0) && ((item != 6) || (mapas.mons[mapas.enemyCount].hp < 100)))
+            if ((item != 0) && ((item != 6) || (mapas.mons[mapas.enemyCount].getHP() < 100)))
             { //daiktas bus paimtas
 
                 SoundSystem* ss = SoundSystem::getInstance();
@@ -1214,9 +1241,11 @@ void Game::SlimeReaction(int index)
     if ((!mapas.mons[index].shot)&&(!mapas.mons[index].spawn)&&(!godmode)
         &&((mapas.tiles[montileY][montileX] == slime)
         ||(mapas.tiles[montileY][montileX] == slime + 1))&&
-        (slimtim==5)){
-            mapas.mons[index].hp-=2;
-            mapas.mons[index].hit=true;
+        (slimtim == 5))
+    {
+        mapas.mons[index].damage(SLIME_DAMAGE);
+        mapas.mons[index].lastDamagedBy = DAMAGER_NOBODY;
+        mapas.mons[index].hit = true;
     }
 }
 //-----------------------------
@@ -1282,27 +1311,31 @@ void Game::BeatEnemy(int aID, int damage)
                 if (isServer)
                 {
                     //server stuff
-                    for (unsigned a=0;a<serveris.clientCount();a++)
+                    for (unsigned a = 0; a < serveris.clientCount(); a++)
                     {
 
-                        int z=i;
+                        int z = i;
 
                         if (i >= (unsigned)mapas.enemyCount)
                         {
                             if ((i-mapas.enemyCount-1)<a)
-                                z=i+1;
+                            {
+                                z = i + 1;
+                            }
                             if ((i-mapas.enemyCount-1)==a)
-                                z=mapas.enemyCount;
+                            {
+                                z = mapas.enemyCount;
+                            }
                         }
 
-                        SendAtackImpulse(a,z,mapas.mons[i].hp);
+                        SendAtackImpulse(a,z,mapas.mons[i].getHP());
                     }
                 }
 
                 if (isClient)
                 {//turbut atakavo playeris
 
-                    SendClientAtackImpulse(mapas.mons[i].id, mapas.mons[i].hp);
+                    SendClientAtackImpulse(mapas.mons[i].id, mapas.mons[i].getHP());
                 }
 
             }
@@ -1326,6 +1359,8 @@ void Game::MonsterAI(int index)
     {
         mapas.mons[index].respawn();
 
+
+        //kill entity if you spawn on it
         if (!mapas.mons[index].spawn)
         {
             for (unsigned i=0; i< mapas.mons.count(); i++)
@@ -1473,7 +1508,7 @@ void Game::MonsterAI(int index)
 
         if (!mapas.mons[index].shot)
         {
-            mapas.mons[index].hp = MONSTER_BASE_HP + rand() % 10;
+            mapas.mons[index].initMonsterHP();
             mapas.mons[index].appearInRandomPlace(mapas.colide,mapas.width,mapas.height);
         }
     }
@@ -2280,11 +2315,49 @@ void Game::CoreGameLogic()
     }
     //zudom playerius jei pas juos nebeliko gifkiu
 
-    for (unsigned i=0;i<mapas.mons.count();i++)
+    if (!isClient)
     {
-        if ((mapas.mons[i].hp <= 0) && (!mapas.mons[i].shot))
+        for (unsigned i = 0; i < mapas.mons.count();i++)
         {
-            KillEnemy(mapas.mons[i].id);
+            if ((mapas.mons[i].getHP() <= 0) && (!mapas.mons[i].shot))
+            {
+                KillEnemy(mapas.mons[i].id);
+
+                for (unsigned clientIdx = 0; clientIdx < serveris.clientCount(); ++clientIdx)
+                {
+                    int victimId = mapas.mons[i].id;
+
+                    if (victimId >= 254) //players
+                    {
+
+                        int lastDamager = mapas.mons[mapas.enemyCount + (victimId - 254)].lastDamagedBy;
+
+                        if (lastDamager == 254)
+                        {
+                            ++frags;
+                        }
+                        else
+                        {
+                            int clientWithFrag = lastDamager - 255;
+                            ++fragTable[clientWithFrag];
+                            SendFragsToClient(clientWithFrag, fragTable[clientWithFrag]);
+                        }
+
+                        if (victimId - 255 < (int)clientIdx)
+                        {
+                            ++victimId;
+                        }
+                        else if (victimId - 255 == (int)clientIdx)
+                        {
+                            victimId = 254;
+                        }
+                    }
+
+
+
+                    SendKillCommandToClient(clientIdx, victimId);
+                }
+            }
         }
     }
 
@@ -2809,7 +2882,8 @@ void Game::SendPlayerInfoToClient(int clientindex)
 
             if (mapas.mons[i].spawn)
             {
-                memcpy(&coords[cnt],&mapas.mons[i].hp, sizeof(int));
+                int hp = mapas.mons[i].getHP();
+                memcpy(&coords[cnt], &hp, sizeof(int));
                 cnt+=sizeof(int);
             }
 
@@ -2821,7 +2895,8 @@ void Game::SendPlayerInfoToClient(int clientindex)
 //-----------------------------------
 void Game::GetCharData(const unsigned char* bufer, int bufersize, int* index )
 {
-    if ((bufersize-(*index))>=14){
+    if ((bufersize-(*index))>=14)
+    {
 
         unsigned char monum=0;
         memcpy(&monum,&bufer[*index],sizeof(unsigned char));
@@ -2841,12 +2916,21 @@ void Game::GetCharData(const unsigned char* bufer, int bufersize, int* index )
             mapas.mons[monum].shot=false;
 
         if (stats & 0x40)
+        {
             mapas.mons[monum].spawn=true;
+        }
         else
+        {
             mapas.mons[monum].spawn=false;
+        }
+
         (*index)++;
-        if (mapas.mons[monum].spawn){
-            memcpy(&mapas.mons[monum].hp,&bufer[*index],sizeof(int));
+
+        if (mapas.mons[monum].spawn)
+        {
+            int hp = 0;
+            memcpy(&hp, &bufer[*index], sizeof(int));
+            mapas.mons[monum].setHP(hp);
             *index+=sizeof(int);
         }
 
@@ -3021,10 +3105,14 @@ void Game::GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int
 
     int playerID=0;
 
-    if (victim>254){
+    if (victim>254)
+    {
         int tmpID=victim-254;
         if (ClientIndex>=tmpID)
+        {
             playerID=tmpID-1;
+        }
+
         playerID=mapas.enemyCount+playerID;
     }
     else
@@ -3033,7 +3121,7 @@ void Game::GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int
     }
 
     mapas.mons[playerID].hit=true;
-    mapas.mons[playerID].hp=hp;
+    mapas.mons[playerID].setHP(hp);
 
 
 
@@ -3046,7 +3134,7 @@ void Game::GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int
 
         if (ClientIndex != (int)a)
         {
-            SendAtackImpulse(a,z,hp);
+            SendAtackImpulse(a, z, hp);
         }
     }
 
@@ -3063,7 +3151,7 @@ void Game::GetAtackImpulse(const unsigned char* buf,int* index)
     *index+=sizeof(int);
 
     mapas.mons[victim].hit=true;
-    mapas.mons[victim].hp=hp;
+    mapas.mons[victim].setHP(hp);
 
 }
 //---------------------------------
@@ -3114,6 +3202,8 @@ void Game::ParseMessagesServerGot()
 
                 Dude naujas;
                 mapas.mons.add(naujas);
+                int zeroFrags = 0;
+                fragTable.add(zeroFrags);
 
 
                 ClientFootprint fp;
@@ -3315,6 +3405,24 @@ void Game::ParseMessagesClientGot()
             {
                 index+=3;
                 GetMapData(msg->data, &index);
+            }
+            else if (strcmp(hdr, "kil") == 0)
+            {
+                index += 3;
+                int victimID = -1;
+                memcpy(&victimID, &(msg->data)[index], sizeof(int));
+                index += sizeof(int);
+
+                if (victimID != -1)
+                {
+                    KillEnemy(victimID);
+                }
+            }
+            else if (strcmp(hdr, "frg") == 0)
+            {
+                index += 3;
+                memcpy(&frags, &(msg->data)[index], sizeof(int));
+                index += sizeof(int);
             }
             else if (strcmp(hdr,"sht")==0)
             {

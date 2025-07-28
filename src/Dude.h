@@ -12,6 +12,7 @@
 class Dude
 {
         bool alive;
+        int hp;
     public:
         float x,y;
         float angle;
@@ -39,7 +40,6 @@ class Dude
         int ammo;
         bool canAtack;
         int reloadtime;
-        int hp;
         int startX;
         int startY;
 
@@ -49,6 +49,8 @@ class Dude
 
         int weaponCount; //kiek gali tureti ginklu
         int currentWeapon; //koks dabar ginklas naudojamas
+
+        int lastDamagedBy;
 
 
 
@@ -109,6 +111,12 @@ class Dude
         //prasuka laika, kad vel galetu atakuoti
         void reload(int time);
         void chageNextWeapon();
+
+        int getHP(){return hp;}
+        void initMonsterHP();
+        void setHP(int newHP){hp = newHP;}
+        //true if hp <= 0
+        bool damage(int dmg);
 };
 
 

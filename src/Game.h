@@ -87,7 +87,8 @@ class Game
     unsigned int maxwavs;
 
 
-    int frags;
+    int frags; //frags of current player
+    DArray<int> fragTable;
     int mustCollectItems;
     int timeleft;
     bool exitSpawned;
@@ -222,6 +223,9 @@ private:
     void LoadShader(ShaderProgram* shader, const char* name);
     void IntroScreenLogic();
     void PlayNewSong(const char* songName);
+
+    void SendKillCommandToClient(unsigned clientIdx, int victimID);
+    void SendFragsToClient(int clientIdx, int frags);
 
     void DeleteAudio();
 

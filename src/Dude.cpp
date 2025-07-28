@@ -2,6 +2,7 @@
 
 #include "Usefull.h"
 #include "Dude.h"
+#include "gui/Text.h"
 //
 
 
@@ -19,8 +20,17 @@ void Dude::heal(){
         }
     }
 }
-
-
+//-------------------------
+void Dude::initMonsterHP()
+{
+    hp = MONSTER_BASE_HP + rand()%10;
+}
+//--------------------------------
+bool Dude::damage(int dmg)
+{
+    hp -= dmg;
+    return hp <= 0;
+}
 //-------------------------------------
 bool Dude::isColideWithOthers( DArray<Dude>& chars, int count, float newx, float newy)
 {
@@ -232,6 +242,14 @@ void Dude::draw(PicsContainer& pics, unsigned index,
               COLOR(r,g,b, 1.f),
               COLOR(r,g,b, 1.f));
 
+    char buf[10];
+    sprintf(buf, "%d", id);
+    WriteText(round(x)-((pskx-scrx)*32)+pushx-posx,
+              round(y)-((psky-scry)*32)+pushy-posy,
+              pics,
+              10,
+              buf);
+
 }
 //----------------------------------------------------------
 bool Dude::shoot(bool useBullets, bool isMine, CBulletContainer* bulcon)
@@ -284,6 +302,7 @@ int Dude::hitIt(Dude& enemy, float vectorx, float vectory, int damage)
     {
         enemy.hp -= damage;
         enemy.hit = true;
+        enemy.lastDamagedBy = id;
         return enemy.id;
     }
 

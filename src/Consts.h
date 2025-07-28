@@ -19,3 +19,8 @@ const int ENTITY_INITIAL_HP             = 100;
 
 const int MONSTER_MAX_RACE              = 3;
 const int MONSTER_BASE_HP               = 30;
+
+
+const int SLIME_DAMAGE                  = 2;
+
+const int DAMAGER_NOBODY                = -1;
