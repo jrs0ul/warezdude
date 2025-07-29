@@ -365,17 +365,17 @@ void Game::DrawNum(int x, int y,int num)
 void Game::SendItemCreation(float x, float y, int value, unsigned int clientIndex)
 {
 
-    char buferis[256];
-    int index=0;
-    buferis[0]='i'; buferis[1]='t'; buferis[2]='c';
-    index+=3;
-    memcpy(&buferis[index],&x,sizeof(float));
-    index+=sizeof(float);
-    memcpy(&buferis[index],&y,sizeof(float));
-    index+=sizeof(float);
-    memcpy(&buferis[index],&value,sizeof(int));
-    index+=sizeof(int);
-    serveris.sendData(clientIndex,buferis,index);
+    char buferis[MAX_MESSAGE_DATA_SIZE];
+    int index = 0;
+    buferis[index] = NET_SERVER_MSG_NEW_ITEM;
+    ++index;
+    memcpy(&buferis[index], &x, sizeof(float));
+    index += sizeof(float);
+    memcpy(&buferis[index], &y, sizeof(float));
+    index += sizeof(float);
+    memcpy(&buferis[index], &value, sizeof(int));
+    index += sizeof(int);
+    serveris.sendData(clientIndex, buferis, index);
 
 }
 
@@ -815,17 +815,19 @@ void Game::GoToLevel(int level, int otherplayer)
     findpskxy();
     fadein=true;
     objectivetim=200;
+
     if (ShowMiniMap)
-        ShowMiniMap=false;
+    {
+        ShowMiniMap = false;
+    }
 }
 //----------------------------------
 void Game::SendKillCommandToClient(unsigned clientIdx, int victimId)
 {
     char buffer[MAX_MESSAGE_DATA_SIZE];
     int pos = 0;
-    strcpy(buffer, "kil");
-    pos += 3;
-
+    buffer[pos] = NET_SERVER_MSG_KILL_CHARACTER;
+    ++pos;
 
     memcpy(&buffer[pos], &victimId, sizeof(int));
     pos += sizeof(int);
@@ -836,51 +838,54 @@ void Game::SendFragsToClient(int clientIdx, int frags)
 {
     char buffer[MAX_MESSAGE_DATA_SIZE];
     int len = 0;
-    strcpy(buffer, "frg");
-    len += 3;
+    buffer[len] = NET_SERVER_MSG_FRAG;
+    ++len;
     memcpy(&buffer[len], &frags, sizeof(int));
     len += sizeof(int);
-
 
     serveris.sendData(clientIdx, buffer, len);
 }
 //-----------------------------------
 //klientas servui isiuncia infa apie paimta daikta
-void Game::SendItemCRemove(int itemIndex){
-    char bufer[1024];
-    int index=0;
-    bufer[index]='i'; bufer[index+1]='t'; bufer[index+2]='m';
-    index += 3;
-    memcpy(&bufer[index],&itemIndex,sizeof(int));
+void Game::SendItemCRemove(int itemIndex)
+{
+    char bufer[MAX_MESSAGE_DATA_SIZE];
+    int index = 0;
+    bufer[index] = NET_CLIENT_MSG_ITEM;
+    ++index;
+    memcpy(&bufer[index], &itemIndex, sizeof(int));
     index += sizeof(int);
     client.sendData(bufer, index);
 }
 //-----------------------------------
 void Game::SendItemSRemove(int ItemIndex, int clientIndex, bool playerTaked)
 {
-    char bufer[1024];
+    char bufer[MAX_MESSAGE_DATA_SIZE];
     int index=0;
-    bufer[0]='i';
-    bufer[1]='t';
-    bufer[2]='m';
-    index+=3;
+    bufer[index] = NET_SERVER_MSG_ITEM;
+    ++index;
     memcpy(&bufer[index],&ItemIndex,sizeof(int));
-    index+=sizeof(int);
+    index += sizeof(int);
     unsigned char plt=0;
+
     if (playerTaked)
+    {
         plt=1;
+    }
+
     memcpy(&bufer[index],&plt,sizeof(unsigned char));
     index++;
     serveris.sendData(clientIndex,bufer,index);
 }
 
 //-------------------------------------
-void Game::SendMapInfo(int clientIndex, CMap& map){
-    char bufer[1024];
-    int index=0;
-    bufer[0]='s';bufer[1]='r';bufer[2]='v';
+void Game::SendMapInfo(int clientIndex, CMap& map)
+{
+    char bufer[MAX_MESSAGE_DATA_SIZE];
+    int index = 0;
+    bufer[index] = NET_SERVER_MSG_SERVER_INFO;
 
-    index+=3;
+    ++index;
     int len = (int)strlen(map.name); 
     int totalpacketlen = len + sizeof(int) + 1 + 1;
 
@@ -908,11 +913,12 @@ void Game::SendMapInfo(int clientIndex, CMap& map){
 void Game::SendMapData(int clientIndex, CMap& map)
 {
 
-    char bufer[1024];
+    char bufer[MAX_MESSAGE_DATA_SIZE];
 
-    int index = 3;
+    int index = 0;
 
-    bufer[0]='d'; bufer[1]='a'; bufer[2]='t';
+    bufer[0] = NET_SERVER_MSG_MAP_DATA;
+    ++index;
 
     memcpy(&bufer[index], &map.enemyCount, sizeof(int));
     index+=sizeof(int);
@@ -945,10 +951,10 @@ void Game::SendMapData(int clientIndex, CMap& map)
 //siuncia servui msg kad keistu mapa
 void Game::SendWarpMessage()
 {
-    char buferis[32];
-    int index=0;
-    buferis[0]='n'; buferis[1]='x'; buferis[2]='t';
-    index+=3;
+    char buferis[MAX_MESSAGE_DATA_SIZE];
+    int index = 0;
+    buferis[index] = NET_CLIENT_MSG_NEXT_LEVEL;
+    ++index;
     client.sendData(buferis, index);
 }
 
@@ -1101,8 +1107,8 @@ bool Game::JoinServer(const char* ip, unsigned port)
 
         c.detach();
 
-        char buf[4] = {'c','o','n'};
-
+        char buf[4];
+        buf[0] = NET_CLIENT_MSG_CONNECT;
 
         sockaddr_in serverAddress;
         memset(&serverAddress, 0, sizeof(sockaddr_in));
@@ -1111,7 +1117,7 @@ bool Game::JoinServer(const char* ip, unsigned port)
         serverAddress.sin_port = htons(port);
 
         client.setServerAddress(serverAddress);
-        client.sendData(buf, 3);
+        client.sendData(buf, 1);
 
         isClient = true;
         return true;
@@ -1124,45 +1130,42 @@ void Game::QuitServer()
 {
     isClient = false;
     char buf[4];
-    buf[0]='q'; buf[1]='u'; buf[2]='t';
-    client.sendData(buf, 3);
+    buf[0] = NET_CLIENT_MSG_QUIT;
+    client.sendData(buf, 1);
     client.shutdown();
 }
 
 //--------------------------------
 void Game::SendClientDoorState(int doorx,int doory, unsigned char doorframe)
 {
-    int index=0;
-    char bufer[256];
-    bufer[0]='d'; bufer[1]='o'; bufer[2]='r';
-    index += 3;
-    memcpy(&bufer[index],&doorx,sizeof(int));
+    int index = 0;
+    char bufer[MAX_MESSAGE_DATA_SIZE];
+    bufer[0] = NET_CLIENT_MSG_DOOR;
+    ++index;
+    memcpy(&bufer[index], &doorx, sizeof(int));
     index += sizeof(int);
-    memcpy(&bufer[index],&doory,sizeof(int));
+    memcpy(&bufer[index], &doory, sizeof(int));
     index += sizeof(int);
-    memcpy(&bufer[index],&doorframe,sizeof(unsigned char));
+    memcpy(&bufer[index], &doorframe, sizeof(unsigned char));
     index += sizeof(unsigned char);
     client.sendData(bufer, index);
 }
 //--------------------------------
 void Game::SendServerDoorState(unsigned int clientIndex, int doorx,int doory, unsigned char doorframe)
 {
-    int index=0;
-    char bufer[128];
-    bufer[0]='d';
-    bufer[1]='o';
-    bufer[2]='r';
-    index+=3;
+    int index = 0;
+    char bufer[MAX_MESSAGE_DATA_SIZE];
+    bufer[index] = NET_SERVER_MSG_DOOR;
+    ++index;
     memcpy(&bufer[index],&doorx,sizeof(int));
-    index+=sizeof(int);
+    index += sizeof(int);
     memcpy(&bufer[index],&doory,sizeof(int));
-    index+=sizeof(int);
+    index += sizeof(int);
     memcpy(&bufer[index],&doorframe,sizeof(unsigned char));
-    index+=sizeof(unsigned char);
-    
+    index += sizeof(unsigned char);
+
     serveris.sendData(clientIndex,bufer,index);
 }
-
 
 //--------------------------------
 //viskas kas susije su durimis
@@ -1252,45 +1255,43 @@ void Game::SlimeReaction(int index)
 void Game::SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine)
 {
     int index=0;
-    char buf[1024];
-    buf[0]='s';
-    buf[1]='h';
-    buf[2]='t';
-    index+=3;
-    memcpy(&buf[index],&monsterindex,sizeof(int));
-    index+=sizeof(int);
-    memcpy(&buf[index],&ammo,sizeof(int));
-    index+=sizeof(int);
-    memcpy(&buf[index],&isMine,sizeof(unsigned char));
-    index+=sizeof(unsigned char);
+    char buf[MAX_MESSAGE_DATA_SIZE];
+    buf[index] = NET_SERVER_MSG_WEAPON_SHOT;
+    ++index;
+    memcpy(&buf[index], &monsterindex, sizeof(int));
+    index += sizeof(int);
+    memcpy(&buf[index], &ammo, sizeof(int));
+    index += sizeof(int);
+    memcpy(&buf[index], &isMine, sizeof(unsigned char));
+    index += sizeof(unsigned char);
 
-    serveris.sendData(clientIndex,buf,index);
+    serveris.sendData(clientIndex, buf, index);
 }
 //------------------------------------------
 void Game::SendClientAtackImpulse(int victimID, int hp)
 {
-    char buferis[1024];
-    int index=0;
-    buferis[0]='a'; buferis[1]='t'; buferis[2]='k';
-    index+=3;
-    memcpy(&buferis[index],&victimID,sizeof(int));
+    char buferis[MAX_MESSAGE_DATA_SIZE];
+    int index = 0;
+    buferis[index] = NET_CLIENT_MSG_MELEE_ATTACK;
+    ++index;
+    memcpy(&buferis[index], &victimID, sizeof(int));
     index += sizeof(int);
-    memcpy(&buferis[index],&hp,sizeof(int));
+    memcpy(&buferis[index], &hp, sizeof(int));
     index += sizeof(int);
     client.sendData(buferis, index);
 }
 //----------------------------------------
 void Game::SendAtackImpulse(unsigned int clientIndex, int victim, int hp)
 {
-    char buferis[1024];
-    int index=0;
-    
-    buferis[0]='a';buferis[1]='t';buferis[2]='k';
-    index += 3;
+    char buferis[MAX_MESSAGE_DATA_SIZE];
+    int index = 0;
+
+    buferis[index] = NET_SERVER_MSG_MELEE_ATTACK;
+    ++index;
     memcpy(&buferis[index],&victim,sizeof(int));
-    index+=sizeof(int);
+    index += sizeof(int);
     memcpy(&buferis[index],&hp,sizeof(int));
-    index+=sizeof(int);
+    index += sizeof(int);
     serveris.sendData(clientIndex,buferis,index);
 }
 
@@ -1996,8 +1997,8 @@ void Game::logic(){
             for (int a = 0; a < (int)serveris.clientCount(); a++)
             {
                 char buf[4];
-                buf[0]='p';buf[1]='i';buf[2]='n';
-                serveris.sendData(a,buf,3);
+                buf[0] = NET_SERVER_MSG_PING;
+                serveris.sendData(a, buf, 1);
 
                 SendPlayerInfoToClient(a);
             }
@@ -2232,16 +2233,21 @@ void Game::CoreGameLogic()
                 if (isClient)
                 {
                     char buf[10];
-                    buf[0]='s'; buf[1]='h'; buf[2]='t';
-                    memcpy(&buf[3], &mapas.getPlayer()->ammo, sizeof(int));
+                    int pos = 0;
+                    buf[pos] = NET_CLIENT_MSG_WEAPON_SHOT;
+                    ++pos;
+                    memcpy(&buf[1], &mapas.getPlayer()->ammo, sizeof(int));
+                    pos += sizeof(int);
                     unsigned char isMine = 0;
+
                     if (mapas.mons[mapas.enemyCount].currentWeapon == 2)
                     {
-                        isMine=1;
+                        isMine = 1;
                     }
 
-                    memcpy(&buf[7],&isMine,sizeof(unsigned char));
-                    client.sendData(buf, 8);
+                    memcpy(&buf[5], &isMine, sizeof(unsigned char));
+                    pos += sizeof(unsigned char);
+                    client.sendData(buf, pos);
                 }
 
                 bool isMine = false;
@@ -2809,26 +2815,26 @@ void Game::LoadMap(const char* mapname, int otherplayers)
 //siuncia kliento info i serva
 void Game::SendClientCoords()
 {
-    char coords[1024];
-    int cnt=0;
-    coords[0]='c'; coords[1]='h'; coords[2]='r';
-    cnt+=3;
-    memcpy(&coords[cnt],&mapas.mons[mapas.enemyCount].x,sizeof(float));
-    cnt+=sizeof(float);
-    memcpy(&coords[cnt],&mapas.mons[mapas.enemyCount].y,sizeof(float));
-    cnt+=sizeof(float);
-    memcpy(&coords[cnt],&mapas.mons[mapas.enemyCount].angle,sizeof(float));
-    cnt+=sizeof(float);
-    memcpy(&coords[cnt],&mapas.mons[mapas.enemyCount].frame,sizeof(unsigned char));
-    cnt+=sizeof(unsigned char);
+    char coords[MAX_MESSAGE_DATA_SIZE];
+    int cnt = 0;
+    coords[0] = NET_CLIENT_MSG_CHARACTER_DATA;
+    ++cnt;
+    memcpy(&coords[cnt], &mapas.mons[mapas.enemyCount].x, sizeof(float));
+    cnt += sizeof(float);
+    memcpy(&coords[cnt], &mapas.mons[mapas.enemyCount].y, sizeof(float));
+    cnt += sizeof(float);
+    memcpy(&coords[cnt], &mapas.mons[mapas.enemyCount].angle, sizeof(float));
+    cnt += sizeof(float);
+    memcpy(&coords[cnt], &mapas.mons[mapas.enemyCount].frame, sizeof(unsigned char));
+    cnt += sizeof(unsigned char);
     unsigned char stats=0x0;
+
     if (mapas.mons[mapas.enemyCount].shot)
         stats|=0x80;
     if (mapas.mons[mapas.enemyCount].spawn)
         stats|=0x40;
     coords[cnt]=stats;
     cnt++;
-
 
     client.sendData(coords, cnt);
 }
@@ -2853,8 +2859,8 @@ void Game::SendPlayerInfoToClient(int clientindex)
                 z = (unsigned char)i;
             }
 
-            coords[cnt] = 'c'; coords[cnt+1] = 'h'; coords[cnt+2] = 'r';
-            cnt += 3;
+            coords[cnt] = NET_SERVER_MSG_CHARACTER_DATA;
+            ++cnt;
             memcpy(&coords[cnt],&z,sizeof(unsigned char));
             cnt += sizeof(unsigned char);
             memcpy(&coords[cnt],&mapas.mons[i].x, sizeof(float));
@@ -3011,19 +3017,22 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
 
     int moncount=0;
     memcpy(&moncount,&bufer[*index],sizeof(int));
-    *index+=sizeof(int);
+    *index += sizeof(int);
 
-    for (int i=0;i<moncount;i++){
-        memcpy(&mapas.mons[i].race,&bufer[*index],sizeof(int));
+    for (int i = 0; i < moncount; i++)
+    {
+        memcpy(&mapas.mons[i].race, &bufer[*index], sizeof(int));
         *index+=sizeof(int);
     }
-    
+
     int itmcount=0;
     memcpy(&itmcount,&bufer[*index],sizeof(int));
     *index+=sizeof(int);
-    for (int i=0;i<itmcount;i++){
+
+    for (int i=0; i < itmcount; i++)
+    {
         CItem itm;
-        
+
         memcpy(&itm.x,&bufer[*index],sizeof(float));
         *index+=sizeof(float);
         memcpy(&itm.y,&bufer[*index],sizeof(float));
@@ -3031,7 +3040,6 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
         memcpy(&itm.value,&bufer[*index],sizeof(int));
         *index+=sizeof(int);
         mapas.addItem(itm.x,itm.y,itm.value);
-        
     }
 
 }
@@ -3159,7 +3167,6 @@ void Game::GetAtackImpulse(const unsigned char* buf,int* index)
 void Game::ParseMessagesServerGot()
 {
 
-
     if (!serveris.storedPacketCount())
     {
         return;
@@ -3187,154 +3194,164 @@ void Game::ParseMessagesServerGot()
         while (index < msg->length)
         {
 
-            char hdr[4];
-            strcpy(hdr,"nop"); //pradine reiksme
-            if (msg->length - index >= 3)
+            NetworkCommands command = NET_NOP;
+
+            if (msg->length - index >= 1)
             {
-                memcpy(&hdr, &(msg->data)[index], 3);
-                hdr[3] = 0;
+                memcpy(&command, &(msg->data)[index], 1);
             }
 
-            if (strcmp(hdr, "con") == 0)
+            switch(command)
             {
-                printf("CLIENT CONNECTED!\n");
-                index += 3;
 
-                Dude naujas;
-                mapas.mons.add(naujas);
-                int zeroFrags = 0;
-                fragTable.add(zeroFrags);
-
-
-                ClientFootprint fp;
-                fp.address = msg->senderAddress;
-                serveris.addClient(fp);
-
-                mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id + 1;
-
-                for (int i=0; i < (int)serveris.clientCount(); i++)
-                {
-                    SendMapInfo(i, mapas);
-                }
-
-                SendMapData(serveris.clientCount()-1, mapas);
-
-            }
-            else if(strcmp(hdr,"chr")==0)
-            {
-                index += 3;
-                UpdateClientPosition(msg->data, &index, clientIdx);
-            }
-            else if (strcmp(hdr,"sht")==0)
-            {
-                unsigned char cisMine=0;
-
-                index+=3;
-                memcpy(&mapas.mons[mapas.enemyCount + 1 + clientIdx].ammo, &(msg->data)[index],sizeof(int));
-                index+=sizeof(int);
-                memcpy(&cisMine, &(msg->data)[index],sizeof(unsigned char));
-                index+=sizeof(unsigned char);
-                bool isMine = false;
-
-                if (cisMine)
-                {
-                    isMine = true;
-                }
-
-                mapas.mons[mapas.enemyCount+1 + clientIdx].shoot(true,isMine,&bulbox);
-
-
-                for (unsigned int a = 0; a < serveris.clientCount(); a++)
-                {//isiunciam isovimo impulsa kitiems
-                    if (a != (unsigned)clientIdx)
+                case NET_CLIENT_MSG_CONNECT:
                     {
-                        if ((a < (unsigned)clientIdx) && ( clientIdx > 0))
+                        printf("CLIENT CONNECTED!\n");
+                        ++index;
+
+                        Dude naujas;
+                        mapas.mons.add(naujas);
+                        int zeroFrags = 0;
+                        fragTable.add(zeroFrags);
+
+
+                        ClientFootprint fp;
+                        fp.address = msg->senderAddress;
+                        serveris.addClient(fp);
+
+                        mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id + 1;
+
+                        for (int i=0; i < (int)serveris.clientCount(); i++)
                         {
-                            SendBulletImpulse(255 + clientIdx, mapas.mons[mapas.enemyCount + clientIdx].ammo, a, isMine);
-                        }
-                        else
-                        {
-                            SendBulletImpulse(256 + clientIdx, mapas.mons[mapas.enemyCount + clientIdx].ammo,a,isMine);
+                            SendMapInfo(i, mapas);
                         }
 
-                    }
-                }
-            }
-            else if (strcmp(hdr,"itm")==0)
-            {
-                index += 3;
-                int itmindex = 0;
-                memcpy(&itmindex, &(msg->data)[index], sizeof(int));
-                index+=sizeof(int);
+                        SendMapData(serveris.clientCount()-1, mapas);
 
-                if ((mapas.items[itmindex].value < ITEM_AMMO_PACK) && (mapas.items[itmindex].value>0))
-                {
-                    mustCollectItems--;
-                }
+                    } break;
 
-                mapas.removeItem(itmindex);
 
-                for (unsigned int a = 0; a < serveris.clientCount(); a++)
-                {
-                    if (a != (unsigned)clientIdx)
+                case NET_CLIENT_MSG_CHARACTER_DATA:
                     {
-                        SendItemSRemove(itmindex,a,true);
-                    }
-                }
+                        ++index;
+                        UpdateClientPosition(msg->data, &index, clientIdx);
+                    } break;
 
-            }
-            else if (strcmp(hdr,"dor")==0)
-            {
-                index+=3;
-                int dx,dy;
-                unsigned char frame;
-                GetDoorInfo(msg->data, &index, &dx,&dy,&frame);
-
-                for (unsigned int a=0;a<serveris.clientCount();a++)
-                {
-                    if (a != (unsigned)clientIdx)
+                case NET_CLIENT_MSG_WEAPON_SHOT:
                     {
-                        SendServerDoorState(a,dx,dy,frame);
+                        unsigned char cisMine=0;
+
+                        ++index;
+                        memcpy(&mapas.mons[mapas.enemyCount + 1 + clientIdx].ammo, &(msg->data)[index],sizeof(int));
+                        index+=sizeof(int);
+                        memcpy(&cisMine, &(msg->data)[index],sizeof(unsigned char));
+                        index+=sizeof(unsigned char);
+                        bool isMine = false;
+
+                        if (cisMine)
+                        {
+                            isMine = true;
+                        }
+
+                        mapas.mons[mapas.enemyCount+1 + clientIdx].shoot(true,isMine,&bulbox);
+
+
+                        for (unsigned int a = 0; a < serveris.clientCount(); a++)
+                        {//isiunciam isovimo impulsa kitiems
+                            if (a != (unsigned)clientIdx)
+                            {
+                                if ((a < (unsigned)clientIdx) && ( clientIdx > 0))
+                                {
+                                    SendBulletImpulse(255 + clientIdx, mapas.mons[mapas.enemyCount + clientIdx].ammo, a, isMine);
+                                }
+                                else
+                                {
+                                    SendBulletImpulse(256 + clientIdx, mapas.mons[mapas.enemyCount + clientIdx].ammo,a,isMine);
+                                }
+
+                            }
+                        }
+                    } break;
+
+                case NET_CLIENT_MSG_ITEM:
+                    {
+                        ++index;
+                        int itmindex = 0;
+                        memcpy(&itmindex, &(msg->data)[index], sizeof(int));
+                        index+=sizeof(int);
+
+                        if ((mapas.items[itmindex].value < ITEM_AMMO_PACK) && (mapas.items[itmindex].value>0))
+                        {
+                            mustCollectItems--;
+                        }
+
+                        mapas.removeItem(itmindex);
+
+                        for (unsigned int a = 0; a < serveris.clientCount(); a++)
+                        {
+                            if (a != (unsigned)clientIdx)
+                            {
+                                SendItemSRemove(itmindex,a,true);
+                            }
+                        }
+
+                    } break;
+
+                case NET_CLIENT_MSG_DOOR:
+                    {
+                        ++index;
+                        int dx,dy;
+                        unsigned char frame;
+                        GetDoorInfo(msg->data, &index, &dx,&dy,&frame);
+
+                        for (unsigned int a=0; a < serveris.clientCount(); a++)
+                        {
+                            if (a != (unsigned)clientIdx)
+                            {
+                                SendServerDoorState(a,dx,dy,frame);
+                            }
+                        }
+                    } break;
+
+                case NET_CLIENT_MSG_NEXT_LEVEL:
+                    {
+                        ++index;
+                        mapai.current++;
+                        int kiek = serveris.clientCount();
+
+                        GoToLevel(mapai.current,kiek);
+
+                        for (int a =0; a<(int)serveris.clientCount(); a++)
+                        {
+                            SendMapInfo(a, mapas);
+                            SendMapData(a, mapas);
+                        }
+
+
+                    } break;
+
+                case NET_CLIENT_MSG_MELEE_ATTACK:
+                    {
+                        ++index;
+                        GetClientAtackImpulse(msg->data, &index, clientIdx);
+                    } break;
+
+                case NET_CLIENT_MSG_QUIT:
+                    {
+                        ++index;
+                        serveris.removeClient(clientIdx);
+                        mapas.mons.remove(mapas.enemyCount + clientIdx);
+                    } break;
+
+                case NET_CLIENT_MSG_PONG:
+                    {
+                        ++index;
+
+                    } break;
+                default:
+                    {
+                        ++index;
                     }
-                }
-            }
-            else if (strcmp(hdr,"nxt")==0)
-            {
-                index+=3;
-                mapai.current++;
-                int kiek = serveris.clientCount();
-
-                GoToLevel(mapai.current,kiek);
-
-                for (int a =0; a<(int)serveris.clientCount(); a++)
-                {
-                    SendMapInfo(a, mapas);
-                    SendMapData(a, mapas);
-                }
-
-
-            }
-            else if (strcmp(hdr,"atk")==0)
-            {
-                index += 3;
-                GetClientAtackImpulse(msg->data, &index, clientIdx);
-            }
-
-            else if (strcmp(hdr,"qut")==0)
-            {
-                index+=3;
-                serveris.removeClient(clientIdx);
-                mapas.mons.remove(mapas.enemyCount + clientIdx);
-            }
-
-            else if (strcmp(hdr,"pon")==0)
-            {
-                index+=3;
-
-            }
-            else
-            {
-                index++;
             }
         }
 
@@ -3382,139 +3399,148 @@ void Game::ParseMessagesClientGot()
 
         while ((unsigned)index < msg->length)
         {
-            char hdr[4];
-            strcpy(hdr, "nop"); //pradine reiksme
+            NetworkCommands command = NET_NOP;
 
-            if (msg->length - index >= 3)
+            if (msg->length - index >= 1)
             {
-                memcpy(&hdr, &(msg->data)[index], 3);
-                hdr[3] = 0;
+                memcpy(&command, &(msg->data)[index], 1);
             }
 
-            if (strcmp(hdr,"chr")==0)
+            switch(command)
             {
-                index+=3;
-                GetCharData(msg->data, msg->length, &index);
-            }
-            else if (strcmp(hdr,"srv")==0)
-            {
-                index+=3;
-                GetMapInfo(msg->data, msg->length, &index);
-            }
-            else if (strcmp(hdr,"dat")==0)
-            {
-                index+=3;
-                GetMapData(msg->data, &index);
-            }
-            else if (strcmp(hdr, "kil") == 0)
-            {
-                index += 3;
-                int victimID = -1;
-                memcpy(&victimID, &(msg->data)[index], sizeof(int));
-                index += sizeof(int);
 
-                if (victimID != -1)
-                {
-                    KillEnemy(victimID);
-                }
-            }
-            else if (strcmp(hdr, "frg") == 0)
-            {
-                index += 3;
-                memcpy(&frags, &(msg->data)[index], sizeof(int));
-                index += sizeof(int);
-            }
-            else if (strcmp(hdr,"sht")==0)
-            {
-                index += 3;
-                int ind = 0;
-                memcpy(&ind, &(msg->data)[index],sizeof(int));
-                index+=sizeof(int);
-
-                if (ind < 254)
-                {
-                    memcpy(&mapas.mons[ind].ammo, &(msg->data)[index],sizeof(int));
-                    index+=sizeof(int);
-                    unsigned char cisMine=0;
-                    memcpy(&cisMine, &(msg->data)[index], sizeof(unsigned char));
-                    index += sizeof(unsigned char);
-                    bool isMine=false;
-
-                    if (cisMine)
+                case NET_SERVER_MSG_CHARACTER_DATA:
                     {
-                        isMine=true;
-                    }
+                        ++index;
+                        GetCharData(msg->data, msg->length, &index);
+                    } break;
 
-                    mapas.mons[ind].shoot(true, isMine, &bulbox);
-                }
-                else
-                {
-                    memcpy(&mapas.mons[mapas.enemyCount+(ind-254)].ammo, &(msg->data)[index], sizeof(int));
-                    index += sizeof(int);
-                    unsigned char cisMine=0;
-                    memcpy(&cisMine, &(msg->data)[index], sizeof(unsigned char));
-                    index += sizeof(unsigned char);
-                    bool isMine=false;
-
-                    if (cisMine)
+                case NET_SERVER_MSG_SERVER_INFO:
                     {
-                        isMine=true;
+                        ++index;
+                        GetMapInfo(msg->data, msg->length, &index);
+                    } break;
+
+                case NET_SERVER_MSG_MAP_DATA:
+                    {
+                        ++index;
+                        GetMapData(msg->data, &index);
+                    } break;
+
+                case NET_SERVER_MSG_KILL_CHARACTER:
+                    {
+                        ++index;
+                        int victimID = -1;
+                        memcpy(&victimID, &(msg->data)[index], sizeof(int));
+                        index += sizeof(int);
+
+                        if (victimID != -1)
+                        {
+                            KillEnemy(victimID);
+                        }
+                    } break;
+
+                case NET_SERVER_MSG_FRAG:
+                    {
+                        ++index;
+                        memcpy(&frags, &(msg->data)[index], sizeof(int));
+                        index += sizeof(int);
+                    } break;
+
+                case NET_SERVER_MSG_WEAPON_SHOT:
+                    {
+                        ++index;
+                        int ind = 0;
+                        memcpy(&ind, &(msg->data)[index], sizeof(int));
+                        index += sizeof(int);
+
+                        if (ind < 254)
+                        {
+                            memcpy(&mapas.mons[ind].ammo, &(msg->data)[index],sizeof(int));
+                            index+=sizeof(int);
+                            unsigned char cisMine=0;
+                            memcpy(&cisMine, &(msg->data)[index], sizeof(unsigned char));
+                            index += sizeof(unsigned char);
+                            bool isMine=false;
+
+                            if (cisMine)
+                            {
+                                isMine=true;
+                            }
+
+                            mapas.mons[ind].shoot(true, isMine, &bulbox);
+                        }
+                        else
+                        {
+                            memcpy(&mapas.mons[mapas.enemyCount+(ind-254)].ammo, &(msg->data)[index], sizeof(int));
+                            index += sizeof(int);
+                            unsigned char cisMine=0;
+                            memcpy(&cisMine, &(msg->data)[index], sizeof(unsigned char));
+                            index += sizeof(unsigned char);
+                            bool isMine=false;
+
+                            if (cisMine)
+                            {
+                                isMine=true;
+                            }
+
+                            mapas.mons[mapas.enemyCount+(ind-254)].shoot(true, isMine, &bulbox);
+                        }
+                    } break;
+
+                case NET_SERVER_MSG_ITEM:
+                    {
+                        ++index;
+                        int itmindex=0;
+                        memcpy(&itmindex, &(msg->data)[index], sizeof(int));
+                        index+=sizeof(int);
+                        unsigned char isPlayerTaked = 0;
+                        memcpy(&isPlayerTaked, &(msg->data)[index], sizeof(unsigned char));
+                        index++;
+
+                        if ((mapas.items[itmindex].value < ITEM_AMMO_PACK) &&
+                                (mapas.items[itmindex].value > 0) &&
+                                (isPlayerTaked))
+                        {
+                            mustCollectItems--;
+                        }
+
+                        mapas.removeItem(itmindex);
+
+                    } break;
+
+                case NET_SERVER_MSG_DOOR:
+                    {
+                        ++index;
+                        GetDoorInfo(msg->data, (unsigned*)&index, 0,0,0);
+                    } break;
+
+                case NET_SERVER_MSG_NEW_ITEM:
+                    {
+                        ++index;
+                        GetNewItemInfo(msg->data, &index);
+                    } break;
+
+                case NET_SERVER_MSG_MELEE_ATTACK:
+                    {
+                        ++index;
+                        GetAtackImpulse(msg->data, &index);
+
+                    } break;
+
+                case NET_SERVER_MSG_PING:
+                    {
+                        ++index;
+                        char buf[2];
+                        buf[0] = NET_CLIENT_MSG_PONG;
+                        client.sendData(buf, 1);
+
+                    } break;
+
+                default:
+                    {
+                        index++;
                     }
-
-                    mapas.mons[mapas.enemyCount+(ind-254)].shoot(true, isMine, &bulbox);
-                }
-
-
-            }
-
-            else if (strcmp(hdr,"itm")==0)
-            {
-                index+=3;
-                int itmindex=0;
-                memcpy(&itmindex,&(msg->data)[index],sizeof(int));
-                index+=sizeof(int);
-                unsigned char isPlayerTaked=0;
-                memcpy(&isPlayerTaked,&(msg->data)[index],sizeof(unsigned char));
-                index++;
-
-                if ((mapas.items[itmindex].value < ITEM_AMMO_PACK) &&
-                        (mapas.items[itmindex].value > 0) &&
-                        (isPlayerTaked))
-                {
-                    mustCollectItems--;
-                }
-
-                mapas.removeItem(itmindex);
-
-            }
-            else if (strcmp(hdr,"dor") == 0)
-            {
-                index+=3;
-                GetDoorInfo(msg->data, (unsigned*)&index, 0,0,0);
-            }
-
-            else if (strcmp(hdr,"itc")==0)
-            {
-                index+=3;
-                GetNewItemInfo(msg->data, &index);
-            }
-
-            else if(strcmp(hdr,"atk")==0)
-            {
-                index+=3;
-                GetAtackImpulse(msg->data, &index);
-
-            }
-            else if(strcmp(hdr,"pin")==0)
-            {
-                index+=3;
-                client.sendData("pon", 3);
-
-            }
-            else
-            {
-
-                index++;
             }
 
             msg->parsed = true;
