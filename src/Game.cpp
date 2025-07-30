@@ -1087,6 +1087,17 @@ void Game::InitServer()
 //--------------------------------
 void Game::StopServer()
 {
+
+    int cnt = 0;
+    char buffer[MAX_MESSAGE_DATA_SIZE];
+    buffer[cnt] = NET_SERVER_MSG_SHUTTING_DOWN;
+    ++cnt;
+
+    for (unsigned i = 0; i < serveris.clientCount(); ++i)
+    {
+        serveris.sendData(i, buffer, cnt);
+    }
+
     isServer = false;
     serveris.shutDown();
 }
@@ -3230,7 +3241,6 @@ void Game::ParseMessagesServerGot()
 
                     } break;
 
-
                 case NET_CLIENT_MSG_CHARACTER_DATA:
                     {
                         ++index;
@@ -3339,8 +3349,24 @@ void Game::ParseMessagesServerGot()
                 case NET_CLIENT_MSG_QUIT:
                     {
                         ++index;
+
+                        for (unsigned i = 0; i < serveris.clientCount(); ++i)
+                        {
+                            if (i != (unsigned)clientIdx)
+                            {
+                                char data[MAX_MESSAGE_DATA_SIZE];
+                                int len = 0;
+                                data[len] = NET_SERVER_MSG_REMOVE_CHARACTER;
+                                ++len;
+                                memcpy(&data[len], &mapas.mons[mapas.enemyCount + clientIdx].id, sizeof(int));
+                                len += sizeof(int);
+                                serveris.sendData(i, data, len);
+                            }
+                        }
+
                         serveris.removeClient(clientIdx);
-                        mapas.mons.remove(mapas.enemyCount + clientIdx);
+                        fragTable.remove(clientIdx);
+                        mapas.mons.remove(mapas.enemyCount + clientIdx + 1);
                     } break;
 
                 case NET_CLIENT_MSG_PONG:
@@ -3415,6 +3441,16 @@ void Game::ParseMessagesClientGot()
                         GetCharData(msg->data, msg->length, &index);
                     } break;
 
+                case NET_SERVER_MSG_SHUTTING_DOWN:
+                    {
+                        client.shutdown();
+                        isClient = false;
+                        state = GAMESTATE_TITLE;
+                        mainmenu.activate();
+                        PlayNewSong("evil.ogg");
+                        return;
+                    } break;
+
                 case NET_SERVER_MSG_SERVER_INFO:
                     {
                         ++index;
@@ -3425,6 +3461,30 @@ void Game::ParseMessagesClientGot()
                     {
                         ++index;
                         GetMapData(msg->data, &index);
+                    } break;
+
+                case NET_SERVER_MSG_REMOVE_CHARACTER:
+                    {
+                        ++index;
+                        int idToRemove;
+                        memcpy(&idToRemove, &(msg->data)[index], sizeof(int));
+
+                        int idxToRemove = -1;
+
+                        for (unsigned i = mapas.enemyCount; i < mapas.mons.count(); ++i)
+                        {
+                            if (mapas.mons[i].id == idToRemove + 1)
+                            {
+                                idxToRemove = i;
+                                break;
+                            }
+                        }
+
+                        if (idxToRemove != -1)
+                        {
+                            mapas.removeMonster(idxToRemove);
+                        }
+
                     } break;
 
                 case NET_SERVER_MSG_KILL_CHARACTER:
@@ -3706,11 +3766,25 @@ void Game::init()
 
 
 }
-
+//--------------------------------
 void Game::destroy()
 {
+
+    if (isServer)
+    {
+        StopServer();
+    }
+    else if (isClient)
+    {
+        QuitServer();
+    }
+
+    music.release();
+    SoundSystem::getInstance()->exit();
+
     mapas.Destroy();
     mapai.Destroy();
+    pics.destroy();
 
     bulbox.destroy();
 }

@@ -270,14 +270,12 @@ int main(int argc, char* argv[])
     ConfGL();
 
     Game.TimeTicks = SDL_GetTicks();
-    
+
     SDL_ShowCursor(false);
 
 
-   
-    while (Game.Works){
-
-
+    while (Game.Works)
+    {
         if ((SDL_GetTicks() > tick))
         {
 
@@ -286,7 +284,8 @@ int main(int argc, char* argv[])
 
             Game.Accumulator += Game.DeltaTime;
 
-            while (Game.Accumulator >= Game.DT){
+            while (Game.Accumulator >= Game.DT)
+            {
                 Logic();
                 Game.Accumulator -= Game.DT;
             }
@@ -294,7 +293,7 @@ int main(int argc, char* argv[])
             CheckKeys();
             RenderScreen();
 
-            tick = SDL_GetTicks() + 1000/61;
+            tick = SDL_GetTicks() + 1000 / 61;
         }
 
         SDL_Delay(0.6);
@@ -305,6 +304,7 @@ int main(int argc, char* argv[])
 
 
     }
+    printf("QUITING!\n");
 
     Game.destroy();
 

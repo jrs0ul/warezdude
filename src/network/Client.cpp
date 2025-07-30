@@ -44,6 +44,7 @@ void Client::sendData( const void* data, int len)
 
 void Client::shutdown()
 {
+    receivedPackets.destroy();
     client.shutdown();
 }
 
