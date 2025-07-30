@@ -209,6 +209,7 @@ private:
     void QuitServer();
     void SendServerDoorState(unsigned int clientIndex, int doorx,int doory, unsigned char doorframe);
     void DoorsInteraction();
+    void CheckForExit();
     void SlimeReaction(int index);
     void SendClientAtackImpulse(int victimID, int hp);
     void SendClientCoords();

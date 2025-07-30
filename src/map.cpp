@@ -17,6 +17,12 @@ void CMap::addMonster(Dude &newmonster){
 void CMap::removeMonster(int index){
     mons.remove(index);
 }
+//-------------------------------
+void CMap::move(Vector3D v, float size)
+{
+    mapPos = mapPos + Vector3D(v.x * size, v.y * size , v.z * size);
+}
+
 
 //-----------------------------------------
 void CMap::arangeItems(){
@@ -24,8 +30,8 @@ void CMap::arangeItems(){
     int iy;
     //isdelioja flopikus
     for (int a=0; a<misionItems; a++){
-        ix=rand()%width;
-        iy=rand()%height;
+        ix=rand()%_width;
+        iy=rand()%_height;
 
         bool found=false;
         for (unsigned long i=0;i<items.count();i++){
@@ -35,9 +41,9 @@ void CMap::arangeItems(){
          }
         }
 
-        while ((colide[iy][ix])||(found)||(tiles[iy][ix]==35)||(tiles[iy][ix]==36)){
-            ix=rand()%width;
-            iy=rand()%height;
+        while ((_colide[iy][ix]) || (found) || (tiles[iy][ix]==35)||(tiles[iy][ix]==36)){
+            ix=rand() % _width;
+            iy=rand() % _height;
             found=false;
             for (unsigned long i=0;i<items.count();i++){
                 if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y)){
@@ -54,8 +60,8 @@ void CMap::arangeItems(){
     //places ammo and medkits
     for (int a=0; a<goods; a++)
     {
-        ix=rand()%width;
-        iy=rand()%height;
+        ix=rand() % _width;
+        iy=rand() % _height;
 
 
 
@@ -67,9 +73,9 @@ void CMap::arangeItems(){
          }
         }
 
-        while ((colide[iy][ix])||(found)){
-            ix=rand()%width;
-            iy=rand()%height;
+        while ((_colide[iy][ix]) || (found)){
+            ix=rand() % _width;
+            iy=rand() % _height;
 
             found=false;
             for (unsigned long i=0;i<items.count();i++){
@@ -93,24 +99,21 @@ void CMap::arangeItems(){
 
 
 //-------------------------------------
-bool CMap::Load(const char* path, bool createItems, int otherplayers){
+bool CMap::load(const char* path, bool createItems, int otherplayers){
 
     char buf[255];
 
     puts(path);
 
-    strcpy(buf,"maps/");
+    strcpy(name, path);
 
-    strcat(buf,path);
-    strcpy(name,path);
-
-    printf("Loading [%s]\n", buf);
+    printf("Loading [%s]\n", path);
 
     enemyCount = 0;
 
     Xml mapfile;
 
-    bool res = mapfile.load(buf);
+    bool res = mapfile.load(path);
 
     if (res)
     {
@@ -140,8 +143,8 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
                                     if (val)
                                     {
                                         sprintf(buf, "%ls", val);
-                                        width = atoi(buf);
-                                        printf("MAP WIDTH: %d\n", width);
+                                        _width = atoi(buf);
+                                        printf("MAP WIDTH: %d\n", _width);
                                     }
                                 }
                                 else if (wcscmp(attr->getName(), L"height") == 0)
@@ -151,10 +154,10 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
                                     if (val)
                                     {
                                         sprintf(buf, "%ls", val);
-                                        height = atoi(buf);
-                                        tiles  = new unsigned char*[height];
-                                        colide = new bool* [height];
-                                        printf("MAP HEIGHT: %d\n", height);
+                                        _height = atoi(buf);
+                                        tiles  = new unsigned char*[_height];
+                                        _colide = new bool* [_height];
+                                        printf("MAP HEIGHT: %d\n", _height);
                                     }
 
                                 }
@@ -170,8 +173,8 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
                             if (row)
                             {
 
-                                tiles[a] = new unsigned char[width];
-                                colide[a] = new bool[width];
+                                tiles[a] = new unsigned char[_width];
+                                _colide[a] = new bool[_width];
 
                                 for (unsigned j = 0; j < row->childrenCount(); ++j)
                                 {
@@ -186,11 +189,11 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
                                                 ((tiles[a][j]>=50)&&(tiles[a][j]<=65))||(tiles[a][j]==67)||(tiles[a][j]==69)||(tiles[a][j]==71)
                                                 ||(tiles[a][j]==9))
                                         {
-                                            colide[a][j]=true;
+                                            _colide[a][j] = true;
                                         }
                                         else
                                         {
-                                            colide[a][j]=false;
+                                            _colide[a][j]=false;
                                         }
 
                                     }
@@ -348,7 +351,7 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
 
     mapfile.destroy();
 
-    printf("map width %d, height %d\n", width, height);
+    printf("map width %d, height %d\n", _width, _height);
 
     start.x = start.x * 32;
     start.y = start.y * 32;
@@ -381,14 +384,52 @@ bool CMap::Load(const char* path, bool createItems, int otherplayers){
     return true;
 }
 //--------------------------------------
-void CMap::Destroy()
+void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy)
+{
+    int tmpy = 0;
+    int tmpx = 0;
+
+    unsigned tileset = pics.findByName("pics/tileset.tga");
+
+
+    for (int a = psky - scry; a < psky; ++a)
+    {
+        tmpx = 0;
+
+        for (int i = pskx - scrx; i < pskx; ++i)
+        {
+            if (tiles)
+            {
+                if (tiles[a])
+                {
+                    pics.draw(tileset,
+                              32 * tmpx + pushx - posx,
+                              32 * tmpy + pushy - posy,
+                              tiles[a][i] - 1,
+                              true,
+                              1.f, 1.f, 0.f, COLOR(r,g,b, 1.0f), COLOR(r, g, b, 1.0f));
+                }
+            }
+
+            tmpx++;
+        }
+
+        tmpy++;
+
+    }
+
+}
+
+
+//--------------------------------------
+void CMap::destroy()
 {
 
     mons.destroy();
 
     if (tiles)
     {
-        for (int a=0;a<height;a++)
+        for (unsigned a=0; a < _height; a++)
         {
             delete []tiles[a];
         }
@@ -397,12 +438,15 @@ void CMap::Destroy()
         tiles=0;
     }
 
-    if (colide)
+    if (_colide)
     {
-        for (int a=0;a<height;a++)
-            delete []colide[a];
-        delete []colide;
-        colide=0;
+        for (unsigned a=0; a < _height; a++)
+        {
+            delete []_colide[a];
+        }
+
+        delete []_colide;
+        _colide=0;
     }
 
     items.destroy();
@@ -411,11 +455,24 @@ void CMap::Destroy()
 
 }
 //-------------------------------------------
+bool CMap::colide(unsigned x, unsigned y)
+{
+
+    if (!_colide)
+    {
+        return false;
+    }
+
+    return _colide[y][x];
+
+}
+
+//-------------------------------------------
 
 
 void CMap::ReplaceTiles(unsigned char old, unsigned char fresh){
- for (int a=0;a<height;a++)
-  for (int i=0;i<width;i++){
+ for (unsigned a = 0; a < _height; a++)
+  for (unsigned i=0;i < _width;i++){
     if (tiles[a][i]==old)
         tiles[a][i]=fresh;
   }

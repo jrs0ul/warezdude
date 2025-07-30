@@ -200,35 +200,7 @@ void Game::DrawSomeText()
 void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 {
 
-    int tmpy=0;
-
-    unsigned tileset = pics.findByName("pics/tileset.tga");
-
-
-    for (int a=psky-scry; a<psky ;a++)
-    {
-        int tmpx=0; 
-        for (int i=pskx-scrx; i<pskx; i++)
-        {
-            if (mapas.tiles)
-                if (mapas.tiles[a])
-                {
-                    pics.draw(tileset, 
-                              32*tmpx+pushx-posx,
-                              32*tmpy+pushy-posy, 
-                              mapas.tiles[a][i]-1,
-                              true,
-                    1.0f,1.0f,0.0,COLOR(r,g,b, 1.0f), COLOR(r, g, b, 1.0f));
-                }
-
-            tmpx++;
-        }
-
-        tmpy++;
-
-    }
-
-
+    mapas.draw(pics, r, g, b, pskx, psky, scrx, scry, posx, posy, pushx, pushy);
 
     for (unsigned i = 0; i<mapas.decals.count(); i++)
     {
@@ -311,16 +283,20 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 void Game::DrawMiniMap(int x, int y)
 {
 
-    pics.draw(12, x, y, 0, false ,mapas.width,mapas.height, 0, COLOR(1,1,1, 0.6f), COLOR(1,1,1, 0.6f));
+    pics.draw(12, x, y, 0, false ,mapas.width(), mapas.height(), 0, COLOR(1,1,1, 0.6f), COLOR(1,1,1, 0.6f));
 
-    for (int i=0;i<mapas.height;i++)
+    for (unsigned i = 0; i < mapas.height(); i++)
     {
-        for (int a=0; a<mapas.width;a++)
+        for (unsigned a = 0; a < mapas.width(); a++)
         {
             int frame=0;
-            if ((mapas.colide)&&(mapas.tiles[i][a]!=65)&&(mapas.tiles[i][a]!=67)&&(mapas.tiles[i][a]!=69)
-                &&(mapas.tiles[i][a]!=71))
-                frame=mapas.colide[i][a];
+
+            if ((mapas.tiles[i][a]!=65) && (mapas.tiles[i][a]!=67) && (mapas.tiles[i][a]!=69)
+                && (mapas.tiles[i][a]!=71))
+            {
+                frame = mapas.colide(a, i);
+            }
+
             if (frame)
             {
                 pics.draw(12, a*4+x,i*4+y,frame, false, 1.f, 1.f, 0.f, COLOR(1,1,1,0.6f), COLOR(1,1,1,0.6f));
@@ -553,16 +529,16 @@ void Game::MoveDude(){
 
 
         if (isServer)
-            mapas.mons[mapas.enemyCount].move(speed, sspeed, 8.0f, mapas.colide,
-                                              mapas.width, mapas.height, mapas.mons,
+            mapas.mons[mapas.enemyCount].move(speed, sspeed, 8.0f, mapas._colide,
+                                              mapas.width(), mapas.height(), mapas.mons,
                                               mapas.enemyCount + serveris.clientCount() + 1, &dirx,&diry);
         else
-            mapas.mons[mapas.enemyCount].move(speed,sspeed,8.0f, mapas.colide,
-                                              mapas.width, mapas.height, mapas.mons,
+            mapas.mons[mapas.enemyCount].move(speed,sspeed,8.0f, mapas._colide,
+                                              mapas.width(), mapas.height(), mapas.mons,
                                               mapas.enemyCount+klientai+1,&dirx,&diry);
 
         //stumdom "kamera"
-        if ((mapas.height>scry)&&(diry==1))
+        if ((mapas.height() > (unsigned)scry)&&(diry==1))
         {
             if ((psky>=scry)&&((mapas.mons[mapas.enemyCount].y+16)/32<=psky-scry/2)&&((DownBorder>0)||(UpBorder<64)))
             {
@@ -576,7 +552,7 @@ void Game::MoveDude(){
                 {
                     UpBorder++;
                 }
-                else if ((psky==mapas.height)&&(DownBorder>0))
+                else if (((unsigned)psky == mapas.height())&&(DownBorder>0))
                 {
                     DownBorder--;
                 }
@@ -590,9 +566,9 @@ void Game::MoveDude(){
 
         }
         //-----
-        if ((mapas.height>scry)&&(diry==2))
+        if ((mapas.height() > (unsigned)scry)&&(diry==2))
         {
-            if ((psky<=mapas.height)&&((mapas.mons[mapas.enemyCount].y+16)/32>=psky-scry/2)&&((DownBorder<64)||(UpBorder>0)))
+            if (((unsigned)psky <= mapas.height())&&((mapas.mons[mapas.enemyCount].y+16)/32>=psky-scry/2)&&((DownBorder<64)||(UpBorder>0)))
             {
 
                 if ((DownBorder<32) && (UpBorder<32))
@@ -604,7 +580,7 @@ void Game::MoveDude(){
                 {
                     UpBorder--;
                 }
-                else if ((psky==mapas.height) && (DownBorder<64))
+                else if (((unsigned)psky == mapas.height()) && (DownBorder<64))
                 {
                     DownBorder++;
                 }
@@ -612,7 +588,7 @@ void Game::MoveDude(){
             }
 
 
-            if ((pushy<-31)&&(psky<mapas.height)&&(UpBorder==0))
+            if ((pushy<-31)&&((unsigned)psky < mapas.height())&&(UpBorder==0))
             {
                 psky++;
                 pushy=0;
@@ -620,7 +596,7 @@ void Game::MoveDude(){
 
         }
         //---
-        if ((mapas.width>scrx)&&(dirx==1))
+        if ((mapas.width() > (unsigned)scrx)&&(dirx==1))
         {
             if ((pskx>=scrx)&&((mapas.mons[mapas.enemyCount].x+16)/32<=pskx-scrx/2)&&((RightBorder>0)||(LeftBorder<64)))
             {
@@ -634,7 +610,7 @@ void Game::MoveDude(){
                 {
                     LeftBorder++;
                 }
-                else if ((pskx==mapas.width)&&(RightBorder>0))
+                else if (((unsigned)pskx == mapas.width()) && (RightBorder>0))
                 {
                     RightBorder--;
                 }
@@ -650,9 +626,9 @@ void Game::MoveDude(){
         }
 
         //---
-        if ((mapas.width>scrx)&&(dirx==2))
+        if ((mapas.width() > (unsigned)scrx)&&(dirx==2))
         {
-            if ((pskx<=mapas.width)&&((mapas.mons[mapas.enemyCount].x+16)/32>=pskx-scrx/2)&&((RightBorder<64)||(LeftBorder>0)))
+            if (((unsigned)pskx <= mapas.width())&&((mapas.mons[mapas.enemyCount].x+16)/32>=pskx-scrx/2)&&((RightBorder<64)||(LeftBorder>0)))
             {
 
                 if ((RightBorder<32)&&(LeftBorder<32))
@@ -664,12 +640,12 @@ void Game::MoveDude(){
                 }
                 else
                 {
-                    if ((pskx==mapas.width)&&(RightBorder<64)){
+                    if (((unsigned)pskx == mapas.width()) && (RightBorder<64)){
                         RightBorder++;
 
                     }
 
-                    if ((LeftBorder==0)&&(pskx<mapas.width)&&(pushx<-31)){
+                    if ((LeftBorder==0)&&((unsigned)pskx < mapas.width())&&(pushx<-31)){
                         pskx++;
                         pushx=0;
                     }
@@ -692,28 +668,29 @@ void Game::AddaptMapView()
     pushx=0;
     pushy=0;
 
-    if (mapas.width < (sys.ScreenWidth / TILE_WIDTH) + 2)
+    if (mapas.width() < (unsigned)(sys.ScreenWidth / TILE_WIDTH) + 2)
     {
-        scrx = mapas.width;
-        posx = (sys.ScreenWidth / 2 - ((mapas.width*32)/2))*-1 - 16;
+        scrx = mapas.width();
+        posx = (sys.ScreenWidth / 2 - ((mapas.width() * TILE_WIDTH)/2))*-1 - 16;
     }
     else{
-        if (mapas.width > (sys.ScreenWidth / TILE_WIDTH) + 2){
-            scrx = sys.ScreenWidth / 32 + 2;
+        if (mapas.width() > (unsigned)(sys.ScreenWidth / TILE_WIDTH) + 2)
+        {
+            scrx = sys.ScreenWidth / TILE_WIDTH + 2;
             posx = 16;
         }
     }
 
-    if (mapas.height < (sys.ScreenHeight / TILE_WIDTH) + 2)
+    if (mapas.height() < (unsigned)(sys.ScreenHeight / TILE_WIDTH) + 2)
     {
-        scry = mapas.height;
-        posy = (sys.ScreenHeight / 2 - ((mapas.height*32)/2))*-1 - 16;
+        scry = mapas.height();
+        posy = (sys.ScreenHeight / 2 - ((mapas.height() * TILE_WIDTH) / 2))*-1 - 16;
     }
     else
     {
-        if (mapas.height > (sys.ScreenHeight / TILE_WIDTH) + 2)
+        if (mapas.height() > (unsigned)(sys.ScreenHeight / TILE_WIDTH) + 2)
         {
-            scry = sys.ScreenHeight / 32 + 2;
+            scry = sys.ScreenHeight / TILE_WIDTH + 2;
             posy = 16;
         }
     }
@@ -742,9 +719,9 @@ void Game::findpskxy()
         pskx = scrx;
     }
 
-    if (pskx > mapas.width)
+    if ((unsigned)pskx > mapas.width())
     {
-        pskx = mapas.width;
+        pskx = mapas.width();
     }
     //-
     psky = round(mapas.mons[mapas.enemyCount].y / 32.0f) + pusesizy;
@@ -754,28 +731,28 @@ void Game::findpskxy()
         psky=scry;
     }
 
-    if (psky>mapas.height)
+    if ((unsigned)psky > mapas.height())
     {
-        psky = mapas.height;
+        psky = mapas.height();
     }
 
-    if ((scry<mapas.height)&&(psky==mapas.height))
+    if (((unsigned)scry < mapas.height()) && ((unsigned)psky == mapas.height()))
     {
         DownBorder=64;
         pushy=-32;
     }
 
-    if ((scry<mapas.height)&&(psky==scry)){
+    if (((unsigned)scry < mapas.height()) && (psky == scry)){
         UpBorder=64;
         pushy=32;
     }
 
-    if ((scrx<mapas.width)&&(pskx==scrx)){
+    if (((unsigned)scrx < mapas.width()) && (pskx == scrx)){
         pushx=32;
         LeftBorder=64;
     }
 
-    if ((scrx<mapas.width)&&(pskx==mapas.width)){
+    if (((unsigned)scrx < mapas.width()) && ((unsigned)pskx == mapas.width())){
         RightBorder=64;
         pushx=32;
     }
@@ -802,10 +779,10 @@ void Game::GoToLevel(int level, int otherplayer)
 {
     exitSpawned = false;
     bulbox.destroy();
-    mapas.Destroy();
+    mapas.destroy();
     char mapname[255];
     mapai.getMapName(level,mapname);
-    mapas.Load(mapname,true,otherplayer);
+    mapas.load(mapname,true,otherplayer);
     mustCollectItems = mapas.misionItems;
     timeleft = mapas.timeToComplete;
     mapas.mons[mapas.enemyCount].x=(float)mapas.start.x;
@@ -1028,31 +1005,7 @@ void Game::ItemPickup()
 
             //exitas
             if (item==4){
-                mapai.current++;
-                if (mapai.current == mapai.count())
-                {
-                    mapai.current=0;
-                    state = GAMESTATE_ENDING;
-                    PlayNewSong("crazy.ogg");
-
-                }
-
-                int kiek=0;
-                if (isServer)
-                    kiek=serveris.clientCount();
-                if (!isClient)
-                    GoToLevel(mapai.current,kiek);
-                else
-                    SendWarpMessage();
-
-                if (isServer){
-                    for (int a =0; a<(int)serveris.clientCount();a++){
-                        SendMapInfo(a, mapas);
-                        SendMapData(a, mapas);
-                    }
-
-                }
-
+                
             }
         }
 
@@ -1201,7 +1154,7 @@ void Game::DoorsInteraction()
                 ||(mapas.tiles[dry][drx]==71))
             {// atidarom
                 mapas.tiles[dry][drx]++;
-                mapas.colide[dry][drx]=false;
+                mapas._colide[dry][drx] = false;
                 door_tim = 1;
                 AdaptSoundPos(8, mapas.mons[mapas.enemyCount].x, mapas.mons[mapas.enemyCount].y);
                 ss->playsound(8);
@@ -1217,7 +1170,7 @@ void Game::DoorsInteraction()
                 if (!CirclesColide(mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y,16.0f,drx*32.0f,dry*32.0f,8.0f))
                 {
                     mapas.tiles[dry][drx]--;
-                    mapas.colide[dry][drx]=true;
+                    mapas._colide[dry][drx] = true;
                     door_tim=1;
                     AdaptSoundPos(9, mapas.mons[mapas.enemyCount].x, mapas.mons[mapas.enemyCount].y);
                     ss->playsound(9);
@@ -1245,6 +1198,46 @@ void Game::DoorsInteraction()
     }
 
 }
+//-----------------------------
+void Game::CheckForExit()
+{
+    int playerX = round(mapas.getPlayer()->x / 32);
+    int playerY = round(mapas.getPlayer()->y / 32);
+
+    printf("%d %d %d\n", playerY, playerX, mapas.tiles[playerY][playerX]);
+
+    if (mapas.tiles[playerY][playerX] == 81)
+    {
+        mapai.current++;
+        if (mapai.current == mapai.count())
+        {
+            mapai.current=0;
+            state = GAMESTATE_ENDING;
+            PlayNewSong("crazy.ogg");
+
+        }
+
+        int kiek=0;
+        if (isServer)
+            kiek=serveris.clientCount();
+        if (!isClient)
+            GoToLevel(mapai.current,kiek);
+        else
+            SendWarpMessage();
+
+        if (isServer){
+            for (int a =0; a<(int)serveris.clientCount();a++){
+                SendMapInfo(a, mapas);
+                SendMapData(a, mapas);
+            }
+
+        }
+
+    }
+
+
+}
+
 //-------
 void Game::SlimeReaction(int index)
 {
@@ -1403,7 +1396,7 @@ void Game::MonsterAI(int index)
         int dx=0;
         int dy=0;
         mapas.mons[index].move(1.0f, 0.0f, 8.0f, 
-                               mapas.colide, mapas.width, mapas.height,
+                               mapas._colide, mapas.width(), mapas.height(),
                                mapas.mons,mapas.enemyCount+1+serveris.clientCount(),&dx,&dy);
 
 
@@ -1450,13 +1443,13 @@ void Game::MonsterAI(int index)
                     unsigned ly = (unsigned)line[i].y;
                     unsigned lx = (unsigned)line[i].x;
 
-                    if ((ly >= mapas.height) || (lx >= mapas.width))
+                    if ((ly >= mapas.height()) || (lx >= mapas.width()))
                     {
                         colide = true;
                         break;
                     }
 
-                    if (mapas.colide[ly][lx])
+                    if (mapas.colide(lx, ly))
                     {
                         colide = true;
                         break;
@@ -1521,7 +1514,7 @@ void Game::MonsterAI(int index)
         if (!mapas.mons[index].shot)
         {
             mapas.mons[index].initMonsterHP();
-            mapas.mons[index].appearInRandomPlace(mapas.colide,mapas.width,mapas.height);
+            mapas.mons[index].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
         }
     }
 
@@ -1585,7 +1578,7 @@ void Game::HandleBullets()
 {
 
     for (int i=0;i<bulbox.count();i++){
-        bulbox.buls[i].ai(mapas.colide,mapas.width,mapas.height);
+        bulbox.buls[i].ai(mapas._colide, mapas.width(), mapas.height());
 
         if (OnHit(bulbox.buls[i]))
             if (!bulbox.buls[i].explode)
@@ -1621,10 +1614,11 @@ void Game::LoadFirstMap()
 {
     if (!isClient){
         char firstmap[255];
-        mapai.getMapName(0,firstmap);
-        mapas.Destroy();
-        if (!mapas.Load(firstmap)){
-            mapas.Destroy();
+        mapai.getMapName(0, firstmap);
+        mapas.destroy();
+        if (!mapas.load(firstmap))
+        {
+            mapas.destroy();
             mapai.Destroy();
             printf("Can't find first map!\n");
             Works = false;
@@ -2133,7 +2127,7 @@ void Game::CoreGameLogic()
                 mapas.mons[mapas.enemyCount].y=(float)mapas.start.y;
             }
             else{
-                mapas.mons[mapas.enemyCount].appearInRandomPlace(mapas.colide,mapas.width,mapas.height);
+                mapas.mons[mapas.enemyCount].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
 
             }
 
@@ -2316,6 +2310,8 @@ void Game::CoreGameLogic()
     SlimeReaction(mapas.enemyCount); // herojaus reakcija i slime
 
     DoorsInteraction();//open doors
+
+    CheckForExit();
 
     HandleBullets();//kulku ai-------------
 
@@ -2503,6 +2499,8 @@ void Game::render()
     int MatrixID = defaultShader.getUniformID("ModelViewProjection");
     glUniformMatrix4fv(MatrixID, 1, GL_FALSE, finalM.m);
     colorShader.use();
+    int MatrixIDColor = colorShader.getUniformID("ModelViewProjection");
+    glUniformMatrix4fv(MatrixIDColor, 1, GL_FALSE, finalM.m);
 
     switch(state)
     {
@@ -2602,7 +2600,7 @@ void Game::DrawEndScreen()
 //------------------------------------
 void Game::DrawGameplay()
 {
-    if ((mapas.width > 0) && (mapas.height > 0))
+    if ((mapas.width() > 0) && (mapas.height() > 0))
     {
 
         if (fadein)
@@ -2634,7 +2632,7 @@ void Game::DrawGameplay()
 
     if (ShowMiniMap)
     {
-        DrawMiniMap(sys.ScreenWidth - mapas.width*4, sys.ScreenHeight - mapas.height*4);
+        DrawMiniMap(sys.ScreenWidth - mapas.width() * 4, sys.ScreenHeight - mapas.height() * 4);
     }
 
 
@@ -2807,8 +2805,8 @@ void LoadIntro(){
 void Game::LoadMap(const char* mapname, int otherplayers)
 {
     bulbox.destroy();
-    mapas.Destroy();
-    mapas.Load(mapname,false, otherplayers);
+    mapas.destroy();
+    mapas.load(mapname, false, otherplayers);
     mustCollectItems = mapas.misionItems;
     timeleft=mapas.timeToComplete;
     if ((!isClient)&&(!isServer)){
@@ -2816,7 +2814,7 @@ void Game::LoadMap(const char* mapname, int otherplayers)
         mapas.mons[mapas.enemyCount].y=(float)mapas.start.y;
     }
     else{
-        mapas.mons[mapas.enemyCount].appearInRandomPlace(mapas.colide,mapas.width,mapas.height);
+        mapas.mons[mapas.enemyCount].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
     }
 
     AddaptMapView();
@@ -3086,9 +3084,14 @@ void Game::GetDoorInfo(const unsigned char* bufer, unsigned * index, int* dx, in
 
     mapas.tiles[doory][doorx]=doorframe;
     if ((doorframe==65)||(doorframe==67)||(doorframe==69)||(doorframe==71))
-        mapas.colide[doory][doorx]=true;
+    {
+        mapas._colide[doory][doorx] = true;
+    }
     else
-        mapas.colide[doory][doorx]=false;
+    {
+        mapas._colide[doory][doorx]=false;
+    }
+
     if (dx)
         *dx=doorx;
     if (dy)
@@ -3782,7 +3785,7 @@ void Game::destroy()
     music.release();
     SoundSystem::getInstance()->exit();
 
-    mapas.Destroy();
+    mapas.destroy();
     mapai.Destroy();
     pics.destroy();
 

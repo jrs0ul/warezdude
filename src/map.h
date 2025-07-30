@@ -27,26 +27,28 @@ enum Items
 
 class CMap 
 {
+        unsigned _width;
+        unsigned _height;
     public:
         char name[20];
-        unsigned char width;
-        unsigned char height;
         unsigned char** tiles;
-        bool** colide;
+        bool** _colide;
         DArray<CItem> items;
         DArray<Dude> mons;
         DArray<Decal> decals;
 
-        int timeToComplete; //per kiek laiko reikia pereit
-        int misionItems; //kiek bus flopiku,cd,captive
-        int goods; //kiek mape bus ammo,medi,timer
+        int timeToComplete;
+        int misionItems;
+        int goods; // ammo, medkits, etc.
         int enemyCount;
+
+        Vector3D mapPos;
 
         Vector3D start;
         Vector3D exit;
 
-        CMap(){
-            tiles=0; width=0; height=0;
+        CMap() : _width(0), _height(0){
+            tiles=0;
             timeToComplete=0;
             misionItems=0;
             goods=0;
@@ -55,8 +57,20 @@ class CMap
 
         Dude* getPlayer();
 
-        bool Load(const char* path, bool createItems=true, int otherplayers=0);
-        void Destroy();
+        unsigned width(){return _width;}
+        unsigned height(){return _height;}
+        void setWidth(unsigned newWidth){_width = newWidth;}
+        void setHeight(unsigned newHeight){_height = newHeight;}
+
+        Vector3D getPos(){return mapPos;}
+        void move(Vector3D v, float size);
+
+        bool load(const char* path, bool createItems=true, int otherplayers=0);
+        bool save(const char* path){return false;}
+        void draw(PicsContainer& pics, float r, float g, float b, int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy);
+        void destroy();
+
+        bool colide(unsigned x, unsigned y);
         void ReplaceTiles(unsigned char old, unsigned char fresh);
         void addItem(float nx, float ny, int nvalue);
         void removeItem(int ID);
