@@ -36,6 +36,7 @@ class CMap
         DArray<CItem> items;
         DArray<Dude> mons;
         DArray<Decal> decals;
+        int itmframe;
 
         int timeToComplete;
         int misionItems;
@@ -66,7 +67,7 @@ class CMap
         void move(Vector3D v, float size);
 
         bool load(const char* path, bool createItems=true, int otherplayers=0);
-        bool save(const char* path){return false;}
+        bool save(const char* path);
         void draw(PicsContainer& pics, float r, float g, float b, int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy);
         void destroy();
 

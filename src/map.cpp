@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <wchar.h>
 #include "map.h"
 #include "Xml.h"
 
@@ -296,7 +297,8 @@ bool CMap::load(const char* path, bool createItems, int otherplayers){
                             if (enemy)
                             {
 
-                                int sx,sy;
+                                int sx = 0;
+                                int sy = 0;
                                 Dude naujas;
                                 naujas.id = a;
 
@@ -384,6 +386,110 @@ bool CMap::load(const char* path, bool createItems, int otherplayers){
     return true;
 }
 //--------------------------------------
+bool CMap::save(const char* path)
+{
+    printf("SAVING %s...\n", path);
+
+    Xml mapfile;
+
+    XmlNode mapnode;
+    mapnode.setName(L"Map");
+    XmlNode size;
+    size.setName(L"size");
+    wchar_t width[10];
+    swprintf(width, 10, L"%d", _width);
+    size.addAtribute(L"width", width);
+    wchar_t height[10];
+    swprintf(height, 10, L"%d", _height);
+    size.addAtribute(L"height", height);
+    mapnode.addChild(size);
+
+    XmlNode rows;
+    rows.setName(L"rows");
+
+    for (unsigned i = 0; i < _height; ++i)
+    {
+        XmlNode row;
+        row.setName(L"row");
+
+        for (unsigned a = 0; a < _width; ++a)
+        {
+            XmlNode tile;
+            tile.setName(L"t");
+            wchar_t value[10];
+            swprintf(value, 10, L"%d", tiles[i][a] + 48);
+            tile.setValue(value);
+            row.addChild(tile);
+        }
+
+        rows.addChild(row);
+    }
+    mapnode.addChild(rows);
+
+
+    XmlNode startTag;
+    startTag.setName(L"start");
+    wchar_t buffer[50];
+    printf("%d %d\n", (int)start.x/32, (int)start.y/32);
+    swprintf(buffer, 50, L"%d", (int)start.x / 32);
+    startTag.addAtribute(L"x", buffer);
+
+    swprintf(buffer, 50, L"%d", (int)start.y / 32);
+    startTag.addAtribute(L"y", buffer);
+    mapnode.addChild(startTag);
+
+    XmlNode exitTag;
+    exitTag.setName(L"exit");
+    swprintf(buffer, 50, L"%d", (int)exit.x);
+    exitTag.addAtribute(L"x", buffer);
+    swprintf(buffer, 50, L"%d", (int)exit.y);
+    exitTag.addAtribute(L"y", buffer);
+    mapnode.addChild(exitTag);
+
+    XmlNode questItemTag;
+    questItemTag.setName(L"items");
+    swprintf(buffer, 50, L"%d", misionItems);
+    questItemTag.setValue(buffer);
+    mapnode.addChild(questItemTag);
+
+    XmlNode timeTag;
+    timeTag.setName(L"time");
+    swprintf(buffer, 50, L"%d", timeToComplete);
+    timeTag.setValue(buffer);
+    mapnode.addChild(timeTag);
+
+    XmlNode itemsTag;
+    itemsTag.setName(L"goods");
+    swprintf(buffer, 50, L"%d", goods);
+    itemsTag.setValue(buffer);
+    mapnode.addChild(itemsTag);
+
+    XmlNode enemies;
+    enemies.setName(L"enemies");
+
+    for (unsigned i = 0; i < (unsigned)enemyCount; ++i)
+    {
+        XmlNode enemyPos;
+        enemyPos.setName(L"pos");
+        wchar_t buf[10];
+        swprintf(buf, 10, L"%d", (int)mons[i].x / 32);
+        enemyPos.addAtribute(L"x", buf);
+        swprintf(buf, 10, L"%d", (int)mons[i].y / 32);
+        enemyPos.addAtribute(L"y", buf);
+        enemies.addChild(enemyPos);
+    }
+
+    mapnode.addChild(enemies);
+
+    mapfile.root.addChild(mapnode);
+    mapfile.write(path);
+
+    mapfile.destroy();
+
+    return true;
+}
+
+//--------------------------------------
 void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy)
 {
     int tmpy = 0;
@@ -417,6 +523,55 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int ps
         tmpy++;
 
     }
+
+
+    for (unsigned i = 0; i < decals.count(); i++)
+    {
+        decals[i].draw(pics, 15, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
+    }
+
+
+    for (unsigned long i = 0; i < items.count(); ++i)
+    {
+
+        if (items[i].value < ITEM_AMMO_PACK)
+        {
+            if ((round(items[i].y) < psky * 32) && (round(items[i].y)>=((psky-scry)*32))&&
+                    ((round(items[i].x) < pskx * 32)) && (round(items[i].x)>=((pskx-scrx)*32)))
+            {
+
+                pics.draw(11,
+                        (round(items[i].x))-((pskx-scrx)*32) + pushx-posx,
+                        (round(items[i].y))-((psky-scry)*32) + pushy-posy,
+                        (items[i].value-1) * 4 + itmframe,
+                        true,
+                        1.0f,
+                        1.0f,
+                        0.0,
+                        COLOR(r,g,b, 1.0f),
+                        COLOR(r,g,b, 1.0f)
+                        );
+            }
+        }
+        else if ((round(items[i].y) < psky * TILE_WIDTH) && (round(items[i].y) >= ((psky-scry) * TILE_WIDTH))&&
+                ((round(items[i].x) < pskx * TILE_WIDTH)) && (round(items[i].x) >= ((pskx-scrx) * TILE_WIDTH)))
+        {
+
+            pics.draw(7,
+                    (round(items[i].x))-((pskx-scrx) * TILE_WIDTH) + pushx-posx,
+                    (round(items[i].y))-((psky-scry) * TILE_WIDTH) + pushy-posy,
+                    items[i].value - ITEM_AMMO_PACK,
+                    true,
+                    1.0f,1.0f,0.0,
+                    COLOR(r,g,b, 1.f),
+                    COLOR(r,g,b, 1.f)
+                    );
+        }
+
+    }
+
+
+
 
 }
 

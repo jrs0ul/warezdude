@@ -14,7 +14,8 @@ class Dude
         bool alive;
         int hp;
     public:
-        float x,y;
+        float x;
+        float y;
         float angle;
 
         int item;

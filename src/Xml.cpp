@@ -260,7 +260,7 @@ bool XmlNode::write(FILE *f, unsigned depth){
                 free(buf);
                 buf = 0;
                 fwrite(mbuf, 1, strlen(mbuf), f);
-                puts(mbuf);
+                //puts(mbuf);
             } 
             if (hasname){
                 int len = 0;

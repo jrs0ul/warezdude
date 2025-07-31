@@ -809,7 +809,7 @@ void CheckKeys()
 
             if ( ( mygtai[BUTTON_SAVE].pointerOntop ( (int)Cross.x,(int)Cross.z ) ) )
             {
-                map.save (MapTiles);
+                map.save(MapTiles);
             }
 
         }
@@ -848,8 +848,6 @@ int main ( int argc, char* argv[] )
         SCREENH = 480;
     }
 
-    INI.get(L"tileSet", buf);
-    wcstombs(Tileset, buf, 255);
 
     INI.get ( L"mapTiles",buf );
     wcstombs ( MapTiles, buf, 255 );
@@ -915,7 +913,7 @@ int main ( int argc, char* argv[] )
 
 
 
-    if ( !map.load(MapTiles) )
+    if ( !map.load(MapTiles, false) )
     {
         _QuitApp = true;
         printf("Error loading map %s !\n", MapTiles);

@@ -202,50 +202,6 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 
     mapas.draw(pics, r, g, b, pskx, psky, scrx, scry, posx, posy, pushx, pushy);
 
-    for (unsigned i = 0; i<mapas.decals.count(); i++)
-    {
-        mapas.decals[i].draw(pics, 15, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
-    }
-
-
-    for (unsigned long i=0; i<mapas.items.count();i++){
-
-        if (mapas.items[i].value < 5)
-        {
-            if ((round(mapas.items[i].y)<psky*32)&&(round(mapas.items[i].y)>=((psky-scry)*32))&&
-                ((round(mapas.items[i].x)<pskx*32))&&(round(mapas.items[i].x)>=((pskx-scrx)*32)))
-            {
-
-                pics.draw(11,
-                         (round(mapas.items[i].x))-((pskx-scrx)*32)+pushx-posx,
-                         (round(mapas.items[i].y))-((psky-scry)*32)+pushy-posy,
-                         (mapas.items[i].value-1) * 4 + itmframe,
-                         true,
-                         1.0f,
-                         1.0f,
-                         0.0,
-                         COLOR(r,g,b, 1.0f),
-                         COLOR(r,g,b, 1.0f)
-                         );
-            }
-        }
-        else
-            if ((round(mapas.items[i].y)<psky*32)&&(round(mapas.items[i].y)>=((psky-scry)*32))&&
-                ((round(mapas.items[i].x)<pskx*32))&&(round(mapas.items[i].x)>=((pskx-scrx)*32)))
-            {
-
-                pics.draw(7,
-                          (round(mapas.items[i].x))-((pskx-scrx)*32)+pushx-posx,
-                          (round(mapas.items[i].y))-((psky-scry)*32)+pushy-posy,
-                          mapas.items[i].value-5,
-                          true,
-                          1.0f,1.0f,0.0,
-                          COLOR(r,g,b, 1.f),
-                          COLOR(r,g,b, 1.f)
-                          );
-            }
-
-    }
 
 
     bulbox.draw(pics, pskx, psky, pushx, pushy, scrx, scry, posx, posy);
@@ -259,7 +215,6 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
         }
     }
 
- 
     if (mapas.enemyCount)
     {
         for (int i=0; i<mapas.enemyCount; i++)
@@ -778,20 +733,13 @@ void Game::PutExit(){
 void Game::GoToLevel(int level, int otherplayer)
 {
     exitSpawned = false;
-    bulbox.destroy();
-    mapas.destroy();
     char mapname[255];
     mapai.getMapName(level,mapname);
-    mapas.load(mapname,true,otherplayer);
-    mustCollectItems = mapas.misionItems;
-    timeleft = mapas.timeToComplete;
-    mapas.mons[mapas.enemyCount].x=(float)mapas.start.x;
-    mapas.mons[mapas.enemyCount].y=(float)mapas.start.y;
-    mapas.mons[mapas.enemyCount].id=254;
-    AddaptMapView();
-    findpskxy();
-    fadein=true;
-    objectivetim=200;
+
+    LoadTheMap(mapname, true, otherplayer);
+
+    fadein = true;
+    objectivetim = 200;
 
     if (ShowMiniMap)
     {
@@ -1204,7 +1152,7 @@ void Game::CheckForExit()
     int playerX = round(mapas.getPlayer()->x / 32);
     int playerY = round(mapas.getPlayer()->y / 32);
 
-    printf("%d %d %d\n", playerY, playerX, mapas.tiles[playerY][playerX]);
+    //printf("%d %d %d\n", playerY, playerX, mapas.tiles[playerY][playerX]);
 
     if (mapas.tiles[playerY][playerX] == 81)
     {
@@ -1610,27 +1558,52 @@ void Game::AnimateSlime()
     }
 }
 //-------------------------------------------------------
+void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers)
+{
+    bulbox.destroy();
+    mapas.destroy();
+
+    if (!mapas.load(name, createItems, otherPlayers))
+    {
+        mapas.destroy();
+        mapai.Destroy();
+        printf("Can't find first map!\n");
+        Works = false;
+    }
+
+    if (netGameState != MPMODE_DEATHMATCH)
+    {
+        mapas.tiles[(int)mapas.exit.y][(int)mapas.exit.x] = 81;
+    }
+
+    mustCollectItems = mapas.misionItems;
+    timeleft = mapas.timeToComplete;
+
+    Dude* player = mapas.getPlayer();
+
+    if ((!isClient) && (!isServer))
+    {
+        player->x = (float)mapas.start.x;
+        player->y = (float)mapas.start.y;
+    }
+    else
+    {
+        player->appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+    }
+
+    player->id = 254;
+    AddaptMapView();
+    findpskxy();
+}
+//-------------------------------------------------------
 void Game::LoadFirstMap()
 {
-    if (!isClient){
+    if (!isClient)
+    {
         char firstmap[255];
         mapai.getMapName(0, firstmap);
-        mapas.destroy();
-        if (!mapas.load(firstmap))
-        {
-            mapas.destroy();
-            mapai.Destroy();
-            printf("Can't find first map!\n");
-            Works = false;
-        }
-        mustCollectItems = mapas.misionItems;
-        timeleft = mapas.timeToComplete;
-        mapas.mons[mapas.enemyCount].x=(float)mapas.start.x;
-        mapas.mons[mapas.enemyCount].y=(float)mapas.start.y;
-        mapas.mons[mapas.enemyCount].id=254;
-        AddaptMapView();
-        findpskxy();
 
+        LoadTheMap(firstmap, true, 0);
     }
 }
 
@@ -2387,8 +2360,6 @@ void Game::DrawHelp()
     pics.draw(11, 150, 90, itmframe, false);
     pics.draw(11, 200, 90, itmframe + 4, false);
     pics.draw(11, 250, 90, itmframe + 8, false);
-    WriteText(200,150, pics, 10, "to unlock the exit ");
-    pics.draw(11, 420,150, itmframe+12, false);
 
     pics.draw(7, 100,210, 0, false);
     WriteText(140,220, pics, 10,"Ammo");
@@ -2450,7 +2421,7 @@ void Game::DrawMissionObjectives()
     char buf[50];
     if (mapas.misionItems)
     {
-        sprintf(buf, "Collect %d Items",mapas.misionItems);
+        sprintf(buf, "%d collectibles here",mapas.misionItems);
         WriteText(sys.ScreenWidth / 2 - 100,
                   sys.ScreenHeight / 2 + 10,
                   pics,
@@ -2461,15 +2432,7 @@ void Game::DrawMissionObjectives()
                   COLOR(1.0f,0.0,0.0, 1.f)
                   );
     }
-    WriteText(sys.ScreenWidth / 2 - 100,
-              sys.ScreenHeight / 2 + 30,
-              pics,
-              10,
-              "Locate exit!",
-              1.0f,1.0f,
-              COLOR(1.0f, 0.0, 0.0, 1.f),
-              COLOR(1.f, 0.f, 0.f, 1.f)
-              );
+
     sprintf(buf,"Time remaining:%d:%d",mapas.timeToComplete/60,mapas.timeToComplete-60*(mapas.timeToComplete/60));
     WriteText(sys.ScreenWidth/2-100, 
               sys.ScreenHeight/2+50,
@@ -2800,26 +2763,6 @@ void LoadIntro(){
 
 }
 
-//-------------------------
-
-void Game::LoadMap(const char* mapname, int otherplayers)
-{
-    bulbox.destroy();
-    mapas.destroy();
-    mapas.load(mapname, false, otherplayers);
-    mustCollectItems = mapas.misionItems;
-    timeleft=mapas.timeToComplete;
-    if ((!isClient)&&(!isServer)){
-        mapas.mons[mapas.enemyCount].x=(float)mapas.start.x;
-        mapas.mons[mapas.enemyCount].y=(float)mapas.start.y;
-    }
-    else{
-        mapas.mons[mapas.enemyCount].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
-    }
-
-    AddaptMapView();
-    findpskxy();
-}
 //----------------------------------------
 //siuncia kliento info i serva
 void Game::SendClientCoords()
@@ -2997,7 +2940,7 @@ void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
 
                 if (strcmp(mapname,mapas.name)!=0)
                 {//jei mapas ne tas pats tai uzloadinam
-                    LoadMap(mapname,klientai);
+                    LoadTheMap(mapname, false, klientai);
                     Client_GotMapData = true;
                     state = GAMESTATE_GAME;
                 }
