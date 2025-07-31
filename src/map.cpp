@@ -97,7 +97,106 @@ void CMap::arangeItems(){
 
 
 }
+//-------------------------------------
+void GenerationDivide(BSPTreeNode* parent)
+{
+    parent->left = new BSPTreeNode;
+    parent->right = new BSPTreeNode;
 
+
+    if (rand() % 2 == 1) //vertical split
+    {
+        printf("VERTICAL\n");
+        parent->left->startx = parent->startx;
+        parent->left->starty = parent->starty;
+        parent->left->height = 4 + (rand() % (parent->height / 3));
+        parent->left->width = parent->width;
+
+        parent->right->startx = parent->left->startx;
+        parent->right->starty = parent->left->starty + parent->left->height;
+        parent->right->width = parent->width;
+        parent->right->height = parent->height - parent->left->height;
+    }
+    else
+    {
+        printf("HORIZONTAL\n");
+        parent->left->startx = parent->startx;
+        parent->left->starty = parent->starty;
+        parent->left->height = parent->height;
+        parent->left->width = 4 + (rand() % (parent->width / 3));
+
+        parent->right->startx = parent->startx + parent->left->width;
+        parent->right->starty = parent->starty;
+        parent->right->width = parent->width - parent->left->width;
+        parent->right->height = parent->height;
+    }
+
+    if (parent->left->width >= 8 && parent->left->height >= 8)
+    {
+       GenerationDivide(parent->left);
+    }
+
+    if (parent->right->width >= 8 && parent->right->height >= 8)
+    {
+        GenerationDivide(parent->right);
+    }
+}
+
+//-------------------------------------
+void Erode(BSPTreeNode* parent, CMap* map)
+{
+    const unsigned char DIRT = 1;
+
+    if (parent->left == nullptr && parent->right == nullptr)
+    {
+        for (int i = parent->starty + 1; i < parent->starty + parent->height - 1; ++i)
+        {
+            for (int a = parent->startx + 1; a < parent->startx + parent->width - 1; ++a)
+            {
+                //printf("[%d, %d] ", i, a);
+                map->tiles[i][a] = DIRT;
+            }
+            //printf("\n");
+        }
+        //printf("\n\n");
+
+        printf("Eroding %d %d %d %d\n", parent->startx, parent->starty, parent->width, parent->height);
+
+        return;
+    }
+    else
+    {
+        Erode(parent->left, map);
+        Erode(parent->right, map);
+    }
+}
+
+
+//-------------------------------------
+void CMap::generate()
+{
+
+    const unsigned char WALL = 19;
+
+
+    BSPTreeNode root;
+    root.startx = 0;
+    root.starty = 0;
+    root.width = _width;
+    root.height = _height;
+
+    GenerationDivide(&root);
+
+    for (unsigned i = 0; i < _height; ++i)
+    {
+        for (unsigned a = 0; a < _width; ++a)
+        {
+            tiles[i][a] = WALL;
+        }
+    }
+
+    Erode(&root, this);
+}
 
 //-------------------------------------
 bool CMap::load(const char* path, bool createItems, int otherplayers){

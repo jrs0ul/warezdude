@@ -25,6 +25,24 @@ enum Items
 };
 
 
+struct BSPTreeNode
+{
+    int startx;
+    int starty;
+    int width;
+    int height;
+
+    BSPTreeNode* left;
+    BSPTreeNode* right;
+
+    BSPTreeNode()
+    : left(nullptr)
+    , right(nullptr)
+    {
+    }
+};
+
+
 class CMap 
 {
         unsigned _width;
@@ -66,10 +84,12 @@ class CMap
         Vector3D getPos(){return mapPos;}
         void move(Vector3D v, float size);
 
+        void generate();
         bool load(const char* path, bool createItems=true, int otherplayers=0);
         bool save(const char* path);
-        void draw(PicsContainer& pics, float r, float g, float b, int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy);
-        void destroy();
+
+        void draw(PicsContainer& pics, float r, float g, float b, 
+                  int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy);
 
         bool colide(unsigned x, unsigned y);
         void ReplaceTiles(unsigned char old, unsigned char fresh);
@@ -78,6 +98,8 @@ class CMap
         void addMonster(Dude& newmonster);
         void removeMonster(int index);
         void fadeDecals();
+
+        void destroy();
 
     private:
         void arangeItems();

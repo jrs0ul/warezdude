@@ -1571,6 +1571,8 @@ void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers)
         Works = false;
     }
 
+    mapas.generate();
+
     if (netGameState != MPMODE_DEATHMATCH)
     {
         mapas.tiles[(int)mapas.exit.y][(int)mapas.exit.x] = 81;
