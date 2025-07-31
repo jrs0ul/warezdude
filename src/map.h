@@ -25,23 +25,44 @@ enum Items
 };
 
 
+enum DivisionType
+{
+    DIV_NONE,
+    DIV_VERTICAL,
+    DIV_HORIZONTAL
+};
+
 struct BSPTreeNode
 {
     int startx;
     int starty;
     int width;
     int height;
+    DivisionType divType;
 
     BSPTreeNode* left;
     BSPTreeNode* right;
 
     BSPTreeNode()
-    : left(nullptr)
+    : divType(DIV_NONE)
+    , left(nullptr)
     , right(nullptr)
     {
     }
 };
 
+const int ColidingTiles[256] = {
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 1, //9
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 1, //19
+                                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, //29
+                                1, 1, 1, 1, 1, 0, 0, 0, 0, 0, //39
+                                0, 0, 0, 0, 1, 1, 1, 1, 0, 0, //49
+                                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, //59
+                                1, 1, 1, 1, 1, 1, 0, 1, 0, 1, //69
+                                0, 1, 0, 0, 0, 0, 0, 0, 0, 0, //79
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                                };
 
 class CMap 
 {
@@ -88,6 +109,8 @@ class CMap
         bool load(const char* path, bool createItems=true, int otherplayers=0);
         bool save(const char* path);
 
+        void buildCollisionmap();
+
         void draw(PicsContainer& pics, float r, float g, float b, 
                   int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy);
 
@@ -101,7 +124,7 @@ class CMap
 
         void destroy();
 
-    private:
+    //private:
         void arangeItems();
 
 };

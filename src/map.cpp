@@ -106,10 +106,10 @@ void GenerationDivide(BSPTreeNode* parent)
 
     if (rand() % 2 == 1) //vertical split
     {
-        printf("VERTICAL\n");
+        parent->divType = DIV_VERTICAL;
         parent->left->startx = parent->startx;
         parent->left->starty = parent->starty;
-        parent->left->height = 4 + (rand() % (parent->height / 3));
+        parent->left->height = parent->height / 2 + (rand() % (parent->height / 2));
         parent->left->width = parent->width;
 
         parent->right->startx = parent->left->startx;
@@ -119,11 +119,11 @@ void GenerationDivide(BSPTreeNode* parent)
     }
     else
     {
-        printf("HORIZONTAL\n");
+        parent->divType = DIV_HORIZONTAL;
         parent->left->startx = parent->startx;
         parent->left->starty = parent->starty;
         parent->left->height = parent->height;
-        parent->left->width = 4 + (rand() % (parent->width / 3));
+        parent->left->width = parent->width / 2 + (rand() % (parent->width / 2));
 
         parent->right->startx = parent->startx + parent->left->width;
         parent->right->starty = parent->starty;
@@ -149,18 +149,21 @@ void Erode(BSPTreeNode* parent, CMap* map)
 
     if (parent->left == nullptr && parent->right == nullptr)
     {
-        for (int i = parent->starty + 1; i < parent->starty + parent->height - 1; ++i)
+
+        int roomPosY = 1;//(rand() % (parent->height / 4)) + 1;
+        int roomHeight =  parent->height - 2;//(parent->height - roomPosY) / 2 + (rand() % ((parent->height - roomPosY) / 2));
+
+        for (int i = parent->starty + roomPosY; i < parent->starty + roomPosY + roomHeight; ++i)
         {
             for (int a = parent->startx + 1; a < parent->startx + parent->width - 1; ++a)
             {
-                //printf("[%d, %d] ", i, a);
-                map->tiles[i][a] = DIRT;
+                if (i < (int)map->height() && a < (int)map->width())
+                {
+                    map->tiles[i][a] = DIRT;
+                }
             }
-            //printf("\n");
         }
-        //printf("\n\n");
 
-        printf("Eroding %d %d %d %d\n", parent->startx, parent->starty, parent->width, parent->height);
 
         return;
     }
@@ -171,6 +174,38 @@ void Erode(BSPTreeNode* parent, CMap* map)
     }
 }
 
+//-------------------------------------
+void AddTunels(BSPTreeNode* parent, CMap* map)
+{
+
+    switch(parent->divType)
+    {
+        case DIV_NONE:
+            {
+                return;
+            }
+
+        case DIV_VERTICAL:
+            {
+                for (int i = parent->starty; i < parent->starty + parent->height; ++i)
+                {
+                    map->tiles[i][parent->startx + 2] = 1;
+                }
+            } break;
+
+        case DIV_HORIZONTAL:
+            {
+                for (int i = parent->startx; i < parent->startx + parent->width; ++i)
+                {
+                    map->tiles[parent->starty + 2][i] = 1;
+                }
+
+            } break;
+    }
+
+    AddTunels(parent->left, map);
+    AddTunels(parent->right, map);
+}
 
 //-------------------------------------
 void CMap::generate()
@@ -196,6 +231,7 @@ void CMap::generate()
     }
 
     Erode(&root, this);
+    AddTunels(&root, this);
 }
 
 //-------------------------------------
@@ -285,16 +321,7 @@ bool CMap::load(const char* path, bool createItems, int otherplayers){
                                         sprintf(buf, "%ls", tile->getValue());
                                         tiles[a][j] = atoi(buf) - 48;
 
-                                        if (((tiles[a][j]>=19)&&(tiles[a][j]<=34))||((tiles[a][j]>=44)&&(tiles[a][j]<48))||
-                                                ((tiles[a][j]>=50)&&(tiles[a][j]<=65))||(tiles[a][j]==67)||(tiles[a][j]==69)||(tiles[a][j]==71)
-                                                ||(tiles[a][j]==9))
-                                        {
-                                            _colide[a][j] = true;
-                                        }
-                                        else
-                                        {
-                                            _colide[a][j]=false;
-                                        }
+                                        _colide[a][j] = (ColidingTiles[tiles[a][j]]) ? true : false;
 
                                     }
 
@@ -484,6 +511,19 @@ bool CMap::load(const char* path, bool createItems, int otherplayers){
 
     return true;
 }
+//------------------------------------
+void CMap::buildCollisionmap()
+{
+
+    for (unsigned i = 0; i < _height; ++i)
+    {
+        for (unsigned a = 0; a < _width; ++a)
+        {
+            _colide[i][a] = (ColidingTiles[tiles[i][a]]) ? true : false;
+        }
+    }
+}
+
 //--------------------------------------
 bool CMap::save(const char* path)
 {

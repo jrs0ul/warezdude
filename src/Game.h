@@ -140,7 +140,6 @@ class Game
     int posx;
     int posy;
 
-    int itmframe;
     int itmtim;
 
 

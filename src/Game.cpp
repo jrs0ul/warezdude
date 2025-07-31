@@ -112,7 +112,7 @@ Game::Game()
     DownBorder=0;// ar rodyti pakrasti ?
     posx=32, posy=32;
 
-    itmframe=0;
+    mapas.itmframe = 0;
     itmtim=0;
 }
 
@@ -1578,17 +1578,23 @@ void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers)
         mapas.tiles[(int)mapas.exit.y][(int)mapas.exit.x] = 81;
     }
 
+    //generation
+    mapas.buildCollisionmap();
+    mapas.items.destroy();
+    mapas.arangeItems();
+    //generatiom
+
     mustCollectItems = mapas.misionItems;
     timeleft = mapas.timeToComplete;
 
     Dude* player = mapas.getPlayer();
 
-    if ((!isClient) && (!isServer))
+    /*if ((!isClient) && (!isServer))
     {
         player->x = (float)mapas.start.x;
         player->y = (float)mapas.start.y;
     }
-    else
+    else*/
     {
         player->appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
     }
@@ -1909,10 +1915,10 @@ void Game::HelpScreenLogic()
 
     if (itmtim>10)
     {
-        itmframe++; //animuoti daiktai
-        if (itmframe > 3)
+        mapas.itmframe++; //animuoti daiktai
+        if (mapas.itmframe > 3)
         {
-            itmframe = 0;
+            mapas.itmframe = 0;
         }
 
         itmtim=0;
@@ -2070,11 +2076,11 @@ void Game::CoreGameLogic()
 
     if (itmtim > 10)
     {
-        itmframe++;  //  item animation
+        mapas.itmframe++;  //  item animation
 
-        if (itmframe > 3)
+        if (mapas.itmframe > 3)
         {
-            itmframe = 0;
+            mapas.itmframe = 0;
         }
 
         itmtim=0;
@@ -2359,9 +2365,9 @@ void Game::DrawHelp()
 {
     pics.draw(13, 320, 240, 0, true);
     WriteShadedText(130, 70, pics, 10, "Colect these:");
-    pics.draw(11, 150, 90, itmframe, false);
-    pics.draw(11, 200, 90, itmframe + 4, false);
-    pics.draw(11, 250, 90, itmframe + 8, false);
+    pics.draw(11, 150, 90, mapas.itmframe, false);
+    pics.draw(11, 200, 90, mapas.itmframe + 4, false);
+    pics.draw(11, 250, 90, mapas.itmframe + 8, false);
 
     pics.draw(7, 100,210, 0, false);
     WriteText(140,220, pics, 10,"Ammo");
@@ -2373,7 +2379,7 @@ void Game::DrawHelp()
     WriteShadedText(140,355, pics, 10, "Tab: minimap");
     WriteShadedText(140,370, pics, 10, "CTRL: fire");
     WriteShadedText(140,385, pics, 10, "SPACE: opens door");
-    int monframe=itmframe;
+    int monframe = mapas.itmframe;
 
     if (monframe==3)
     {
