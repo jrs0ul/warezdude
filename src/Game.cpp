@@ -183,15 +183,15 @@ void Game::DrawSomeText()
 
     char buf[80];
 
-    //sprintf(buf,"AvailSysMem : %d KB",AvailSysMem()/1000);
-    //WriteText(20,40,render.spraitas,&pics.images[10],buf, 0.8f,0.6f,0.6f);
     sprintf(buf,"FPS : %d",FPS());
     WriteText(20,20, pics, 10, buf, 0.8f,0.6f);
-    if (isServer){
+
+    if (isServer)
+    {
         sprintf(buf,"Client count : %d",serveris.clientCount());
         WriteText(20,40, pics, 10,buf, 0.8f, 1);
     }
-    
+
 
 }
 
@@ -733,10 +733,18 @@ void Game::PutExit(){
 void Game::GoToLevel(int level, int otherplayer)
 {
     exitSpawned = false;
-    char mapname[255];
-    mapai.getMapName(level,mapname);
 
-    LoadTheMap(mapname, true, otherplayer);
+    if (netGameState == MPMODE_DEATHMATCH)
+    {
+        char mapname[255];
+        mapai.getMapName(level,mapname);
+
+        LoadTheMap(mapname, true, otherplayer);
+    }
+    else
+    {
+        GenerateTheMap();
+    }
 
     fadein = true;
     objectivetim = 200;
@@ -1157,7 +1165,7 @@ void Game::CheckForExit()
     if (mapas.tiles[playerY][playerX] == 81)
     {
         mapai.current++;
-        if (mapai.current == mapai.count())
+        if (mapai.current == MAP_COUNT)
         {
             mapai.current=0;
             state = GAMESTATE_ENDING;
@@ -1558,6 +1566,84 @@ void Game::AnimateSlime()
     }
 }
 //-------------------------------------------------------
+void Game::GenerateTheMap()
+{
+    bulbox.destroy();
+    mapas.destroy();
+
+    mapas.generate();
+
+
+    mapas.buildCollisionmap();
+
+    mapas.exit.x = rand() % mapas.width();
+    mapas.exit.y = rand() % mapas.height();
+
+    while(mapas._colide[(int)mapas.exit.y][(int)mapas.exit.x])
+    {
+        mapas.exit.x = rand() % mapas.width();
+        mapas.exit.y = rand() % mapas.height();
+    }
+
+    mapas.start.x = rand() % mapas.width();
+    mapas.start.y = rand() % mapas.height();
+
+    while(mapas._colide[(int)mapas.start.y][(int)mapas.start.x])
+    {
+        mapas.start.x = rand() % mapas.width();
+        mapas.start.y = rand() % mapas.height();
+    }
+
+    mapas.start.x *= 32;
+    mapas.start.y *= 32;
+
+
+
+    mapas.tiles[(int)mapas.exit.y][(int)mapas.exit.x] = TILE_EXIT;
+
+    mapas.enemyCount = 2 + rand() % 10;
+
+    mapas.misionItems = 4;
+    mustCollectItems = mapas.misionItems;
+    mapas.goods = 10;
+
+    for (int i = 0; i < mapas.enemyCount; ++i)
+    {
+        Dude m;
+        m.id = i;
+        m.race = rand() % MONSTER_MAX_RACE + 1;
+        m.initMonsterHP();
+        m.appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+        mapas.mons.add(m);
+    }
+
+    Dude d;
+    mapas.addMonster(d);
+
+    Dude* player = mapas.getPlayer();
+    player->appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+    player->id = 254;
+    player->weaponCount = 3;
+    player->currentWeapon = 1;
+    player->frame = (player->currentWeapon + 1) * 4 - 2;
+
+
+    Dude p;
+    for (int i = 0; i < klientai; ++i)
+    {
+        mapas.mons.add(p);
+        mapas.mons[mapas.mons.count() - 1].id = mapas.mons[mapas.mons.count() - 2].id + 1;
+
+    }
+
+    mapas.arangeItems();
+
+    AddaptMapView();
+    findpskxy();
+}
+
+
+//-------------------------------------------------------
 void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers)
 {
     bulbox.destroy();
@@ -1571,30 +1657,22 @@ void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers)
         Works = false;
     }
 
-    mapas.generate();
-
     if (netGameState != MPMODE_DEATHMATCH)
     {
-        mapas.tiles[(int)mapas.exit.y][(int)mapas.exit.x] = 81;
+        mapas.tiles[(int)mapas.exit.y][(int)mapas.exit.x] = TILE_EXIT;
     }
-
-    //generation
-    mapas.buildCollisionmap();
-    mapas.items.destroy();
-    mapas.arangeItems();
-    //generatiom
 
     mustCollectItems = mapas.misionItems;
     timeleft = mapas.timeToComplete;
 
     Dude* player = mapas.getPlayer();
 
-    /*if ((!isClient) && (!isServer))
+    if ((!isClient) && (!isServer))
     {
         player->x = (float)mapas.start.x;
         player->y = (float)mapas.start.y;
     }
-    else*/
+    else
     {
         player->appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
     }
@@ -1608,10 +1686,11 @@ void Game::LoadFirstMap()
 {
     if (!isClient)
     {
-        char firstmap[255];
-        mapai.getMapName(0, firstmap);
+        //char firstmap[255];
+        //mapai.getMapName(0, firstmap);
 
-        LoadTheMap(firstmap, true, 0);
+        //LoadTheMap(firstmap, true, 0);
+        GenerateTheMap();
     }
 }
 

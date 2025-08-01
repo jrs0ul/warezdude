@@ -919,7 +919,6 @@ int main ( int argc, char* argv[] )
         printf("Error loading map %s !\n", MapTiles);
     }
 
-    map.generate();
 
     printf("\nStarting loop %d\n", _QuitApp);
     while (!_QuitApp )

@@ -26,23 +26,29 @@ void CMap::move(Vector3D v, float size)
 
 
 //-----------------------------------------
-void CMap::arangeItems(){
+void CMap::arangeItems()
+{
     int ix;
     int iy;
+
     //isdelioja flopikus
-    for (int a=0; a<misionItems; a++){
+    for (int a=0; a<misionItems; a++)
+    {
         ix=rand()%_width;
         iy=rand()%_height;
 
         bool found=false;
-        for (unsigned long i=0;i<items.count();i++){
-            if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y)){
+        for (unsigned long i=0;i<items.count();i++)
+        {
+            if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y))
+            {
                 found=true;
                 break;
-         }
+            }
         }
 
-        while ((_colide[iy][ix]) || (found) || (tiles[iy][ix]==35)||(tiles[iy][ix]==36)){
+        while ((_colide[iy][ix]) || (found) || (tiles[iy][ix]==35)||(tiles[iy][ix]==36))
+        {
             ix=rand() % _width;
             iy=rand() % _height;
             found=false;
@@ -67,7 +73,8 @@ void CMap::arangeItems(){
 
 
         bool found=false;
-        for (unsigned long i=0;i<items.count();i++){
+        for (unsigned long i=0;i<items.count();i++)
+        {
             if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y)){
                 found=true;
                 break;
@@ -212,6 +219,19 @@ void CMap::generate()
 {
 
     const unsigned char WALL = 19;
+
+    if (!tiles)
+    {
+        _width = 20 + rand() % 40;
+        _height = 20 + rand() % 40;
+
+        tiles = new unsigned char* [_height];
+
+        for (unsigned i = 0; i < _height; ++i)
+        {
+            tiles[i] = new unsigned char[_width];
+        }
+    }
 
 
     BSPTreeNode root;
@@ -514,6 +534,17 @@ bool CMap::load(const char* path, bool createItems, int otherplayers){
 //------------------------------------
 void CMap::buildCollisionmap()
 {
+
+    if (!_colide)
+    {
+        _colide = new bool * [_height];
+
+        for (unsigned i = 0; i < _height; ++i)
+        {
+            _colide[i] = new bool[_width];
+        }
+
+    }
 
     for (unsigned i = 0; i < _height; ++i)
     {

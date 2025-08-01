@@ -24,3 +24,7 @@ const int MONSTER_BASE_HP               = 30;
 const int SLIME_DAMAGE                  = 2;
 
 const int DAMAGER_NOBODY                = -1;
+
+const unsigned TILE_EXIT                = 81;
+
+const int MAP_COUNT                     = 8;
