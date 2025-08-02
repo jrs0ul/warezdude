@@ -4,6 +4,7 @@
 #include <cstdio>     //sprinf
 #include <ctime>
 #include <thread>
+#include <cassert>
 
 #include "Dude.h"
 #include "BulletContainer.h"
@@ -832,7 +833,7 @@ void Game::SendMapInfo(int clientIndex, CMap& map)
     index += (int)strlen(map.name);
 
     unsigned int kiekis = serveris.clientCount(); 
-    memcpy(&bufer[index], &kiekis, sizeof(unsigned int)); //klientu skaicius
+    memcpy(&bufer[index], &kiekis, sizeof(unsigned int)); //client count
     index += sizeof(unsigned int);
 
     char gameType = (char)netGameState;
@@ -852,6 +853,31 @@ void Game::SendMapData(int clientIndex, CMap& map)
 
     bufer[0] = NET_SERVER_MSG_MAP_DATA;
     ++index;
+
+    int height = (netGameState == MPMODE_DEATHMATCH) ? 0 : map.height();
+    int width =  (netGameState == MPMODE_DEATHMATCH) ? 0 : map.width();
+
+    memcpy(&bufer[index], &height, sizeof(int));
+    index += sizeof(int);
+    memcpy(&bufer[index], &width, sizeof(int));
+    index += sizeof(int);
+
+    if (width && height)
+    {
+        unsigned char tile = 0;
+
+        for (unsigned i = 0; i < map.height(); ++i)
+        {
+            for (unsigned a = 0; a < map.width(); ++a)
+            {
+                tile = map.tiles[i][a];
+                memcpy(&bufer[index], &tile, sizeof(unsigned char));
+                index += sizeof(unsigned char);
+            }
+        }
+    }
+
+    assert(index < MAX_MESSAGE_DATA_SIZE);
 
     memcpy(&bufer[index], &map.enemyCount, sizeof(int));
     index+=sizeof(int);
@@ -2987,20 +3013,21 @@ void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
 {
 
     int mapnamelen = 0;
+    char mapname[255];
+
     if (bufersize-(*index) >= (int)sizeof(int))
     {
         int totallen = 0;
-        memcpy(&totallen,&bufer[*index],sizeof(int));
+        memcpy(&totallen, &bufer[*index], sizeof(int));
         *index += sizeof(int);
 
-        if ((bufersize-(*index)>=totallen)&&(totallen>0))
+        if ((bufersize-(*index) >= totallen) && (totallen>0))
         {
             memcpy(&mapnamelen, &bufer[*index], sizeof(int));
 
             if (mapnamelen)
             {
                 *index += sizeof(int);
-                char mapname[255];
 
                 if (bufersize-(*index) >= mapnamelen)
                 {
@@ -3009,21 +3036,24 @@ void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
 
                 *index+=mapnamelen;
                 mapname[mapnamelen] = 0;
+            }
 
 
-                int klientaiold = klientai;
-                //gaunam klientu skaiciu
-                if (bufersize-(*index) >= (int)sizeof(int))
-                {
-                    memcpy(&klientai,&bufer[*index],sizeof(int));
-                }
+            int klientaiold = klientai;
+            //gaunam klientu skaiciu
+            if (bufersize-(*index) >= (int)sizeof(int))
+            {
+                memcpy(&klientai,&bufer[*index],sizeof(int));
+            }
 
-                *index += sizeof(unsigned int);
+            *index += sizeof(unsigned int);
 
-                netGameState = (MultiplayerModes)bufer[*index];
+            netGameState = (MultiplayerModes)bufer[*index];
 
-                ++(*index);
+            ++(*index);
 
+            if (mapnamelen)
+            {
 
                 if (strcmp(mapname,mapas.name)!=0)
                 {//jei mapas ne tas pats tai uzloadinam
@@ -3045,7 +3075,12 @@ void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
                     }
 
                 }
-            } //maplen
+            }
+            else
+            {
+                state = GAMESTATE_GAME;
+
+            }
         }
     }
 }
@@ -3053,10 +3088,77 @@ void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
 void Game::GetMapData(const unsigned char* bufer, int* index)
 {
 
+    int mapHeight = 0;
+    int mapWidth = 0;
+
+    memcpy(&mapHeight, &bufer[*index], sizeof(int));
+    *index += sizeof(int);
+    memcpy(&mapWidth, &bufer[*index], sizeof(int));
+    *index += sizeof(int);
+
+    if (mapHeight && mapWidth)
+    {
+        mapas.destroy();
+        mapas.tiles = new unsigned char * [mapHeight];
+
+        for (int i = 0; i < mapHeight; ++i)
+        {
+            mapas.tiles[i] = new unsigned char[mapWidth];
+
+            for (int a = 0; a < mapWidth; ++a)
+            {
+
+                memcpy(&mapas.tiles[i][a], &bufer[*index], sizeof(unsigned char));
+                *index += sizeof(unsigned char);
+            }
+        }
+
+        mapas._height = mapHeight;
+        mapas._width = mapWidth;
+
+        mapas.buildCollisionmap();
+
+    }
+
 
     int moncount=0;
     memcpy(&moncount,&bufer[*index],sizeof(int));
     *index += sizeof(int);
+
+    if (!mapas.mons.count()) //  No monsters in the map ? Must be coop map
+    {
+        mapas.enemyCount = moncount;
+
+        for (int i = 0; i < moncount; i++)
+        {
+            Dude monster;
+            monster.id = i;
+            monster.initMonsterHP();
+            mapas.addMonster(monster);
+        }
+
+        Dude d;
+        mapas.addMonster(d);
+
+        Dude* player = mapas.getPlayer();
+        player->appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+        player->id = 254;
+        player->weaponCount = 3;
+        player->currentWeapon = 1;
+        player->frame = (player->currentWeapon + 1) * 4 - 2;
+
+        Dude naujas;
+        for (int i = 0; i < klientai; i++)
+        {
+            mapas.mons.add(naujas);
+            mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id + 1;
+        }
+
+        AddaptMapView();
+        findpskxy();
+
+
+    }
 
     for (int i = 0; i < moncount; i++)
     {
@@ -3064,21 +3166,21 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
         *index+=sizeof(int);
     }
 
-    int itmcount=0;
-    memcpy(&itmcount,&bufer[*index],sizeof(int));
+    int itmcount = 0;
+    memcpy(&itmcount, &bufer[*index], sizeof(int));
     *index+=sizeof(int);
 
-    for (int i=0; i < itmcount; i++)
+    for (int i = 0; i < itmcount; i++)
     {
         CItem itm;
 
-        memcpy(&itm.x,&bufer[*index],sizeof(float));
-        *index+=sizeof(float);
-        memcpy(&itm.y,&bufer[*index],sizeof(float));
-        *index+=sizeof(float);
-        memcpy(&itm.value,&bufer[*index],sizeof(int));
-        *index+=sizeof(int);
-        mapas.addItem(itm.x,itm.y,itm.value);
+        memcpy(&itm.x, &bufer[*index], sizeof(float));
+        *index += sizeof(float);
+        memcpy(&itm.y, &bufer[*index], sizeof(float));
+        *index += sizeof(float);
+        memcpy(&itm.value, &bufer[*index], sizeof(int));
+        *index += sizeof(int);
+        mapas.addItem(itm.x, itm.y, itm.value);
     }
 
 }
@@ -3270,7 +3372,7 @@ void Game::ParseMessagesServerGot()
                             SendMapInfo(i, mapas);
                         }
 
-                        SendMapData(serveris.clientCount()-1, mapas);
+                        SendMapData(serveris.clientCount() - 1, mapas);
 
                     } break;
 

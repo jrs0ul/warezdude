@@ -1,7 +1,7 @@
 #pragma once
 
 
-const int MAX_MESSAGE_DATA_SIZE = 1024;
+const int MAX_MESSAGE_DATA_SIZE = 5120;
 
 struct Message
 {

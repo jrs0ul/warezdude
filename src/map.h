@@ -66,9 +66,9 @@ const int ColidingTiles[256] = {
 
 class CMap 
 {
+public:
         unsigned _width;
         unsigned _height;
-    public:
         char name[20];
         unsigned char** tiles;
         bool** _colide;
