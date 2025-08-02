@@ -242,13 +242,13 @@ void Dude::draw(PicsContainer& pics, unsigned index,
               COLOR(r,g,b, 1.f),
               COLOR(r,g,b, 1.f));
 
-    /*char buf[10];
+    char buf[10];
     sprintf(buf, "%d", id);
     WriteText(round(x)-((pskx-scrx)*32)+pushx-posx,
               round(y)-((psky-scry)*32)+pushy-posy,
               pics,
               10,
-              buf);*/
+              buf);
 
 }
 //----------------------------------------------------------

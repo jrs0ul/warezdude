@@ -879,8 +879,11 @@ void Game::SendMapData(int clientIndex, CMap& map)
 
     assert(index < MAX_MESSAGE_DATA_SIZE);
 
+    memcpy(&bufer[index], &mustCollectItems, sizeof(int));
+    index += sizeof(int);
+
     memcpy(&bufer[index], &map.enemyCount, sizeof(int));
-    index+=sizeof(int);
+    index += sizeof(int);
 
     for (int i = 0; i < map.enemyCount; i++)
     {
@@ -1622,7 +1625,6 @@ void Game::GenerateTheMap()
 
     mapas.start.x *= 32;
     mapas.start.y *= 32;
-
 
 
     mapas.tiles[(int)mapas.exit.y][(int)mapas.exit.x] = TILE_EXIT;
@@ -3024,10 +3026,10 @@ void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
         if ((bufersize-(*index) >= totallen) && (totallen>0))
         {
             memcpy(&mapnamelen, &bufer[*index], sizeof(int));
+            *index += sizeof(int);
 
             if (mapnamelen)
             {
-                *index += sizeof(int);
 
                 if (bufersize-(*index) >= mapnamelen)
                 {
@@ -3037,7 +3039,6 @@ void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
                 *index+=mapnamelen;
                 mapname[mapnamelen] = 0;
             }
-
 
             int klientaiold = klientai;
             //gaunam klientu skaiciu
@@ -3120,9 +3121,15 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
 
     }
 
+    int missionItems = 0;
+    memcpy(&missionItems, &bufer[*index], sizeof(int));
+    *index += sizeof(int);
+    mapas.misionItems = missionItems;
+    mustCollectItems = missionItems;
 
-    int moncount=0;
-    memcpy(&moncount,&bufer[*index],sizeof(int));
+
+    int moncount = 0;
+    memcpy(&moncount, &bufer[*index], sizeof(int));
     *index += sizeof(int);
 
     if (!mapas.mons.count()) //  No monsters in the map ? Must be coop map
@@ -3157,6 +3164,7 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
         AddaptMapView();
         findpskxy();
 
+        Client_GotMapData = true;
 
     }
 

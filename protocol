@@ -81,6 +81,8 @@ map_height      - 4 bytes // 0 if deathmatch
 map_width       - 4 bytes // 0 if deathmatch
 mapTiles        - tileCount bytes
 
+missionItems    - 4 bytes
+
 enemy_count     - 4 bytes
 monster_race_1  - 4 bytes
 ...
