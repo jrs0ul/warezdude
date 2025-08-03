@@ -127,6 +127,7 @@ class Game
     int ms;
 
 
+    int otherClientCount; //  This number is received from server, for server itself it is 0
     int pskx;
     int psky;
     int pushx; 

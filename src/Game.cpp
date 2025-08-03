@@ -64,7 +64,6 @@ bool isServer=false;
 bool isClient=false;
 
 
-int klientai=0;
 
 int leterKey;
 
@@ -80,6 +79,7 @@ bool nextWepPressed=false;
 //==================================================
 
 Game::Game()
+: imgCount(0)
 {
     Accumulator = 0;
     DT = 1000.0f/60.0f/1000.0f;
@@ -92,7 +92,7 @@ Game::Game()
     netGameState = MPMODE_COOP;
 
 
-    imgCount=0;
+    otherClientCount = 0;
     maxwavs=0;
 
 
@@ -208,17 +208,17 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
     bulbox.draw(pics, pskx, psky, pushx, pushy, scrx, scry, posx, posy);
 
 
-    for (int i = 0; i < PlayerCount(); i++)
+    for (int i = 0; i < PlayerCount(); ++i)
     {
-        if (mapas.mons[mapas.enemyCount+i].isAlive())
+        if (mapas.mons[mapas.enemyCount + i].isAlive())
         {
-            mapas.mons[mapas.enemyCount+i].draw(pics, 5, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
+            mapas.mons[mapas.enemyCount + i].draw(pics, 5, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
         }
     }
 
     if (mapas.enemyCount)
     {
-        for (int i=0; i<mapas.enemyCount; i++)
+        for (int i=0; i <mapas.enemyCount; i++)
         {
 
             if ((round(mapas.mons[i].y)<psky*32) && (round(mapas.mons[i].y)>=((psky-scry)*32))&&
@@ -491,7 +491,7 @@ void Game::MoveDude(){
         else
             mapas.mons[mapas.enemyCount].move(speed,sspeed,8.0f, mapas._colide,
                                               mapas.width(), mapas.height(), mapas.mons,
-                                              mapas.enemyCount+klientai+1,&dirx,&diry);
+                                              mapas.enemyCount + otherClientCount + 1,&dirx,&diry);
 
         //stumdom "kamera"
         if ((mapas.height() > (unsigned)scry)&&(diry==1))
@@ -694,12 +694,12 @@ void Game::findpskxy()
 
     if (((unsigned)scry < mapas.height()) && ((unsigned)psky == mapas.height()))
     {
-        DownBorder=64;
+        DownBorder = TILE_WIDTH * 2;
         pushy=-32;
     }
 
     if (((unsigned)scry < mapas.height()) && (psky == scry)){
-        UpBorder=64;
+        UpBorder = TILE_WIDTH * 2;
         pushy=32;
     }
 
@@ -1656,11 +1656,12 @@ void Game::GenerateTheMap()
     player->frame = (player->currentWeapon + 1) * 4 - 2;
 
 
-    Dude p;
-    for (int i = 0; i < klientai; ++i)
+    for (int i = 0; i < PlayerCount() - 1; ++i)
     {
+        Dude p;
+        p.appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+        p.id = mapas.mons[mapas.mons.count() - 1].id + 1;
         mapas.mons.add(p);
-        mapas.mons[mapas.mons.count() - 1].id = mapas.mons[mapas.mons.count() - 2].id + 1;
 
     }
 
@@ -2059,7 +2060,7 @@ int Game::PlayerCount()
     }
     else if (isClient)
     {
-        players += klientai;
+        players += otherClientCount;
     }
 
     return players;
@@ -3040,11 +3041,11 @@ void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
                 mapname[mapnamelen] = 0;
             }
 
-            int klientaiold = klientai;
+            int klientaiold = otherClientCount;
             //gaunam klientu skaiciu
             if (bufersize-(*index) >= (int)sizeof(int))
             {
-                memcpy(&klientai,&bufer[*index],sizeof(int));
+                memcpy(&otherClientCount, &bufer[*index],sizeof(int));
             }
 
             *index += sizeof(unsigned int);
@@ -3058,20 +3059,20 @@ void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
 
                 if (strcmp(mapname,mapas.name)!=0)
                 {//jei mapas ne tas pats tai uzloadinam
-                    LoadTheMap(mapname, false, klientai);
+                    LoadTheMap(mapname, false, otherClientCount);
                     Client_GotMapData = true;
                     state = GAMESTATE_GAME;
                 }
                 else
                 {
 
-                    if (klientai-klientaiold)
+                    if (otherClientCount - klientaiold)
                     {
-                        Dude naujas;
-                        for (int i=0;i<(klientai-klientaiold);i++)
+                        for (int i=0; i < (otherClientCount - klientaiold); ++i)
                         {
-                            mapas.mons.add(naujas);
-                            mapas.mons[mapas.mons.count()-1].id=mapas.mons[mapas.mons.count()-2].id+1;
+                            Dude n;
+                            n.id = mapas.mons[mapas.mons.count() - 1].id + 1;
+                            mapas.mons.add(n);
                         }
                     }
 
@@ -3080,6 +3081,18 @@ void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
             else
             {
                 state = GAMESTATE_GAME;
+
+                if ((otherClientCount - klientaiold) && Client_GotMapData)
+                {
+                    Dude naujas;
+                    for (int i=0; i < (otherClientCount - klientaiold); i++)
+                    {
+                        Dude n;
+                        n.id = mapas.mons[mapas.mons.count() - 1].id + 1;
+                        mapas.mons.add(n);
+                    }
+                }
+
 
             }
         }
@@ -3155,9 +3168,11 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
         player->frame = (player->currentWeapon + 1) * 4 - 2;
 
         Dude naujas;
-        for (int i = 0; i < klientai; i++)
+        for (int i = 0; i < otherClientCount; i++)
         {
             mapas.mons.add(naujas);
+            mapas.mons[mapas.mons.count()-1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+
             mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id + 1;
         }
 
