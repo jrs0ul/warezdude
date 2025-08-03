@@ -2,6 +2,7 @@
 #include <wchar.h>
 #include "map.h"
 #include "Xml.h"
+#include "MapGenerator.h"
 
 
 
@@ -104,121 +105,11 @@ void CMap::arangeItems()
 
 
 }
-//-------------------------------------
-void GenerationDivide(BSPTreeNode* parent)
-{
-    parent->left = new BSPTreeNode;
-    parent->right = new BSPTreeNode;
 
-
-    if (rand() % 2 == 1) //vertical split
-    {
-        parent->divType = DIV_VERTICAL;
-        parent->left->startx = parent->startx;
-        parent->left->starty = parent->starty;
-        parent->left->height = parent->height / 2 + (rand() % (parent->height / 2));
-        parent->left->width = parent->width;
-
-        parent->right->startx = parent->left->startx;
-        parent->right->starty = parent->left->starty + parent->left->height;
-        parent->right->width = parent->width;
-        parent->right->height = parent->height - parent->left->height;
-    }
-    else
-    {
-        parent->divType = DIV_HORIZONTAL;
-        parent->left->startx = parent->startx;
-        parent->left->starty = parent->starty;
-        parent->left->height = parent->height;
-        parent->left->width = parent->width / 2 + (rand() % (parent->width / 2));
-
-        parent->right->startx = parent->startx + parent->left->width;
-        parent->right->starty = parent->starty;
-        parent->right->width = parent->width - parent->left->width;
-        parent->right->height = parent->height;
-    }
-
-    if (parent->left->width >= 8 && parent->left->height >= 8)
-    {
-       GenerationDivide(parent->left);
-    }
-
-    if (parent->right->width >= 8 && parent->right->height >= 8)
-    {
-        GenerationDivide(parent->right);
-    }
-}
-
-//-------------------------------------
-void Erode(BSPTreeNode* parent, CMap* map)
-{
-    const unsigned char DIRT = 1;
-
-    if (parent->left == nullptr && parent->right == nullptr)
-    {
-
-        int roomPosY = 1;//(rand() % (parent->height / 4)) + 1;
-        int roomHeight =  parent->height - 2;//(parent->height - roomPosY) / 2 + (rand() % ((parent->height - roomPosY) / 2));
-
-        for (int i = parent->starty + roomPosY; i < parent->starty + roomPosY + roomHeight; ++i)
-        {
-            for (int a = parent->startx + 1; a < parent->startx + parent->width - 1; ++a)
-            {
-                if (i < (int)map->height() && a < (int)map->width())
-                {
-                    map->tiles[i][a] = DIRT;
-                }
-            }
-        }
-
-
-        return;
-    }
-    else
-    {
-        Erode(parent->left, map);
-        Erode(parent->right, map);
-    }
-}
-
-//-------------------------------------
-void AddTunels(BSPTreeNode* parent, CMap* map)
-{
-
-    switch(parent->divType)
-    {
-        case DIV_NONE:
-            {
-                return;
-            }
-
-        case DIV_VERTICAL:
-            {
-                for (int i = parent->starty; i < parent->starty + parent->height; ++i)
-                {
-                    map->tiles[i][parent->startx + 2] = 1;
-                }
-            } break;
-
-        case DIV_HORIZONTAL:
-            {
-                for (int i = parent->startx; i < parent->startx + parent->width; ++i)
-                {
-                    map->tiles[parent->starty + 2][i] = 1;
-                }
-
-            } break;
-    }
-
-    AddTunels(parent->left, map);
-    AddTunels(parent->right, map);
-}
 
 //-------------------------------------
 void CMap::generate()
 {
-
-    const unsigned char WALL = 19;
 
     if (!tiles)
     {
@@ -230,28 +121,16 @@ void CMap::generate()
         for (unsigned i = 0; i < _height; ++i)
         {
             tiles[i] = new unsigned char[_width];
+            for (unsigned a = 0; a < _width; ++a)
+            {
+                tiles[i][a] = TILE_WALL;
+            }
         }
     }
 
+    MapGenerator gen(_width, _height);
+    gen.generate(this);
 
-    BSPTreeNode root;
-    root.startx = 0;
-    root.starty = 0;
-    root.width = _width;
-    root.height = _height;
-
-    GenerationDivide(&root);
-
-    for (unsigned i = 0; i < _height; ++i)
-    {
-        for (unsigned a = 0; a < _width; ++a)
-        {
-            tiles[i][a] = WALL;
-        }
-    }
-
-    Erode(&root, this);
-    AddTunels(&root, this);
 }
 
 //-------------------------------------

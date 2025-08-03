@@ -25,6 +25,8 @@ const int SLIME_DAMAGE                  = 2;
 
 const int DAMAGER_NOBODY                = -1;
 
-const unsigned TILE_EXIT                = 81;
+const unsigned char TILE_DIRT           = 1;
+const unsigned char TILE_WALL           = 19;
+const unsigned char TILE_EXIT           = 81;
 
 const int MAP_COUNT                     = 8;

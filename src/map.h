@@ -25,31 +25,7 @@ enum Items
 };
 
 
-enum DivisionType
-{
-    DIV_NONE,
-    DIV_VERTICAL,
-    DIV_HORIZONTAL
-};
 
-struct BSPTreeNode
-{
-    int startx;
-    int starty;
-    int width;
-    int height;
-    DivisionType divType;
-
-    BSPTreeNode* left;
-    BSPTreeNode* right;
-
-    BSPTreeNode()
-    : divType(DIV_NONE)
-    , left(nullptr)
-    , right(nullptr)
-    {
-    }
-};
 
 const int ColidingTiles[256] = {
                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, //9
