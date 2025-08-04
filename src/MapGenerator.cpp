@@ -13,7 +13,7 @@ MapGenerator::~MapGenerator()
 void MapGenerator::generate(CMap* map)
 {
     divide(&root);
-    erodeRoom(&root, map);
+    makeRoom(&root, map);
     addTunels(&root, map);
 }
 
@@ -96,28 +96,35 @@ void MapGenerator::divide(BSPTreeNode* parent)
 
 }
 
-void MapGenerator::erodeRoom(BSPTreeNode* parent, CMap* map)
+void MapGenerator::makeRoom(BSPTreeNode* parent, CMap* map)
 {
-    if (parent->left == nullptr && parent->right == nullptr)
+
+    const int MIN_ROOM_WIDTH = 5;
+
+    if (parent->left == nullptr && parent->right == nullptr) // this is the leaf node
     {
 
         int roomPosY = 1;
-        int roomHeight =  parent->height - 2;
+
+        int maxRandomHeightAddition = (parent->height - 4 < 0) ? 0 : parent->height - 4;
+        int maxRandomWidthAddition = (parent->width - MIN_ROOM_WIDTH < 0) ? 0 : parent->width - MIN_ROOM_WIDTH;
+        int roomHeight =  4  + rand() % maxRandomHeightAddition;
+        int roomWidth = MIN_ROOM_WIDTH + rand() % maxRandomWidthAddition;
 
         for (int i = parent->starty + roomPosY; i < parent->starty + roomPosY + roomHeight; ++i)
         {
-            for (int a = parent->startx; a < parent->startx + parent->width; ++a)
+            for (int a = parent->startx; a < parent->startx + roomWidth; ++a)
             {
                 if (i < (int)map->height() && a < (int)map->width())
                 {
 
                     if (a == parent->startx && i > parent->starty)
                     {
-                        map->tiles[i][a] = 20;
+                        map->tiles[i][a] = TILE_V_WALL;
                     }
-                    else if (a == parent->startx + parent->width - 1)
+                    else if (a == parent->startx + roomWidth - 1)
                     {
-                        map->tiles[i][a] = 20;
+                        map->tiles[i][a] = TILE_V_WALL;
                     }
                     else
                     {
@@ -127,44 +134,39 @@ void MapGenerator::erodeRoom(BSPTreeNode* parent, CMap* map)
             }
         }
 
-        int i = parent->starty;
+        int roomTopY = parent->starty;
 
+
+        for (int a = parent->startx + 1; a < parent->startx + roomWidth - 1; ++a)
         {
-            for (int a = parent->startx + 1; a < parent->startx + parent->width - 1; ++a)
+            if (roomTopY < (int)map->height() && a < (int)map->width())
             {
-                if (i < (int)map->height() && a < (int)map->width())
-                {
-                    map->tiles[i][a] = 21;
-                }
+                map->tiles[roomTopY][a] = TILE_H_WALL;
             }
         }
 
-        i = parent->starty + parent->height - 1;
+        int roomBottomY = parent->starty + roomHeight;
 
+        for (int a = parent->startx + 1; a < parent->startx + roomWidth - 1; ++a)
         {
-            for (int a = parent->startx + 1; a < parent->startx + parent->width - 1; ++a)
+            if (roomBottomY < (int)map->height() && a < (int)map->width())
             {
-                if (i < (int)map->height() && a < (int)map->width())
-                {
-                    map->tiles[i][a] = 21;
-                }
+                map->tiles[roomBottomY][a] = TILE_H_WALL;
             }
         }
 
-
+        //corners
         map->tiles[parent->starty][parent->startx] = 22;
-        map->tiles[parent->starty][parent->startx + parent->width - 1] = 23;
-        map->tiles[parent->starty + parent->height - 1][parent->startx + parent->width - 1] = 25;
-        map->tiles[parent->starty + parent->height - 1][parent->startx] = 24;
-
-
+        map->tiles[parent->starty][parent->startx + roomWidth - 1] = 23;
+        map->tiles[roomBottomY][parent->startx + roomWidth - 1] = 25;
+        map->tiles[roomBottomY][parent->startx] = 24;
 
         return;
     }
     else
     {
-        erodeRoom(parent->left, map);
-        erodeRoom(parent->right, map);
+        makeRoom(parent->left, map);
+        makeRoom(parent->right, map);
     }
 
 }
@@ -182,20 +184,25 @@ void MapGenerator::addTunels(BSPTreeNode* parent, CMap* map)
             {
                 for (int i = parent->starty + 1; i < parent->starty + parent->height - 1; ++i)
                 {
-                    map->tiles[i][parent->startx + 2] = 37;
-                }
 
-                if (map->tiles[parent->starty][parent->startx + 2] == 37)
-                {
-                    map->tiles[parent->starty][parent->startx + 1] = 33;
-                    map->tiles[parent->starty][parent->startx + 2] = 69;
-                    map->tiles[parent->starty][parent->startx + 3] = 32;
-                }
+                    if (map->tiles[i][parent->startx + 1] == 21 )
+                    {
 
-                if (map->tiles[parent->starty + parent->height - 1][parent->startx + 2] == 37)
-                {
-                    map->tiles[parent->starty + parent->height - 1][parent->startx + 1] = 33;
-                    map->tiles[parent->starty + parent->height - 1][parent->startx + 3] = 32;
+                        if (rand() % 10 == 1)
+                        {
+                            map->tiles[i][parent->startx + 1] = 33;
+                            map->tiles[i][parent->startx + 2] = 37;
+                            map->tiles[i][parent->startx + 3] = 32;
+                        }
+                        else
+                        {
+                            map->tiles[i][parent->startx + 2] = 69;
+                        }
+                    }
+                    else
+                    {
+                        map->tiles[i][parent->startx + 2] = 37;
+                    }
                 }
 
             } break;
@@ -204,11 +211,11 @@ void MapGenerator::addTunels(BSPTreeNode* parent, CMap* map)
             {
                 for (int i = parent->startx + 1; i < parent->startx + parent->width - 1; ++i)
                 {
-                    if (map->tiles[parent->starty + 1][i] == 20)
+                    if (map->tiles[parent->starty + 1][i] == 20 )
                     {
-                        map->tiles[parent->starty + 1][i] = 34;
+                        //map->tiles[parent->starty + 1][i] = 34;
                         map->tiles[parent->starty + 2][i] = 71;
-                        map->tiles[parent->starty + 3][i] = 31;
+                        //map->tiles[parent->starty + 3][i] = 31;
                     }
                     else
                     {

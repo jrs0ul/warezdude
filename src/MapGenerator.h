@@ -49,7 +49,7 @@ public:
 
 private:
     void divide(BSPTreeNode* parent);
-    void erodeRoom(BSPTreeNode* parent, CMap* map);
+    void makeRoom(BSPTreeNode* parent, CMap* map);
     void addTunels(BSPTreeNode* parent, CMap* map);
     void erase(BSPTreeNode* parent);
 

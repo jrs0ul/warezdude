@@ -123,7 +123,7 @@ void CMap::generate()
             tiles[i] = new unsigned char[_width];
             for (unsigned a = 0; a < _width; ++a)
             {
-                tiles[i][a] = TILE_WALL;
+                tiles[i][a] = TILE_DIRT;
             }
         }
     }
