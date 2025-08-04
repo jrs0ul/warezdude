@@ -19,23 +19,52 @@ void MapGenerator::generate(CMap* map)
 
 void MapGenerator::divide(BSPTreeNode* parent)
 {
-    if (parent->width < 8 || parent->height < 8)
+
+    const int MIN_ROOM_SIZE = 16;
+
+    if (parent->width < MIN_ROOM_SIZE && parent->height < MIN_ROOM_SIZE)
     {
         return;
     }
 
-    parent->left = new BSPTreeNode;
-    parent->right = new BSPTreeNode;
 
-    newCount += 2;
+    DivisionType divType = ((rand() % 1000) % 2 == 1) ? DIV_VERTICAL : DIV_HORIZONTAL;
 
-
-    if ((rand() % 1000) % 2 == 1) //vertical split
+    if (divType == DIV_VERTICAL && parent->height < MIN_ROOM_SIZE)
     {
-        parent->divType = DIV_VERTICAL;
+        if (parent->width < MIN_ROOM_SIZE)
+        {
+            return;
+        }
+        else
+        {
+            divType = DIV_HORIZONTAL;
+        }
+    }
+
+    if (divType == DIV_HORIZONTAL && parent->width < MIN_ROOM_SIZE)
+    {
+        if (parent->height < MIN_ROOM_SIZE)
+        {
+            return;
+        }
+        else
+        {
+            divType = DIV_VERTICAL;
+        }
+    }
+
+
+    if (divType == DIV_VERTICAL ) //vertical split
+    {
+        parent->left = new BSPTreeNode;
+        parent->right = new BSPTreeNode;
+        newCount += 2;
+
+        parent->divType = divType;
         parent->left->startx = parent->startx;
         parent->left->starty = parent->starty;
-        parent->left->height = parent->height / 3 + (rand() % (parent->height / 4));
+        parent->left->height = 5 + (rand() % (parent->height / 4));
         parent->left->width = parent->width;
 
         parent->right->startx = parent->left->startx;
@@ -45,7 +74,12 @@ void MapGenerator::divide(BSPTreeNode* parent)
     }
     else
     {
-        parent->divType = DIV_HORIZONTAL;
+
+        parent->left = new BSPTreeNode;
+        parent->right = new BSPTreeNode;
+        newCount += 2;
+
+        parent->divType = divType;
         parent->left->startx = parent->startx;
         parent->left->starty = parent->starty;
         parent->left->height = parent->height;
@@ -150,6 +184,20 @@ void MapGenerator::addTunels(BSPTreeNode* parent, CMap* map)
                 {
                     map->tiles[i][parent->startx + 2] = 37;
                 }
+
+                if (map->tiles[parent->starty][parent->startx + 2] == 37)
+                {
+                    map->tiles[parent->starty][parent->startx + 1] = 33;
+                    map->tiles[parent->starty][parent->startx + 2] = 69;
+                    map->tiles[parent->starty][parent->startx + 3] = 32;
+                }
+
+                if (map->tiles[parent->starty + parent->height - 1][parent->startx + 2] == 37)
+                {
+                    map->tiles[parent->starty + parent->height - 1][parent->startx + 1] = 33;
+                    map->tiles[parent->starty + parent->height - 1][parent->startx + 3] = 32;
+                }
+
             } break;
 
         case DIV_HORIZONTAL:
