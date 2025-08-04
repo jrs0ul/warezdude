@@ -128,7 +128,7 @@ void MapGenerator::makeRoom(BSPTreeNode* parent, CMap* map)
                     }
                     else
                     {
-                        map->tiles[i][a] = TILE_DIRT;
+                        map->tiles[i][a] = 37;
                     }
                 }
             }

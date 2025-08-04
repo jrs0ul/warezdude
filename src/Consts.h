@@ -26,6 +26,7 @@ const int SLIME_DAMAGE                  = 2;
 const int DAMAGER_NOBODY                = -1;
 
 const unsigned char TILE_DIRT           = 1;
+const unsigned char TILE_ROCKS          = 8;
 const unsigned char TILE_WALL           = 19;
 const unsigned char TILE_V_WALL         = 20;
 const unsigned char TILE_H_WALL         = 21;

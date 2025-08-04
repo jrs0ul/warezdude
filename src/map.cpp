@@ -121,9 +121,13 @@ void CMap::generate()
         for (unsigned i = 0; i < _height; ++i)
         {
             tiles[i] = new unsigned char[_width];
+
             for (unsigned a = 0; a < _width; ++a)
             {
-                tiles[i][a] = TILE_DIRT;
+                int other = rand() % 3;
+                int grass = rand() % 10;
+
+                tiles[i][a] = (other == 2) ? ((grass == 2) ? 10 : TILE_ROCKS): TILE_DIRT;
             }
         }
     }
