@@ -543,7 +543,7 @@ bool CMap::save(const char* path)
 }
 
 //--------------------------------------
-void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy)
+void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int psky, int scrx, int scry, int posx, int posy)
 {
     int tmpy = 0;
     int tmpx = 0;
@@ -562,8 +562,8 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int ps
                 if (tiles[a])
                 {
                     pics.draw(tileset,
-                              TILE_WIDTH * tmpx + pushx - posx,
-                              TILE_WIDTH * tmpy + pushy - posy,
+                              TILE_WIDTH * tmpx +  mapPos.x - posx,
+                              TILE_WIDTH * tmpy +  mapPos.y - posy,
                               tiles[a][i] - 1,
                               true,
                               1.f, 1.f, 0.f, COLOR(r, g, b, 1.0f), COLOR(r, g, b, 1.0f));
@@ -580,7 +580,7 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int ps
 
     for (unsigned i = 0; i < decals.count(); i++)
     {
-        decals[i].draw(pics, 15, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
+        decals[i].draw(pics, 15, pskx,scrx,psky,scry, mapPos.x, posx, mapPos.y, posy);
     }
 
 
@@ -594,8 +594,8 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int ps
             {
 
                 pics.draw(11,
-                        (round(items[i].x))-((pskx-scrx)*32) + pushx-posx,
-                        (round(items[i].y))-((psky-scry)*32) + pushy-posy,
+                        (round(items[i].x))-((pskx-scrx)*32) + mapPos.x - posx,
+                        (round(items[i].y))-((psky-scry)*32) + mapPos.y - posy,
                         (items[i].value-1) * 4 + itmframe,
                         true,
                         1.0f,
@@ -611,8 +611,8 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int ps
         {
 
             pics.draw(7,
-                    (round(items[i].x))-((pskx-scrx) * TILE_WIDTH) + pushx-posx,
-                    (round(items[i].y))-((psky-scry) * TILE_WIDTH) + pushy-posy,
+                    (round(items[i].x))-((pskx-scrx) * TILE_WIDTH) + mapPos.x - posx,
+                    (round(items[i].y))-((psky-scry) * TILE_WIDTH) + mapPos.y - posy,
                     items[i].value - ITEM_AMMO_PACK,
                     true,
                     1.0f,1.0f,0.0,
@@ -628,7 +628,7 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int ps
 
 }
 //--------------------------------------
-void CMap::drawEntities(PicsContainer& pics, int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy)
+void CMap::drawEntities(PicsContainer& pics, int pskx, int psky, int scrx, int scry, int posx, int posy)
 {
 
     for (int i = 0; i < enemyCount; i++)
@@ -638,7 +638,7 @@ void CMap::drawEntities(PicsContainer& pics, int pskx, int psky, int scrx, int s
                 ((round(mons[i].x) < pskx * TILE_WIDTH)) && (round(mons[i].x) >= ((pskx-scrx) * TILE_WIDTH)))
         {
 
-            mons[i].draw(pics, mons[i].race + 1, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
+            mons[i].draw(pics, mons[i].race + 1, pskx,scrx,psky,scry, mapPos.x, posx, mapPos.y, posy);
         }
 
     }

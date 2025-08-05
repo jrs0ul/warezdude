@@ -130,8 +130,6 @@ class Game
     int otherClientCount; //  This number is received from server, for server itself it is 0
     int pskx;
     int psky;
-    int pushx; 
-    int pushy;
     int scrx;
     int scry;
     int LeftBorder;

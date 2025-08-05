@@ -42,6 +42,8 @@ const int ColidingTiles[256] = {
 
 class CMap 
 {
+
+        Vector3D mapPos; //map starting position on the screen
 public:
         unsigned _width;
         unsigned _height;
@@ -58,7 +60,6 @@ public:
         int goods; // ammo, medkits, etc.
         int enemyCount;
 
-        Vector3D mapPos; //map starting position on the screen
 
         Vector3D start;
         Vector3D exit;
@@ -79,6 +80,8 @@ public:
         void setHeight(unsigned newHeight){_height = newHeight;}
 
         Vector3D getPos(){return mapPos;}
+        void setPosX(float value){mapPos.x = value;}
+        void setPosY(float value){mapPos.y = value;}
         void move(Vector3D v, float size);
 
         void generate();
@@ -87,10 +90,9 @@ public:
 
         void buildCollisionmap();
 
-        void draw(PicsContainer& pics, float r, float g, float b, 
-                  int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy);
+        void draw(PicsContainer& pics, float r, float g, float b, int pskx, int psky, int scrx, int scry, int posx, int posy);
 
-        void drawEntities(PicsContainer& pics, int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy);
+        void drawEntities(PicsContainer& pics, int pskx, int psky, int scrx, int scry, int posx, int posy);
 
         bool colide(unsigned x, unsigned y);
         void ReplaceTiles(unsigned char old, unsigned char fresh);

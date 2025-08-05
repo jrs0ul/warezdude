@@ -105,7 +105,6 @@ Game::Game()
     ms=0;
 
     pskx=22; psky=17;
-    pushx=0; pushy=0;
     scrx=22; scry=17;
     LeftBorder=0;
     RightBorder=0;
@@ -204,21 +203,21 @@ void Game::DrawSomeText()
 void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 {
 
-    mapas.draw(pics, r, g, b, pskx, psky, scrx, scry, posx, posy, pushx, pushy);
+    mapas.draw(pics, r, g, b, pskx, psky, scrx, scry, posx, posy);
 
 
 
-    bulbox.draw(pics, pskx, psky, pushx, pushy, scrx, scry, posx, posy);
+    bulbox.draw(pics, pskx, psky, mapas.getPos().x, mapas.getPos().y, scrx, scry, posx, posy);
 
     for (int i = 0; i < PlayerCount(); ++i)
     {
         if (mapas.mons[mapas.enemyCount + i].isAlive())
         {
-            mapas.mons[mapas.enemyCount + i].draw(pics, 5, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
+            mapas.mons[mapas.enemyCount + i].draw(pics, 5, pskx,scrx,psky,scry,mapas.getPos().x, posx, mapas.getPos().y, posy);
         }
     }
 
-    mapas.drawEntities(pics, pskx, psky, scrx, scry, posx, posy, pushx, pushy);
+    mapas.drawEntities(pics, pskx, psky, scrx, scry, posx, posy);
 
 
 }
@@ -482,17 +481,19 @@ void Game::MoveDude(){
                                               mapas.enemyCount + otherClientCount + 1,&dirx,&diry);
 
         //stumdom "kamera"
-        if ((mapas.height() > (unsigned)scry)&&(diry==1))
+        if ((mapas.height() > (unsigned)scry) && (diry==1))
         {
-            if ((psky>=scry)&&((mapas.mons[mapas.enemyCount].y+16)/32<=psky-scry/2)&&((DownBorder>0)||(UpBorder<64)))
+            if ((psky >= scry) && ((mapas.mons[mapas.enemyCount].y + 16) / 32 <= psky - scry/2 ) &&
+                    ((DownBorder > 0) || (UpBorder < 64)))
             {
 
-                if ((UpBorder < 32) && (DownBorder < 32))
+                if ((UpBorder < TILE_WIDTH) && (DownBorder < TILE_WIDTH))
                 {
-                    pushy++; 
+                    //pushy++;
+                    mapas.move(Vector3D(0.f, 1.f, 0.f), 1.f);
                 }
 
-                if ((psky==scry)&&(UpBorder<64))
+                if ((psky==scry) && (UpBorder < 64))
                 {
                     UpBorder++;
                 }
@@ -502,10 +503,10 @@ void Game::MoveDude(){
                 }
             }
 
-            if ((pushy>31)&&(psky>scry)&&(DownBorder==0))
+            if ((mapas.getPos().y > 31) && (psky>scry) && (DownBorder==0))
             {
                 psky--;
-                pushy = 0;
+                mapas.setPosY(0);
             }
 
         }
@@ -515,9 +516,10 @@ void Game::MoveDude(){
             if (((unsigned)psky <= mapas.height())&&((mapas.mons[mapas.enemyCount].y+16)/32>=psky-scry/2)&&((DownBorder<64)||(UpBorder>0)))
             {
 
-                if ((DownBorder<32) && (UpBorder<32))
+                if ((DownBorder < TILE_WIDTH) && (UpBorder < TILE_WIDTH))
                 {
-                    pushy--; 
+                    //pushy--;
+                    mapas.move(Vector3D(0.f, -1.f, 0.f), 1.f);
                 }
 
                 if ((psky==scry) && (UpBorder>0))
@@ -532,10 +534,10 @@ void Game::MoveDude(){
             }
 
 
-            if ((pushy<-31)&&((unsigned)psky < mapas.height())&&(UpBorder==0))
+            if ((mapas.getPos().y < -31)&&((unsigned)psky < mapas.height())&&(UpBorder==0))
             {
                 psky++;
-                pushy=0;
+                mapas.setPosY(0);
             }
 
         }
@@ -545,9 +547,10 @@ void Game::MoveDude(){
             if ((pskx>=scrx)&&((mapas.mons[mapas.enemyCount].x+16)/32<=pskx-scrx/2)&&((RightBorder>0)||(LeftBorder<64)))
             {
 
-                if ((LeftBorder<32)&&(RightBorder<32))
+                if ((LeftBorder < 32) && (RightBorder < 32))
                 {
-                    pushx++;
+                    //pushx++;
+                    mapas.move(Vector3D(1.f, 0.f, 0.f), 1.f);
                 }
 
                 if ((pskx==scrx)&&(LeftBorder<64))
@@ -561,10 +564,10 @@ void Game::MoveDude(){
 
             }
 
-            if ((pskx>scrx) && (pushx>31) && (RightBorder==0))
+            if ((pskx > scrx) && (mapas.getPos().x > 31) && (RightBorder==0))
             {
                 pskx--;
-                pushx=0;
+                mapas.setPosX(0.f);
             }
 
         }
@@ -576,7 +579,10 @@ void Game::MoveDude(){
             {
 
                 if ((RightBorder<32)&&(LeftBorder<32))
-                    pushx--;  
+                {
+                    //pushx--;
+                    mapas.move(Vector3D(-1.f, 0.f, 0.f), 1.f);
+                }
 
                 if ((pskx==scrx)&&(LeftBorder>0))
                 {
@@ -584,14 +590,16 @@ void Game::MoveDude(){
                 }
                 else
                 {
-                    if (((unsigned)pskx == mapas.width()) && (RightBorder<64)){
+                    if (((unsigned)pskx == mapas.width()) && (RightBorder<64))
+                    {
                         RightBorder++;
 
                     }
 
-                    if ((LeftBorder==0)&&((unsigned)pskx < mapas.width())&&(pushx<-31)){
+                    if ((LeftBorder==0)&&((unsigned)pskx < mapas.width()) && (mapas.getPos().x < -31))
+                    {
                         pskx++;
-                        pushx=0;
+                        mapas.setPosX(0.f);
                     }
                 }
             }
@@ -609,8 +617,8 @@ void Game::MoveDude(){
 //--------------
 void Game::AddaptMapView()
 {
-    pushx=0;
-    pushy=0;
+    mapas.setPosX(0.f);
+    mapas.setPosY(0.f);
 
     if (mapas.width() < (unsigned)(sys.ScreenWidth / TILE_WIDTH) + 2)
     {
@@ -683,22 +691,25 @@ void Game::findpskxy()
     if (((unsigned)scry < mapas.height()) && ((unsigned)psky == mapas.height()))
     {
         DownBorder = TILE_WIDTH * 2;
-        pushy=-32;
+        mapas.setPosY(-TILE_WIDTH);
     }
 
-    if (((unsigned)scry < mapas.height()) && (psky == scry)){
+    if (((unsigned)scry < mapas.height()) && (psky == scry))
+    {
         UpBorder = TILE_WIDTH * 2;
-        pushy=32;
+        mapas.setPosY(TILE_WIDTH);
     }
 
-    if (((unsigned)scrx < mapas.width()) && (pskx == scrx)){
-        pushx=32;
-        LeftBorder=64;
+    if (((unsigned)scrx < mapas.width()) && (pskx == scrx))
+    {
+        LeftBorder = 64;
+        mapas.setPosX(TILE_WIDTH);
     }
 
-    if (((unsigned)scrx < mapas.width()) && ((unsigned)pskx == mapas.width())){
-        RightBorder=64;
-        pushx=32;
+    if (((unsigned)scrx < mapas.width()) && ((unsigned)pskx == mapas.width()))
+    {
+        RightBorder = TILE_WIDTH * 2;
+        mapas.setPosX(TILE_WIDTH);
     }
 
 }
@@ -2243,8 +2254,8 @@ void Game::CoreGameLogic()
             (!player->shot) && (!player->spawn))
     {
 
-        Vector3D dudePosOnScreen(round(player->x)-((pskx-scrx)*32)+pushx-posx,
-                                 round(player->y)-((psky-scry)*32)+pushy-posy, 0);
+        Vector3D dudePosOnScreen(round(player->x)-((pskx-scrx) * TILE_WIDTH) + mapas.getPos().x - posx,
+                                 round(player->y)-((psky-scry) * TILE_WIDTH) + mapas.getPos().y - posy, 0);
 
         Vector3D mouse(MouseX, MouseY, 0);
 
