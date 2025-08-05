@@ -100,16 +100,17 @@ void MapGenerator::makeRoom(BSPTreeNode* parent, CMap* map)
 {
 
     const int MIN_ROOM_WIDTH = 5;
+    const int MIN_ROOM_HEIGHT = 4;
 
     if (parent->left == nullptr && parent->right == nullptr) // this is the leaf node
     {
 
         int roomPosY = 1;
 
-        int maxRandomHeightAddition = (parent->height - 4 < 0) ? 0 : parent->height - 4;
+        int maxRandomHeightAddition = (parent->height - MIN_ROOM_HEIGHT < 0) ? 0 : parent->height - MIN_ROOM_HEIGHT;
         int maxRandomWidthAddition = (parent->width - MIN_ROOM_WIDTH < 0) ? 0 : parent->width - MIN_ROOM_WIDTH;
-        int roomHeight =  4  + rand() % maxRandomHeightAddition;
-        int roomWidth = MIN_ROOM_WIDTH + rand() % maxRandomWidthAddition;
+        int roomHeight =  (maxRandomHeightAddition > 0) ? MIN_ROOM_HEIGHT  + rand() % maxRandomHeightAddition : MIN_ROOM_HEIGHT;
+        int roomWidth = (maxRandomWidthAddition) ? MIN_ROOM_WIDTH + rand() % maxRandomWidthAddition : MIN_ROOM_WIDTH;
 
         for (int i = parent->starty + roomPosY; i < parent->starty + roomPosY + roomHeight; ++i)
         {

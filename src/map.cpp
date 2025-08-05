@@ -562,11 +562,11 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int ps
                 if (tiles[a])
                 {
                     pics.draw(tileset,
-                              32 * tmpx + pushx - posx,
-                              32 * tmpy + pushy - posy,
+                              TILE_WIDTH * tmpx + pushx - posx,
+                              TILE_WIDTH * tmpy + pushy - posy,
                               tiles[a][i] - 1,
                               true,
-                              1.f, 1.f, 0.f, COLOR(r,g,b, 1.0f), COLOR(r, g, b, 1.0f));
+                              1.f, 1.f, 0.f, COLOR(r, g, b, 1.0f), COLOR(r, g, b, 1.0f));
                 }
             }
 
@@ -589,8 +589,8 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int ps
 
         if (items[i].value < ITEM_AMMO_PACK)
         {
-            if ((round(items[i].y) < psky * 32) && (round(items[i].y)>=((psky-scry)*32))&&
-                    ((round(items[i].x) < pskx * 32)) && (round(items[i].x)>=((pskx-scrx)*32)))
+            if ((round(items[i].y) < psky * TILE_WIDTH) && (round(items[i].y) >= ((psky-scry)*32))&&
+                    ((round(items[i].x) < pskx * TILE_WIDTH)) && (round(items[i].x) >= ((pskx-scrx)*32)))
             {
 
                 pics.draw(11,
@@ -627,7 +627,23 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int ps
 
 
 }
+//--------------------------------------
+void CMap::drawEntities(PicsContainer& pics, int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy)
+{
 
+    for (int i = 0; i < enemyCount; i++)
+    {
+
+        if ((round(mons[i].y) < psky * TILE_WIDTH) && (round(mons[i].y) >= ((psky-scry) * TILE_WIDTH))&&
+                ((round(mons[i].x) < pskx * TILE_WIDTH)) && (round(mons[i].x) >= ((pskx-scrx) * TILE_WIDTH)))
+        {
+
+            mons[i].draw(pics, mons[i].race + 1, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
+        }
+
+    }
+
+}
 
 //--------------------------------------
 void CMap::destroy()

@@ -182,15 +182,18 @@ void Game::PlayNewSong(const char* songName)
 void Game::DrawSomeText()
 {
 
-    char buf[80];
+    char buf[255];
 
     sprintf(buf,"FPS : %d",FPS());
     WriteText(20,20, pics, 10, buf, 0.8f,0.6f);
 
+    sprintf(buf, "Map width %d height %d", mapas.width(), mapas.height());
+    WriteText(20, 40, pics, 10, buf, 0.8f,0.8f);
+
     if (isServer)
     {
         sprintf(buf,"Client count : %d",serveris.clientCount());
-        WriteText(20,40, pics, 10,buf, 0.8f, 1);
+        WriteText(20, 60, pics, 10,buf, 0.8f, 1);
     }
 
 
@@ -207,7 +210,6 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 
     bulbox.draw(pics, pskx, psky, pushx, pushy, scrx, scry, posx, posy);
 
-
     for (int i = 0; i < PlayerCount(); ++i)
     {
         if (mapas.mons[mapas.enemyCount + i].isAlive())
@@ -216,21 +218,7 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
         }
     }
 
-    if (mapas.enemyCount)
-    {
-        for (int i=0; i <mapas.enemyCount; i++)
-        {
-
-            if ((round(mapas.mons[i].y)<psky*32) && (round(mapas.mons[i].y)>=((psky-scry)*32))&&
-                ((round(mapas.mons[i].x)<pskx*32)) && (round(mapas.mons[i].x)>=((pskx-scrx)*32)))
-            {
-
-                mapas.mons[i].draw(pics, mapas.mons[i].race+1, pskx,scrx,psky,scry,pushx,posx,pushy,posy);
-            }
-
-        }
-    }
-
+    mapas.drawEntities(pics, pskx, psky, scrx, scry, posx, posy, pushx, pushy);
 
 
 }
@@ -651,8 +639,8 @@ void Game::AddaptMapView()
         }
     }
 
-    pskx=scrx;
-    psky=scry;
+    pskx = scrx;
+    psky = scry;
 }
 
 //---------------

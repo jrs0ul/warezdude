@@ -58,7 +58,7 @@ public:
         int goods; // ammo, medkits, etc.
         int enemyCount;
 
-        Vector3D mapPos;
+        Vector3D mapPos; //map starting position on the screen
 
         Vector3D start;
         Vector3D exit;
@@ -89,6 +89,8 @@ public:
 
         void draw(PicsContainer& pics, float r, float g, float b, 
                   int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy);
+
+        void drawEntities(PicsContainer& pics, int pskx, int psky, int scrx, int scry, int posx, int posy, int pushx, int pushy);
 
         bool colide(unsigned x, unsigned y);
         void ReplaceTiles(unsigned char old, unsigned char fresh);
