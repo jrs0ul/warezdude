@@ -3,9 +3,10 @@
 
 
 const int TILE_WIDTH                    = 32;
+const int HALF_TILE_WIDTH               = TILE_WIDTH / 2;
 
 
-
+const float PLAYER_RADIUS               = 8.f;
 const int PLAYER_MELEE_DAMAGE           = 15;
 
 const int PROJECTILE_BULLET_DAMAGE      = 3;

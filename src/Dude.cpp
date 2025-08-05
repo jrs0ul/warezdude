@@ -1,8 +1,10 @@
-#include <cmath>
-
-#include "Usefull.h"
 #include "Dude.h"
+
+#include <cmath>
+#include "Usefull.h"
 #include "gui/Text.h"
+#include "bullet.h"
+#include "BulletContainer.h"
 //
 
 
@@ -227,28 +229,26 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
 
 }
 //--------------------------------------------------------------
-void Dude::draw(PicsContainer& pics, unsigned index,
-                int pskx, int scrx, int psky, int scry,
-                int pushx, int posx, int pushy, int posy)
+void Dude::draw(PicsContainer& pics, unsigned index, float posx, float posy)
 {
-    pics.draw(index, 
-              round(x)-((pskx-scrx)*32)+pushx-posx,
-              round(y)-((psky-scry)*32)+pushy-posy,
+    pics.draw(index,
+              x + posx,
+              y + posy,
               frame,
               true,
               1.0f,
               1.0f,
-              (angle + M_PI / 2.f) * 57.2958f,
+              (angle + M_PI / 2.f) * (180 / M_PI),
               COLOR(r,g,b, 1.f),
               COLOR(r,g,b, 1.f));
 
-    char buf[10];
+    /*char buf[10];
     sprintf(buf, "%d", id);
-    WriteText(round(x)-((pskx-scrx)*32)+pushx-posx,
-              round(y)-((psky-scry)*32)+pushy-posy,
+    WriteText(round(x)-((pskx-scrx) * TILE_WIDTH) + posx,
+              round(y)-((psky-scry) * TILE_WIDTH) + posy,
               pics,
               10,
-              buf);
+              buf);*/
 
 }
 //----------------------------------------------------------

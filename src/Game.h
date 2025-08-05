@@ -16,6 +16,7 @@
 #include "SelectMenu.h"
 #include "network/Server.h"
 #include "network/Client.h"
+#include "BulletContainer.h"
 #include "map.h"
 #include "maplist.h"
 
@@ -128,16 +129,6 @@ class Game
 
 
     int otherClientCount; //  This number is received from server, for server itself it is 0
-    int pskx;
-    int psky;
-    int scrx;
-    int scry;
-    int LeftBorder;
-    int RightBorder;
-    int UpBorder;
-    int DownBorder;// ar rodyti pakrasti ?
-    int posx;
-    int posy;
 
     int itmtim;
 
@@ -212,13 +203,12 @@ private:
     void SendClientAtackImpulse(int victimID, int hp);
     void SendClientCoords();
     void SendClientDoorState(int doorx,int doory, unsigned char doorframe);
-    void AddaptMapView();
+    void AdaptMapView();
     void DrawMissionObjectives();
     void MonsterAI(int index);
     void BeatEnemy(int aID, int damage);
     void SendAtackImpulse(unsigned int clientIndex, int victim, int hp);
     void SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine);
-    void findpskxy();
     void GenerateTheMap();
     void LoadTheMap(const char* name, bool createItems, int otherPlayers);
     void LoadFirstMap();

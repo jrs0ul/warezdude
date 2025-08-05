@@ -174,6 +174,8 @@ void PicsContainer::draw(
 
         glDrawArrays(GL_TRIANGLES, 0, vertexCount / 2 );
 
+        //printf("triangles: %d\n", vertexCount/2);
+
 
         glDisableVertexAttribArray(ColorAttribID);
 

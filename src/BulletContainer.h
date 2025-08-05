@@ -1,8 +1,9 @@
 #ifndef CBULL_CON_H
 #define CBULL_CON_H
 
-#include "bullet.h"
-#include "TextureLoader.h"
+
+class Bullet;
+class PicsContainer;
 
 class CBulletContainer
 {
@@ -15,7 +16,7 @@ class CBulletContainer
     int count(){return _count;};
     void add(Bullet& newbulet);
     void removeDead();
-    void draw(PicsContainer& pics, int pskx, int psky, int pushx, int pushy, int scrx, int scry, int posx, int posy);
+    void draw(PicsContainer& pics, float posx, float posy);
     void destroy();
     ~CBulletContainer(){}
 

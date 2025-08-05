@@ -2,12 +2,11 @@
 #define DUDE_H
 
 #include "DArray.h"
-#include "BulletContainer.h"
-#include "TextureLoader.h"
 #include "Vectors.h"
 #include "Consts.h"
 
-
+class CBulletContainer;
+class PicsContainer;
 
 class Dude
 {
@@ -89,12 +88,10 @@ class Dude
         bool isColideWithOthers(DArray<Dude>& chars, int count, float newx, float newy);
         void rotate(float angle);
         void move(float walkSpeed,float strifeSpeed,float radius, bool** map, int mapsizex, int mapsizey,
-                DArray<Dude>& chars,int charcount, int* dirx, int* diry);
+                DArray<Dude>& chars, int charcount, int* dirx, int* diry);
         void respawn();
         //nupaiso
-        void draw(PicsContainer& pics, unsigned index,
-                int pskx, int scrx, int psky, int scry,
-                int pushx, int posx, int pushy, int posy);
+        void draw(PicsContainer& pics, unsigned index, float posx, float posy);
 
         /* shoots or deploys a mine if the entity has some ammo */
         bool shoot(bool useBullets, bool isMine, CBulletContainer* bulcon);

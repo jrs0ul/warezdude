@@ -1,8 +1,11 @@
+#include "BulletContainer.h"
 #include <cstring>
 #include "Consts.h"
-#include "BulletContainer.h"
+#include "bullet.h"
+#include "TextureLoader.h"
 
-void CBulletContainer::add(Bullet& newbulet){
+void CBulletContainer::add(Bullet& newbulet)
+{
 
     Bullet* tmp=0;
     if (buls){
@@ -77,17 +80,18 @@ void CBulletContainer::add(Bullet& newbulet){
  }
 //---------------------------
 
-void CBulletContainer::draw(PicsContainer& pics, int pskx, int psky, int pushx, int pushy, int scrx, int scry, int posx, int posy)
+void CBulletContainer::draw(PicsContainer& pics, float posx, float posy)
 {
     for (int z = 0; z < _count; z++)
     {
         pics.draw(6,
-                round(buls[z].x)-((pskx-scrx) * TILE_WIDTH)+pushx-posx,
-                round(buls[z].y)-((psky-scry) * TILE_WIDTH)+pushy-posy,
+                buls[z].x + posx,
+                buls[z].y + posy,
                 buls[z].frame,
                 true,
-                1.0f,1.0f,
-                (buls[z].angle + (3.14f/2.0f)) * (180/M_PI)
+                1.0f,
+                1.0f,
+                (buls[z].angle + (M_PI / 2.0f)) * (180 / M_PI)
                 ); 
     }
 

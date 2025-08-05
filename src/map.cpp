@@ -543,103 +543,75 @@ bool CMap::save(const char* path)
 }
 
 //--------------------------------------
-void CMap::draw(PicsContainer& pics, float r, float g, float b, int pskx, int psky, int scrx, int scry, int posx, int posy)
+void CMap::draw(PicsContainer& pics, float r, float g, float b)
 {
-    int tmpy = 0;
-    int tmpx = 0;
 
     unsigned tileset = pics.findByName("pics/tileset.tga");
 
-
-    for (int a = psky - scry; a < psky; ++a)
+    if (tiles)
     {
-        tmpx = 0;
 
-        for (int i = pskx - scrx; i < pskx; ++i)
+        for (unsigned a = 0; a < _height; ++a)
         {
-            if (tiles)
+
+            for (unsigned i = 0; i < _width; ++i)
             {
-                if (tiles[a])
+                const float tileX = i * TILE_WIDTH + mapPos.x;
+                const float tileY = a * TILE_WIDTH + mapPos.y;
+                if (tileX + HALF_TILE_WIDTH < 0 || tileX - HALF_TILE_WIDTH > 640 ||
+                        tileY + HALF_TILE_WIDTH < 0 || tileY - HALF_TILE_WIDTH > 480)
                 {
-                    pics.draw(tileset,
-                              TILE_WIDTH * tmpx +  mapPos.x - posx,
-                              TILE_WIDTH * tmpy +  mapPos.y - posy,
-                              tiles[a][i] - 1,
-                              true,
-                              1.f, 1.f, 0.f, COLOR(r, g, b, 1.0f), COLOR(r, g, b, 1.0f));
+                    continue;
                 }
+
+                pics.draw(tileset,
+                        tileX,
+                        tileY,
+                        tiles[a][i] - 1,
+                        true,
+                        1.f, 1.f, 0.f, COLOR(r, g, b, 1.0f), COLOR(r, g, b, 1.0f));
+
             }
 
-            tmpx++;
         }
-
-        tmpy++;
-
     }
 
 
     for (unsigned i = 0; i < decals.count(); i++)
     {
-        decals[i].draw(pics, 15, pskx,scrx,psky,scry, mapPos.x, posx, mapPos.y, posy);
+        decals[i].draw(pics, 15, mapPos.x, mapPos.y);
     }
 
 
     for (unsigned long i = 0; i < items.count(); ++i)
     {
 
-        if (items[i].value < ITEM_AMMO_PACK)
-        {
-            if ((round(items[i].y) < psky * TILE_WIDTH) && (round(items[i].y) >= ((psky-scry)*32))&&
-                    ((round(items[i].x) < pskx * TILE_WIDTH)) && (round(items[i].x) >= ((pskx-scrx)*32)))
-            {
+        const int itemFrame = (items[i].value < ITEM_AMMO_PACK) ? (items[i].value-1) * 4 + itmframe :
+                                                            items[i].value - ITEM_AMMO_PACK;
+        const int itemPicture = (items[i].value < ITEM_AMMO_PACK) ? 11 : 7;
 
-                pics.draw(11,
-                        (round(items[i].x))-((pskx-scrx)*32) + mapPos.x - posx,
-                        (round(items[i].y))-((psky-scry)*32) + mapPos.y - posy,
-                        (items[i].value-1) * 4 + itmframe,
-                        true,
-                        1.0f,
-                        1.0f,
-                        0.0,
-                        COLOR(r,g,b, 1.0f),
-                        COLOR(r,g,b, 1.0f)
-                        );
-            }
-        }
-        else if ((round(items[i].y) < psky * TILE_WIDTH) && (round(items[i].y) >= ((psky-scry) * TILE_WIDTH))&&
-                ((round(items[i].x) < pskx * TILE_WIDTH)) && (round(items[i].x) >= ((pskx-scrx) * TILE_WIDTH)))
-        {
-
-            pics.draw(7,
-                    (round(items[i].x))-((pskx-scrx) * TILE_WIDTH) + mapPos.x - posx,
-                    (round(items[i].y))-((psky-scry) * TILE_WIDTH) + mapPos.y - posy,
-                    items[i].value - ITEM_AMMO_PACK,
-                    true,
-                    1.0f,1.0f,0.0,
-                    COLOR(r,g,b, 1.f),
-                    COLOR(r,g,b, 1.f)
-                    );
-        }
-
+        pics.draw(itemPicture,
+                  items[i].x + mapPos.x,
+                  items[i].y + mapPos.y,
+                  itemFrame,
+                  true,
+                  1.0f,
+                  1.0f,
+                  0.0,
+                  COLOR(r,g,b, 1.0f),
+                  COLOR(r,g,b, 1.0f)
+                );
     }
-
-
-
 
 }
 //--------------------------------------
-void CMap::drawEntities(PicsContainer& pics, int pskx, int psky, int scrx, int scry, int posx, int posy)
+void CMap::drawEntities(PicsContainer& pics)
 {
 
     for (int i = 0; i < enemyCount; i++)
     {
 
-        if ((round(mons[i].y) < psky * TILE_WIDTH) && (round(mons[i].y) >= ((psky-scry) * TILE_WIDTH))&&
-                ((round(mons[i].x) < pskx * TILE_WIDTH)) && (round(mons[i].x) >= ((pskx-scrx) * TILE_WIDTH)))
-        {
-
-            mons[i].draw(pics, mons[i].race + 1, pskx,scrx,psky,scry, mapPos.x, posx, mapPos.y, posy);
-        }
+        mons[i].draw(pics, mons[i].race + 1, mapPos.x, mapPos.y);
 
     }
 

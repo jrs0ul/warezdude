@@ -90,9 +90,9 @@ public:
 
         void buildCollisionmap();
 
-        void draw(PicsContainer& pics, float r, float g, float b, int pskx, int psky, int scrx, int scry, int posx, int posy);
+        void draw(PicsContainer& pics, float r, float g, float b);
 
-        void drawEntities(PicsContainer& pics, int pskx, int psky, int scrx, int scry, int posx, int posy);
+        void drawEntities(PicsContainer& pics);
 
         bool colide(unsigned x, unsigned y);
         void ReplaceTiles(unsigned char old, unsigned char fresh);

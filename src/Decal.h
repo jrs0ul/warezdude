@@ -18,8 +18,7 @@ public:
         frame=0;
     }
     void draw(PicsContainer& pics, unsigned index,
-                int pskx, int scrx, int psky, int scry,
-                int pushx, int posx, int pushy, int posy);
+                int posx, int posy);
 };
 
 
