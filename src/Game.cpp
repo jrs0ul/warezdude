@@ -29,12 +29,10 @@ const int slime=35;
 
 const unsigned NetPort=6666;
 
-
 int slimtim=0;
 bool slimeswap=false;
 
 bool godmode=false;
-
 
 bool ShowMiniMap=false;
 bool mapkey=false;
@@ -48,24 +46,14 @@ int intro_cline=0;
 int intro_gline=0; 
 int intro_cchar=0;
 
-
 int door_tim=0;
 
 bool fadein=true;
 int fadetim=0;
 int objectivetim=200;
 
-
 ScroollControl SfxVolumeC, MusicVolumeC;
 EditBox ipedit;
-
-
-
-
-bool isServer=false;
-bool isClient=false;
-
-
 
 int leterKey;
 
@@ -108,6 +96,7 @@ Game::Game()
 
     mapas.itmframe = 0;
     itmtim=0;
+    netMode = NETMODE_NONE;
 }
 
 
@@ -183,7 +172,7 @@ void Game::DrawSomeText()
     sprintf(buf, "Map width %d height %d", mapas.width(), mapas.height());
     WriteText(20, 40, pics, 10, buf, 0.8f,0.8f);
 
-    if (isServer)
+    if (netMode == NETMODE_SERVER)
     {
         sprintf(buf,"Client count : %d",serveris.clientCount());
         WriteText(20, 60, pics, 10,buf, 0.8f, 1);
@@ -342,7 +331,7 @@ void Game::KillEnemy(int ID)
 
             mapas.mons[ID].item=0;
 
-            if (isServer)
+            if (netMode == NETMODE_SERVER)
             {
                 for (unsigned int i=0;i<serveris.clientCount();i++)
                 {
@@ -478,8 +467,8 @@ void Game::MoveDude()
         }
 
 
-        int characterCount = (isServer) ? mapas.enemyCount + serveris.clientCount() + 1 :
-                                          mapas.enemyCount + otherClientCount + 1;
+        int characterCount = (netMode == NETMODE_SERVER) ? mapas.enemyCount + serveris.clientCount() + 1 :
+                                                           mapas.enemyCount + otherClientCount + 1;
 
         mapas.mons[mapas.enemyCount].move(walkSpeed, strifeSpeed, PLAYER_RADIUS, mapas._colide,
                                           mapas.width(), mapas.height(), mapas.mons,
@@ -532,12 +521,12 @@ void Game::AdaptMapView()
 
 
 
-    if ((int)(mapas.width() * TILE_WIDTH) < sys.ScreenWidth )
+    if ((int)(mapas.width() * TILE_WIDTH) <= sys.ScreenWidth )
     {
         posX = HALF_SCREEN_W - (mapas.width() * HALF_TILE_WIDTH - HALF_TILE_WIDTH);
     }
 
-    if ((int)(mapas.height() * TILE_WIDTH) < sys.ScreenHeight)
+    if ((int)(mapas.height() * TILE_WIDTH) <= sys.ScreenHeight)
     {
         posY = sys.ScreenHeight / 2.f - (mapas.height() * HALF_TILE_WIDTH - HALF_TILE_WIDTH);
     }
@@ -796,11 +785,17 @@ void Game::ItemPickup()
 
 
                 //siunciam infa----------
-                if (isClient)
-                    SendItemCRemove(i);
-                if (isServer){
-                    for (unsigned int a=0;a<serveris.clientCount();a++)
-                        SendItemSRemove(i,a,true);
+                switch (netMode)
+                {
+                    case NETMODE_NONE : break;
+                    case NETMODE_CLIENT : SendItemCRemove(i); break;
+                    case NETMODE_SERVER :
+                    {
+                        for (unsigned int a=0; a<serveris.clientCount(); a++)
+                        {
+                            SendItemSRemove(i, a, true);
+                        }
+                    }
                 }
 
                 //------------------------
@@ -834,7 +829,8 @@ void Game::ItemPickup()
 //---------------------------------
 void Game::InitServer()
 {
-    isServer = true;
+    netMode = NETMODE_SERVER;
+
     printf("Launching server on port: %d\n", NetPort);
     if (serveris.launch(NetPort))
     {
@@ -870,7 +866,7 @@ void Game::StopServer()
         serveris.sendData(i, buffer, cnt);
     }
 
-    isServer = false;
+    netMode = NETMODE_NONE;
     serveris.shutDown();
 }
 //---------------------------------
@@ -902,7 +898,7 @@ bool Game::JoinServer(const char* ip, unsigned port)
         client.setServerAddress(serverAddress);
         client.sendData(buf, 1);
 
-        isClient = true;
+        netMode = NETMODE_CLIENT;
         return true;
     }
 
@@ -911,7 +907,7 @@ bool Game::JoinServer(const char* ip, unsigned port)
 //--------------------------
 void Game::QuitServer()
 {
-    isClient = false;
+    netMode = NETMODE_NONE;
     char buf[4];
     buf[0] = NET_CLIENT_MSG_QUIT;
     client.sendData(buf, 1);
@@ -996,24 +992,32 @@ void Game::DoorsInteraction()
                 }
             }
 
-            if (isServer)
-            {//isiunciam info visiems klientams
-                for (unsigned int i=0;i<serveris.clientCount();i++)
+
+            switch(netMode)
+            {
+                case NETMODE_NONE: break;
+                case NETMODE_SERVER:
                 {
-                    SendServerDoorState(i,drx,dry,mapas.tiles[dry][drx]);
+                    for (unsigned int i = 0; i < serveris.clientCount(); i++)
+                    {
+                        SendServerDoorState(i, drx, dry, mapas.tiles[dry][drx]);
+                    }
+                 } break;
+                case NETMODE_CLIENT:
+                {
+                    SendClientDoorState(drx,dry,mapas.tiles[dry][drx]);
                 }
             }
 
-            if (isClient)
-            {//isiunciam infa servui
-                SendClientDoorState(drx,dry,mapas.tiles[dry][drx]);
-            }
-
         }
-    } else{
+    } 
+    else
+    {
         door_tim++;
-        if (door_tim==30)
+        if (door_tim == 30)
+        {
             door_tim=0;
+        }
     }
 
 }
@@ -1036,16 +1040,22 @@ void Game::CheckForExit()
 
         }
 
-        int kiek=0;
-        if (isServer)
-            kiek=serveris.clientCount();
-        if (!isClient)
-            GoToLevel(mapai.current,kiek);
-        else
-            SendWarpMessage();
+        int otherPlayers = (netMode == NETMODE_SERVER) ? serveris.clientCount() : 0;
 
-        if (isServer){
-            for (int a =0; a<(int)serveris.clientCount();a++){
+        if (netMode == NETMODE_CLIENT)
+        {
+            SendWarpMessage();
+        }
+        else
+        {
+            GoToLevel(mapai.current, otherPlayers); //server, offline
+        }
+
+
+        if (netMode == NETMODE_SERVER)
+        {
+            for (int a = 0; a < (int)serveris.clientCount(); ++a)
+            {
                 SendMapInfo(a, mapas);
                 SendMapData(a, mapas);
             }
@@ -1123,43 +1133,45 @@ void Game::BeatEnemy(int aID, int damage)
 {
     if (mapas.mons[aID].canAtack)
     {
-        mapas.mons[aID].shoot(false,false,&bulbox);
-        Vector3D vec = MakeVector(16.0f,0,mapas.mons[aID].angle);
+        mapas.mons[aID].shoot(false, false, &bulbox);
+        Vector3D vec = MakeVector(16.0f, 0, mapas.mons[aID].angle);
 
-        for (unsigned long i=0; i < mapas.mons.count(); i++)
+        for (unsigned long i = 0; i < mapas.mons.count(); ++i)
         {
 
-            if (mapas.mons[aID].hitIt(mapas.mons[i],vec.x,vec.y,damage)>-1)
+            if (mapas.mons[aID].hitIt(mapas.mons[i], vec.x, vec.y, damage) > -1)
             {
 
-                if (isServer)
+                switch(netMode)
                 {
-                    //server stuff
-                    for (unsigned a = 0; a < serveris.clientCount(); a++)
-                    {
+                    case NETMODE_NONE: break;
+                    case NETMODE_SERVER:
+                                       {
+                                           for (unsigned a = 0; a < serveris.clientCount(); a++)
+                                           {
 
-                        int z = i;
+                                               int z = i;
 
-                        if (i >= (unsigned)mapas.enemyCount)
-                        {
-                            if ((i-mapas.enemyCount-1)<a)
-                            {
-                                z = i + 1;
-                            }
-                            if ((i-mapas.enemyCount-1)==a)
-                            {
-                                z = mapas.enemyCount;
-                            }
-                        }
+                                               if (i >= (unsigned)mapas.enemyCount)
+                                               {
+                                                   if ((i - mapas.enemyCount - 1) < a)
+                                                   {
+                                                       z = i + 1;
+                                                   }
 
-                        SendAtackImpulse(a,z,mapas.mons[i].getHP());
-                    }
-                }
+                                                   if ((i - mapas.enemyCount - 1) == a)
+                                                   {
+                                                       z = mapas.enemyCount;
+                                                   }
+                                               }
 
-                if (isClient)
-                {//turbut atakavo playeris
-
-                    SendClientAtackImpulse(mapas.mons[i].id, mapas.mons[i].getHP());
+                                               SendAtackImpulse(a, z, mapas.mons[i].getHP());
+                                           }
+                                       } break;
+                    case NETMODE_CLIENT:
+                                       {
+                                           SendClientAtackImpulse(mapas.mons[i].id, mapas.mons[i].getHP());
+                                       }
                 }
 
             }
@@ -1226,19 +1238,20 @@ void Game::MonsterAI(int index)
 
 
         //1 kas kolidina super duper figuroje
-        int kiekplayeriu=1;
+        int kiekplayeriu = 1;
 
-        if (isServer)
+        if (netMode == NETMODE_SERVER)
         {
             kiekplayeriu += serveris.clientCount();
         }
 
         int victimindex=0;
 
-        for (int i=mapas.enemyCount;i<mapas.enemyCount+kiekplayeriu;i++)
+        for (int i = mapas.enemyCount; i < mapas.enemyCount + kiekplayeriu; ++i)
         {
             if ((CirclesColide(mapas.mons[i].x,mapas.mons[i].y,16,mapas.mons[index].x,mapas.mons[index].y,128))
-                &&(!mapas.mons[i].shot)&&(!mapas.mons[i].spawn)){
+                &&(!mapas.mons[i].shot)&&(!mapas.mons[i].spawn))
+            {
                 victimindex=i;
                 break;
             }
@@ -1296,11 +1309,12 @@ void Game::MonsterAI(int index)
                     mapas.mons[index].shoot(true,false,&bulbox);
                     mapas.mons[index].ammo++;
                     mapas.mons[index].reloadtime=0;
-                    if (isServer)
-                    { //pasiunciam klientui
+
+                    if (netMode == NETMODE_SERVER)
+                    {
                         for (unsigned int i=0;i < serveris.clientCount(); i++)
                         {
-                            SendBulletImpulse(index,mapas.mons[index].ammo,i,false);
+                            SendBulletImpulse(index,mapas.mons[index].ammo,i, false);
                         }
                     }
                 }
@@ -1366,11 +1380,11 @@ void Game::MonsterAI(int index)
                         AdaptSoundPos(5,mapas.items[i].x,mapas.items[i].y);
                         ss->playsound(5);
 
-                        if (isServer)
+                        if (netMode == NETMODE_SERVER)
                         {
-                            for (unsigned a=0; a < serveris.clientCount(); a++)
+                            for (unsigned a = 0; a < serveris.clientCount(); ++a)
                             {
-                                SendItemSRemove(i,a,false);
+                                SendItemSRemove(i, a, false);
                             }
                         }
 
@@ -1529,7 +1543,7 @@ void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers)
 
     Dude* player = mapas.getPlayer();
 
-    if ((!isClient) && (!isServer))
+    if (netMode == NETMODE_NONE)
     {
         player->x = (float)mapas.start.x;
         player->y = (float)mapas.start.y;
@@ -1545,12 +1559,8 @@ void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers)
 //-------------------------------------------------------
 void Game::LoadFirstMap()
 {
-    if (!isClient)
+    if (netMode != NETMODE_CLIENT) //offline & server
     {
-        //char firstmap[255];
-        //mapai.getMapName(0, firstmap);
-
-        //LoadTheMap(firstmap, true, 0);
         GenerateTheMap();
     }
 }
@@ -1576,14 +1586,11 @@ void Game::TitleMenuLogic()
 
     if (mainmenu.active())
     {
-        if (isServer)
+        switch(netMode)
         {
-            StopServer();
-        }
-
-        if (isClient)
-        {
-            QuitServer();
+            case NETMODE_NONE: break;
+            case NETMODE_SERVER: StopServer(); break;
+            case NETMODE_CLIENT: QuitServer(); break;
         }
 
         if (!mainmenu.selected)
@@ -1886,13 +1893,11 @@ int Game::PlayerCount()
 {
     int players = 1;
 
-    if (isServer)
+    switch(netMode)
     {
-        players += serveris.clientCount();
-    }
-    else if (isClient)
-    {
-        players += otherClientCount;
+        case NETMODE_NONE: break;
+        case NETMODE_SERVER: players += serveris.clientCount(); break;
+        case NETMODE_CLIENT: players += otherClientCount; break;
     }
 
     return players;
@@ -1916,32 +1921,36 @@ void Game::logic(){
         }
     }
 
-    if (isServer)
+    switch (netMode)
     {
-        if (serveris.isRunning())
+        case NETMODE_NONE: break;
+        case NETMODE_SERVER:
         {
-            for (int a = 0; a < (int)serveris.clientCount(); a++)
+            if (serveris.isRunning())
             {
-                char buf[4];
-                buf[0] = NET_SERVER_MSG_PING;
-                serveris.sendData(a, buf, 1);
+                for (int a = 0; a < (int)serveris.clientCount(); ++a)
+                {
+                    char buf[4];
+                    buf[0] = NET_SERVER_MSG_PING;
+                    serveris.sendData(a, buf, 1);
 
-                SendPlayerInfoToClient(a);
+                    SendPlayerInfoToClient(a);
+                }
+
+                ParseMessagesServerGot();
             }
-
-            ParseMessagesServerGot();
-        }
-    }
-    else if (isClient)
-    {
-        if (client.isOpen())
+        } break;
+        case NETMODE_CLIENT:
         {
-            if (Client_GotMapData)
+            if (client.isOpen())
             {
-                SendClientCoords();
-            }
+                if (Client_GotMapData)
+                {
+                    SendClientCoords();
+                }
 
-            ParseMessagesClientGot();
+                ParseMessagesClientGot();
+            }
         }
     }
 
@@ -2044,9 +2053,10 @@ void Game::CoreGameLogic()
         if (!mapas.mons[mapas.enemyCount].shot)
         {
 
-            if ((!isClient)&&(!isServer)){
-                mapas.mons[mapas.enemyCount].x=(float)mapas.start.x;
-                mapas.mons[mapas.enemyCount].y=(float)mapas.start.y;
+            if (netMode == NETMODE_NONE)
+            {
+                mapas.mons[mapas.enemyCount].x = (float)mapas.start.x;
+                mapas.mons[mapas.enemyCount].y = (float)mapas.start.y;
             }
             else
             {
@@ -2144,19 +2154,21 @@ void Game::CoreGameLogic()
                 case 0: BeatEnemy(mapas.enemyCount, PLAYER_MELEE_DAMAGE); break;
             }
 
-            if ((mapas.mons[mapas.enemyCount].currentWeapon>0)&&(res)){
+            if ((mapas.mons[mapas.enemyCount].currentWeapon>0)&&(res))
+            {
                 if (mapas.mons[mapas.enemyCount].currentWeapon==1){
 
                     AdaptSoundPos(0,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y); 
                     SoundSystem::getInstance()->playsound(0); 
 
                 }
-                if (mapas.mons[mapas.enemyCount].currentWeapon==2){
+                if (mapas.mons[mapas.enemyCount].currentWeapon==2)
+                {
                     AdaptSoundPos(12,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
                     SoundSystem::getInstance()->playsound(12);
                 }
 
-                if (isClient)
+                if (netMode == NETMODE_CLIENT)
                 {
                     char buf[10];
                     int pos = 0;
@@ -2176,32 +2188,33 @@ void Game::CoreGameLogic()
                     client.sendData(buf, pos);
                 }
 
-                bool isMine = false;
+                const bool isMine = (mapas.mons[mapas.enemyCount].currentWeapon == 2) ? true : false;
 
-                if (mapas.mons[mapas.enemyCount].currentWeapon==2)
-                {
-                    isMine=true;
-                }
-                if (isServer)
+                if (netMode == NETMODE_SERVER)
                 {
                     for (int i=0;i<(int)serveris.clientCount();i++)
                     {
-                        SendBulletImpulse(255,mapas.mons[mapas.enemyCount].ammo,i,isMine);
+                        SendBulletImpulse(255, mapas.mons[mapas.enemyCount].ammo, i, isMine);
                     }
                 }
 
             }
             else if (mapas.mons[mapas.enemyCount].currentWeapon>0)
             {
-                if (noAmmo){
+                if (noAmmo)
+                {
                     mapas.mons[mapas.enemyCount].chageNextWeapon();
                     noAmmo=false;
                 }
-                else{
+                else
+                {
                     AdaptSoundPos(4,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
                     SoundSystem::getInstance()->playsound(4);
+
                     if (!noAmmo)
+                    {
                         noAmmo=true;
+                    }
                 }
             }
         }
@@ -2236,20 +2249,17 @@ void Game::CoreGameLogic()
 
     HandleBullets();//kulku ai-------------
 
-    //kaip ir monstru ai
-    if (mapas.enemyCount)
+    for (int i=0; i<mapas.enemyCount; ++i)
     {
-        for (int i=0; i<mapas.enemyCount; i++)
+        if (netMode != NETMODE_CLIENT) //  offline & server
         {
-            if (!isClient)
-            {
-                MonsterAI(i);
-            }
+            MonsterAI(i);
         }
     }
+
     //zudom playerius jei pas juos nebeliko gifkiu
 
-    if (!isClient)
+    if (netMode != NETMODE_CLIENT)
     {
         for (unsigned i = 0; i < mapas.mons.count();i++)
         {
@@ -2257,45 +2267,43 @@ void Game::CoreGameLogic()
             {
                 KillEnemy(mapas.mons[i].id);
 
-                for (unsigned clientIdx = 0; clientIdx < serveris.clientCount(); ++clientIdx)
+                if (netMode == NETMODE_SERVER)
                 {
-                    int victimId = mapas.mons[i].id;
-
-                    if (victimId >= 254) //players
+                    for (unsigned clientIdx = 0; clientIdx < serveris.clientCount(); ++clientIdx)
                     {
+                        int victimId = mapas.mons[i].id;
 
-                        int lastDamager = mapas.mons[mapas.enemyCount + (victimId - 254)].lastDamagedBy;
+                        if (victimId >= 254) //players
+                        {
+                            int lastDamager = mapas.mons[mapas.enemyCount + (victimId - 254)].lastDamagedBy;
 
-                        if (lastDamager == 254)
-                        {
-                            ++frags;
-                        }
-                        else
-                        {
-                            int clientWithFrag = lastDamager - 255;
-                            ++fragTable[clientWithFrag];
-                            SendFragsToClient(clientWithFrag, fragTable[clientWithFrag]);
+                            if (lastDamager == 254)
+                            {
+                                ++frags;
+                            }
+                            else
+                            {
+                                int clientWithFrag = lastDamager - 255;
+                                ++fragTable[clientWithFrag];
+                                SendFragsToClient(clientWithFrag, fragTable[clientWithFrag]);
+                            }
+
+                            if (victimId - 255 < (int)clientIdx)
+                            {
+                                ++victimId;
+                            }
+                            else if (victimId - 255 == (int)clientIdx)
+                            {
+                                victimId = 254;
+                            }
                         }
 
-                        if (victimId - 255 < (int)clientIdx)
-                        {
-                            ++victimId;
-                        }
-                        else if (victimId - 255 == (int)clientIdx)
-                        {
-                            victimId = 254;
-                        }
+                        SendKillCommandToClient(clientIdx, victimId);
                     }
-
-
-
-                    SendKillCommandToClient(clientIdx, victimId);
                 }
             }
         }
     }
-
-
 
 }
 
@@ -2575,19 +2583,6 @@ void Game::DrawGameplay()
     }
 }*/
 
-//------------------------------------
-
-void Game::QuitApp()
-{
-    if (isServer){
-        StopServer();
-    }
-    if (isClient){
-        QuitServer();
-    }
-    DeleteAudio();
-    pics.destroy();
-}
 
 //-----------------------------------
 
@@ -2598,11 +2593,7 @@ void Game::QuitApp()
 {
     switch(msg)
     {
-    case WM_DESTROY:{
-        QuitApp(); 
-        break;
-    }
-
+    
 
     case WM_ACTIVATE:{
 
@@ -3433,7 +3424,7 @@ void Game::ParseMessagesClientGot()
                 case NET_SERVER_MSG_SHUTTING_DOWN:
                     {
                         client.shutdown();
-                        isClient = false;
+                        netMode = NETMODE_NONE;
                         state = GAMESTATE_TITLE;
                         mainmenu.activate();
                         PlayNewSong("evil.ogg");
@@ -3759,14 +3750,13 @@ void Game::init()
 void Game::destroy()
 {
 
-    if (isServer)
+    switch(netMode)
     {
-        StopServer();
+        case NETMODE_NONE: break;
+        case NETMODE_SERVER: StopServer(); break;
+        case NETMODE_CLIENT: QuitServer(); break;
     }
-    else if (isClient)
-    {
-        QuitServer();
-    }
+
 
     music.release();
     SoundSystem::getInstance()->exit();

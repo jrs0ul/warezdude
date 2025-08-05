@@ -54,6 +54,13 @@ enum MultiplayerModes
     MPMODE_DEATHMATCH
 };
 
+enum NetworkingModes
+{
+    NETMODE_NONE,
+    NETMODE_SERVER,
+    NETMODE_CLIENT
+};
+
 enum NetworkCommands
 {
     NET_NOP = 0,
@@ -131,6 +138,8 @@ class Game
     int otherClientCount; //  This number is received from server, for server itself it is 0
 
     int itmtim;
+
+    NetworkingModes netMode;
 
 
 public:
@@ -220,7 +229,6 @@ private:
     void ParseMessagesServerGot();
     void ParseMessagesClientGot();
     void GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int ClientIndex);
-    void QuitApp();
     bool OnHit(Bullet& bul);
     void DrawStats();
     void SendPlayerInfoToClient(int clientindex);

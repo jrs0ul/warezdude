@@ -364,13 +364,18 @@ void Dude::damageAnim(){
     }
 }
 //------------------------------
-void Dude::reload(int time){
+void Dude::reload(int time)
+{
     reloadtime++;
-    if (reloadtime>time/2)
-     frame=(currentWeapon+1)*4-2;
-    if (reloadtime==time){
-        canAtack=true;
-        reloadtime=0;
+    if (reloadtime > time / 2)
+    {
+        frame = (currentWeapon+1)*4-2;
+    }
+
+    if (reloadtime == time)
+    {
+        canAtack = true;
+        reloadtime = 0;
     }
 
 }
