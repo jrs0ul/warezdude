@@ -2,6 +2,10 @@
 <Images>
 <Img src="pics/chars.tga" width="16" height="16" filter="1" />
 <Img src="pics/buttons.tga" width="32" height="32" filter="0" />
+<Img src="pics/monstar.tga" width="32" height="32" filter="0" />
+<Img src="pics/monster.tga" width="32" height="32" filter="0" />
+<Img src="pics/cop.tga" width="32" height="32" filter="0" />
+<Img src="pics/human.tga" width="32" height="32" filter="0" />
 <Img src="pics/pointer.tga" width="16" height="16" filter="0" />
 <Img src="pics/tileset.tga" width="32" height="32" filter="0" />
 </Images>

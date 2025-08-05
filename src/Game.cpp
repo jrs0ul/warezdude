@@ -401,34 +401,50 @@ bool Game::OnHit(Bullet& bul)
 //nupaiso kiek turi gyvybiu soviniu etc
 void Game::DrawStats()
 {
+    const unsigned STAT_ICON = 9;
 
-    pics.draw(9, 30,435, 2, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
-    DrawNum(58,440,mapas.mons[mapas.enemyCount].getHP());
+    pics.draw(STAT_ICON,
+              30,
+              sys.ScreenHeight - 40,
+              2, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
+    DrawNum(58,
+            sys.ScreenHeight - 40,
+            mapas.mons[mapas.enemyCount].getHP());
 
 
-    pics.draw(9, 120,440, 0, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f)); 
-    DrawNum(155,440,mapas.mons[mapas.enemyCount].ammo);
+    pics.draw(STAT_ICON,
+              120,
+              sys.ScreenHeight - 40,
+              0, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f)); 
+    DrawNum(155,
+            sys.ScreenHeight - 40,
+            mapas.mons[mapas.enemyCount].ammo);
 
     if (mapas.misionItems && netGameState == MPMODE_COOP)
     {
-        pics.draw(9, 220, 440, 1, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
-        DrawNum(255,440, mustCollectItems);
+        pics.draw(STAT_ICON,
+                  220,
+                  sys.ScreenHeight - 40,
+                  1, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
+        DrawNum(255,
+                sys.ScreenHeight - 40,
+                mustCollectItems);
     }
 
     if (netGameState == MPMODE_DEATHMATCH)
     {
-        pics.draw(9, 220, 440, 3, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
+        pics.draw(STAT_ICON, 220, 440, 3, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
         DrawNum(255,440, frags);
     }
 
 
     if (mapas.timeToComplete && netGameState == MPMODE_COOP)
     {
-        int min = timeleft/60;
-        int sec = timeleft-min*60;
+        int min = timeleft / 60;
+        int sec = timeleft - min * 60;
         char buf[50];
         sprintf(buf,"%d:%d",min,sec);
-        WriteText(450,20, pics, 10, buf, 0.7f,1.5f,COLOR(1.0f,0.5f,0.5f, 1.f), COLOR(1.0f,0.5f,0.5f, 1.f));
+        WriteText(450, 20, pics, 10, buf, 0.7f,1.5f, COLOR(1.0f,0.5f,0.5f, 1.f), COLOR(1.0f,0.5f,0.5f, 1.f));
     }
 
 }
@@ -495,6 +511,7 @@ void Game::AdaptMapView()
 
     Dude* player = mapas.getPlayer();
     const float HALF_SCREEN_W = sys.ScreenWidth / 2.f;
+    const float HALF_SCREEN_H = sys.ScreenHeight / 2.f;
 
     float posX = HALF_SCREEN_W - player->x;
 
@@ -508,7 +525,7 @@ void Game::AdaptMapView()
     }
 
 
-    float posY = HALF_SCREEN_W - player->y;
+    float posY = HALF_SCREEN_H - player->y;
 
     if (posY > HALF_TILE_WIDTH)
     {
@@ -528,7 +545,7 @@ void Game::AdaptMapView()
 
     if ((int)(mapas.height() * TILE_WIDTH) <= sys.ScreenHeight)
     {
-        posY = sys.ScreenHeight / 2.f - (mapas.height() * HALF_TILE_WIDTH - HALF_TILE_WIDTH);
+        posY = HALF_SCREEN_H- (mapas.height() * HALF_TILE_WIDTH - HALF_TILE_WIDTH);
     }
 
 

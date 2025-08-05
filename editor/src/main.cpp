@@ -384,7 +384,7 @@ void DrawPanel(){
 
     for (unsigned i = BUTTON_FIRST_TILE; i < BUTTON_FIRST_TILE + TILE_STEP; ++i)
     {
-        mygtai[i].draw ( pics, 3 + currentPalette, firsttile + (i - BUTTON_FIRST_TILE));
+        mygtai[i].draw ( pics, 7, firsttile + (i - BUTTON_FIRST_TILE));
     }
 
     mygtai[BUTTON_TILES_DEC].draw ( pics, BUTTON_IMG, 6 );
@@ -497,6 +497,8 @@ static void RenderScreen ( void ){
         map.draw(pics, 1,1,1, SCREENW, SCREENH);
     }
 
+    map.drawEntities(pics, SCREENW, SCREENH);
+
     if ( SHOW_COLISSION )
     {
         for (unsigned a = 0; a < map.height(); a++ )
@@ -526,7 +528,7 @@ static void RenderScreen ( void ){
 
     DrawPanel();
 
-    pics.draw ( 2, Cross.x, Cross.z );
+    pics.draw ( 6, Cross.x, Cross.z );
 
 
     pics.drawBatch(&colorShader, &defaultShader, 666);
