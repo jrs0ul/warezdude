@@ -543,7 +543,7 @@ bool CMap::save(const char* path)
 }
 
 //--------------------------------------
-void CMap::draw(PicsContainer& pics, float r, float g, float b)
+void CMap::draw(PicsContainer& pics, float r, float g, float b, int ScreenWidth, int ScreenHeight)
 {
 
     unsigned tileset = pics.findByName("pics/tileset.tga");
@@ -558,8 +558,8 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b)
             {
                 const float tileX = i * TILE_WIDTH + mapPos.x;
                 const float tileY = a * TILE_WIDTH + mapPos.y;
-                if (tileX + HALF_TILE_WIDTH < 0 || tileX - HALF_TILE_WIDTH > 640 ||
-                        tileY + HALF_TILE_WIDTH < 0 || tileY - HALF_TILE_WIDTH > 480)
+                if (tileX + HALF_TILE_WIDTH < 0 || tileX - HALF_TILE_WIDTH > ScreenWidth ||
+                        tileY + HALF_TILE_WIDTH < 0 || tileY - HALF_TILE_WIDTH > ScreenHeight)
                 {
                     continue;
                 }
@@ -579,7 +579,7 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b)
 
     for (unsigned i = 0; i < decals.count(); i++)
     {
-        decals[i].draw(pics, 15, mapPos.x, mapPos.y);
+        decals[i].draw(pics, 15, mapPos.x, mapPos.y, ScreenWidth, ScreenHeight);
     }
 
 
@@ -590,9 +590,19 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b)
                                                             items[i].value - ITEM_AMMO_PACK;
         const int itemPicture = (items[i].value < ITEM_AMMO_PACK) ? 11 : 7;
 
+        const float itemX = items[i].x + mapPos.x;
+        const float itemY = items[i].y + mapPos.y;
+
+         if (itemX + HALF_TILE_WIDTH < 0 || itemX - HALF_TILE_WIDTH > ScreenWidth ||
+                        itemY + HALF_TILE_WIDTH < 0 || itemY - HALF_TILE_WIDTH > ScreenHeight)
+                {
+                    continue;
+                }
+
+
         pics.draw(itemPicture,
-                  items[i].x + mapPos.x,
-                  items[i].y + mapPos.y,
+                  itemX,
+                  itemY,
                   itemFrame,
                   true,
                   1.0f,
@@ -605,13 +615,13 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b)
 
 }
 //--------------------------------------
-void CMap::drawEntities(PicsContainer& pics)
+void CMap::drawEntities(PicsContainer& pics, int ScreenWidth, int ScreenHeight)
 {
 
     for (int i = 0; i < enemyCount; i++)
     {
 
-        mons[i].draw(pics, mons[i].race + 1, mapPos.x, mapPos.y);
+        mons[i].draw(pics, mons[i].race + 1, mapPos.x, mapPos.y, ScreenWidth, ScreenHeight);
 
     }
 

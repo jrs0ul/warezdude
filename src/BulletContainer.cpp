@@ -80,13 +80,23 @@ void CBulletContainer::add(Bullet& newbulet)
  }
 //---------------------------
 
-void CBulletContainer::draw(PicsContainer& pics, float posx, float posy)
+void CBulletContainer::draw(PicsContainer& pics, float posx, float posy, int ScreenWidth, int ScreenHeight)
 {
     for (int z = 0; z < _count; z++)
     {
+        const float bulletX = buls[z].x + posx;
+        const float bulletY = buls[z].y + posy;
+
+        if (bulletX + HALF_TILE_WIDTH < 0 || bulletX - HALF_TILE_WIDTH > ScreenWidth ||
+            bulletY + HALF_TILE_WIDTH < 0 || bulletY - HALF_TILE_WIDTH > ScreenHeight)
+        {
+            continue;
+        }
+
+
         pics.draw(6,
-                buls[z].x + posx,
-                buls[z].y + posy,
+                bulletX,
+                bulletY,
                 buls[z].frame,
                 true,
                 1.0f,

@@ -16,7 +16,7 @@ class CBulletContainer
     int count(){return _count;};
     void add(Bullet& newbulet);
     void removeDead();
-    void draw(PicsContainer& pics, float posx, float posy);
+    void draw(PicsContainer& pics, float posx, float posy, int ScreenWidth, int ScreenHeight);
     void destroy();
     ~CBulletContainer(){}
 

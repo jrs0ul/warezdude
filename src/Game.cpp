@@ -197,19 +197,19 @@ void Game::DrawSomeText()
 void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 {
 
-    mapas.draw(pics, r, g, b);
+    mapas.draw(pics, r, g, b, sys.ScreenWidth, sys.ScreenHeight);
 
-    bulbox.draw(pics, mapas.getPos().x, mapas.getPos().y);
+    bulbox.draw(pics, mapas.getPos().x, mapas.getPos().y, sys.ScreenWidth, sys.ScreenHeight);
 
     for (int i = 0; i < PlayerCount(); ++i)
     {
         if (mapas.mons[mapas.enemyCount + i].isAlive())
         {
-            mapas.mons[mapas.enemyCount + i].draw(pics, 5, mapas.getPos().x, mapas.getPos().y);
+            mapas.mons[mapas.enemyCount + i].draw(pics, 5, mapas.getPos().x, mapas.getPos().y, sys.ScreenWidth, sys.ScreenHeight);
         }
     }
 
-    mapas.drawEntities(pics);
+    mapas.drawEntities(pics, sys.ScreenWidth, sys.ScreenHeight);
 
 
 }

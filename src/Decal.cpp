@@ -3,10 +3,24 @@
 #include "Consts.h"
 
 void Decal::draw(PicsContainer& pics, unsigned index,
-                int posx, int posy)
+                float posx, float posy,
+                int ScreenWidth, int ScreenHeight)
 {
 
-    pics.draw(index, x + posx, y + posy,
+    const float decalX = x + posx;
+    const float decalY = y + posy;
+
+    if (decalX + HALF_TILE_WIDTH < 0 || decalX - HALF_TILE_WIDTH > ScreenWidth ||
+        decalY + HALF_TILE_WIDTH < 0 || decalY - HALF_TILE_WIDTH > ScreenHeight)
+    {
+        return;
+    }
+
+
+
+    pics.draw(index,
+              decalX,
+              decalY,
               frame,
               true,
               1.0f,1.0f,0,

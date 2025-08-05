@@ -18,7 +18,8 @@ public:
         frame=0;
     }
     void draw(PicsContainer& pics, unsigned index,
-                int posx, int posy);
+                float posx, float posy,
+                int ScreenWidth, int ScreenHeight);
 };
 
 

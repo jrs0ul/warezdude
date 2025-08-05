@@ -229,11 +229,20 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
 
 }
 //--------------------------------------------------------------
-void Dude::draw(PicsContainer& pics, unsigned index, float posx, float posy)
+void Dude::draw(PicsContainer& pics, unsigned index, float posx, float posy, int ScreenWidth, int ScreenHeight)
 {
+    const float dudex = x + posx;
+    const float dudey = y + posy;
+
+    if (dudex + HALF_TILE_WIDTH < 0 || dudex - HALF_TILE_WIDTH > ScreenWidth ||
+        dudey + HALF_TILE_WIDTH < 0 || dudey - HALF_TILE_WIDTH > ScreenHeight)
+    {
+        return;
+    }
+
     pics.draw(index,
-              x + posx,
-              y + posy,
+              dudex,
+              dudey,
               frame,
               true,
               1.0f,

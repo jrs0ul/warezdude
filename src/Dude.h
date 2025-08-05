@@ -91,7 +91,7 @@ class Dude
                 DArray<Dude>& chars, int charcount, int* dirx, int* diry);
         void respawn();
         //nupaiso
-        void draw(PicsContainer& pics, unsigned index, float posx, float posy);
+        void draw(PicsContainer& pics, unsigned index, float posx, float posy, int ScreenWidth, int ScreenHeight);
 
         /* shoots or deploys a mine if the entity has some ammo */
         bool shoot(bool useBullets, bool isMine, CBulletContainer* bulcon);
