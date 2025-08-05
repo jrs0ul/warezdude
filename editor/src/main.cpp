@@ -494,7 +494,7 @@ static void RenderScreen ( void ){
 
     if ( SHOW_LEV1 )
     {
-        map.draw(pics, 1,1,1, map.width(), map.height(), map.width(), map.height(), 0, 0, map.getPos().x, map.getPos().y);
+        map.draw(pics, 1,1,1, SCREENW, SCREENH);
     }
 
     if ( SHOW_COLISSION )
