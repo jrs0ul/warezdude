@@ -89,20 +89,51 @@ void Dude::rotate(float ang)
 
 
 //----------------------------------------------------
-//judina heroju, speed-greitis, radius - herojaus bounding circle spindulys, map - zemelapio
-//praeinamumu masyvas, dirx - ar juda x asimi, diry - ar juda y asimi
-void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int mapsizex, int mapsizey,
-                DArray<Dude>& chars,int charcount, int* dirx, int* diry){
+//creature moves using the rotation angle
+//returns false if the creature can't move in X or Y axis direction
+bool Dude::move(float walkSpeed,
+                float strifeSpeed,
+                float radius,
+                const bool** map,
+                int mapsizex,
+                int mapsizey,
+                DArray<Dude>& chars,
+                int charcount)
+{
 
     Vector3D vl = MakeVector(walkSpeed, strifeSpeed, angle);
     vl.normalize();
 
+    return movement(vl, radius, (const bool**)map, mapsizex, mapsizey, chars, charcount);
+}
+//-----------------------------------------------------
+bool Dude::moveGamePad(const Vector3D& movementDir,
+                        float radius,
+                        const bool** map,
+                        int mapsizex,
+                        int mapsizey,
+                        DArray<Dude>& chars,
+                        int charcount)
+{
+    return movement(movementDir, radius, (const bool**)map, mapsizex, mapsizey, chars, charcount);
+}
 
-    float difx = vl.x;
-    float dify = vl.y;
 
-    float newposx=x+difx;
-    float newposy=y-dify;
+//----------------------------------------------------
+bool Dude::movement(Vector3D dir,
+                      float radius,
+                      const bool** map,
+                      int mapsizex,
+                      int mapsizey,
+                      DArray<Dude>& chars,
+                      int charcount)
+{
+
+    float difx = dir.x;
+    float dify = dir.y;
+
+    float newposx = x + difx;
+    float newposy = y - dify;
 
 
     Vector3D p1; 
@@ -118,27 +149,35 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
 
     p1.x = round((newposx - radius) / 32.0f);
 
-    if (p1.x>mapsizex-1)
+    if (p1.x > mapsizex-1)
     {
-        p1.x=mapsizex-1;
+        p1.x = mapsizex-1;
     }
 
     p1.y = round((y - radius) / 32.0f);
 
-    if (p1.y>mapsizey-1)
+    if (p1.y > mapsizey-1)
     {
         p1.y = mapsizey-1;
     }
 
     p2.x=round((newposx+radius)/32.0f);
+
     if (p2.x>mapsizex-1)
+    {
         p2.x=mapsizex-1;
+    }
+
     p2.y=p1.y;
 
     p3.x=p1.x;
+
     p3.y=round((y+radius)/32.0f);
+
     if (p3.y>mapsizey-1)
+    {
         p3.y=mapsizey-1;
+    }
 
     p4.x=p2.x;
     p4.y=p3.y;
@@ -168,32 +207,29 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
 
 
 
-    if (dirx)
-        *dirx=0;
-    if (diry)
-        *diry=0;
+    int dirx = 0;
+    int diry = 0;
 
-    
 
     if ((!map[(int)p1.y][(int)p1.x]) &&
         (!map[(int)p2.y][(int)p2.x]) &&
         (!map[(int)p3.y][(int)p3.x]) &&
         (!map[(int)p4.y][(int)p4.x]) && 
         (!isColideWithOthers(chars,charcount,newposx,y)) &&
-        ((newposx)<=(mapsizex-1)*32.0f) &&
-        ((newposy)<((mapsizey-1)*32.0f)) &&
+        ((newposx)<=(mapsizex-1) * TILE_WIDTH) &&
+        ((newposy)<((mapsizey-1) * TILE_WIDTH)) &&
         ((newposx-radius)>=-radius) &&
         ((y-radius)>=-radius)
 
        )
     {
-        if ((x > newposx)&&(dirx))
+        if (x > newposx)
         {
-            *dirx=1;
+            dirx = 1;
         }
-        else if ((x<newposx)&&(dirx))
+        else if (x < newposx)
         {
-            *dirx=2;
+            dirx = 2;
         }
 
         x = x + difx;
@@ -205,26 +241,42 @@ void Dude::move(float walkSpeed,float strifeSpeed, float radius, bool** map, int
         (!map[(int)p7.y][(int)p7.x]) &&
         (!map[(int)p8.y][(int)p8.x]) &&
         (!isColideWithOthers(chars,charcount,x,newposy)) &&
-        ((newposx)<=(mapsizex-1)*32.0f) &&
-        ((newposy)<((mapsizey-1)*32.0f))&&
+        ((newposx)<=(mapsizex-1) * TILE_WIDTH) &&
+        ((newposy)<((mapsizey-1) * TILE_WIDTH))&&
         ((newposx-radius)>=-radius) &&
         ((newposy-radius)>=-radius))
     {
 
-            if ((y>newposy)&&(diry))
-                *diry=1;
-            else
-                if ((y<newposy)&&(diry))
-                    *diry=2;
+        if (y > newposy)
+        {
+            diry = 1;
+        }
+        else if (y < newposy)
+        {
+            diry = 2;
+        }
 
-            y = y - dify;
+        y = y - dify;
     }
 
-    if ((*diry>0)||(*dirx>0)){
+    if ((diry > 0) || (dirx > 0))
+    {
         tim++;
-        if (tim>=30) tim=0;
-        frame=tim/10+currentWeapon*4;
+
+        if (tim >= 30)
+        {
+            tim = 0;
+        }
+
+        frame = tim / 10 + currentWeapon * 4;
     }
+
+    if ((diry == 0) || (dirx == 0))
+    {
+        return false;
+    }
+
+    return true;
 
 
 }

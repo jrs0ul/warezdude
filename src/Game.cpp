@@ -457,9 +457,6 @@ void Game::MoveDude()
 
     if ((Keys[0]) || (Keys[1]) || (Keys[2]) || (Keys[3]))
     {
-
-        int dirx;
-        int diry;
         float walkSpeed = 0.f;
         float strifeSpeed = 0.f;
 
@@ -472,6 +469,7 @@ void Game::MoveDude()
         {
             walkSpeed = 1.0f;
         }
+
         if (Keys[2])
         {
             strifeSpeed = -1.0f;
@@ -486,20 +484,15 @@ void Game::MoveDude()
         int characterCount = (netMode == NETMODE_SERVER) ? mapas.enemyCount + serveris.clientCount() + 1 :
                                                            mapas.enemyCount + otherClientCount + 1;
 
-        mapas.mons[mapas.enemyCount].move(walkSpeed, strifeSpeed, PLAYER_RADIUS, mapas._colide,
-                                          mapas.width(), mapas.height(), mapas.mons,
-                                          characterCount, &dirx, &diry);
+        player->move(walkSpeed, strifeSpeed, PLAYER_RADIUS, (const bool**)mapas._colide,
+                     mapas.width(), mapas.height(), mapas.mons,
+                     characterCount);
 
         AdaptMapView();
 
     }
 
-    SoundSystem::getInstance()->setupListener(Vector3D(player->x,
-                                                       0,
-                                                       mapas.mons[mapas.enemyCount].y).v,
-                                              Vector3D(mapas.mons[mapas.enemyCount].x,
-                                                       0,
-                                                       mapas.mons[mapas.enemyCount].y).v);
+    
 
 }
 
@@ -551,7 +544,6 @@ void Game::AdaptMapView()
 
     mapas.setPosX(posX);
     mapas.setPosY(posY);
-
 
 }
 
@@ -1237,18 +1229,13 @@ void Game::MonsterAI(int index)
         }
     }
 
-    
-    if ((!mapas.mons[index].shot)&&(!mapas.mons[index].spawn))
-    {//jei nieks nepashove tai lets go :)
+    if (!mapas.mons[index].shot && !mapas.mons[index].spawn)
+    {
+        bool movedFreely = mapas.mons[index].move(1.0f, 0.0f, 8.0f, 
+                               (const bool**)mapas._colide, mapas.width(), mapas.height(),
+                               mapas.mons, mapas.enemyCount + 1 + serveris.clientCount());
 
-        int dx=0;
-        int dy=0;
-        mapas.mons[index].move(1.0f, 0.0f, 8.0f, 
-                               mapas._colide, mapas.width(), mapas.height(),
-                               mapas.mons,mapas.enemyCount+1+serveris.clientCount(),&dx,&dy);
-
-
-        if ((dx==0)||(dy==0))
+        if (!movedFreely)
         {
             mapas.mons[index].rotate(0.1f);
         }
@@ -2017,7 +2004,8 @@ void Game::logic(){
     OldMouseX = MouseX;
     OldMouseY = MouseY;
 
-    OldGamepad = gamepad;
+    OldGamepadLAxis = gamepadLAxis;
+    OldGamepadRAxis = gamepadRAxis;
 
 }
 
@@ -2100,11 +2088,10 @@ void Game::CoreGameLogic()
 
 
 
-    if (((OldGamepad.x != gamepad.x ) || (OldGamepad.y != gamepad.y )) &&
-        !((int)gamepad.x == 0 && (int)gamepad.y == 0) && (!player->shot) && (!player->spawn))
+    if (((OldGamepadLAxis.x != gamepadLAxis.x ) || (OldGamepadLAxis.y != gamepadLAxis.y )) &&
+        !((int)gamepadLAxis.x == 0 && (int)gamepadLAxis.y == 0)&& (!player->shot) && (!player->spawn))
     {
-        Vector3D dir = gamepad;
-        //dir.normalize();
+        Vector3D dir = gamepadLAxis;
 
         player->angle = M_PI / 2 - atan2(dir.x, dir.y);
     }
@@ -2133,14 +2120,34 @@ void Game::CoreGameLogic()
     if ((Keys[ACTION_NEXT_WEAPON]) && (!Keys[ACTION_FIRE]) && (!nextWepPressed))
     {
         nextWepPressed = true;
-        mapas.mons[mapas.enemyCount].chageNextWeapon();
+        player->chageNextWeapon();
     }
 
-    if ((Keys[0]||Keys[1]||Keys[2]||Keys[3])&&(!mapas.mons[mapas.enemyCount].shot)
-            &&(!mapas.mons[mapas.enemyCount].spawn)&&(mapas.mons[mapas.enemyCount].canAtack))
+    if (!player->shot && !player->spawn && player->canAtack)
     {
-        MoveDude();
+        int characterCount = (netMode == NETMODE_SERVER) ? mapas.enemyCount + serveris.clientCount() + 1 :
+                                                           mapas.enemyCount + otherClientCount + 1;
+        Vector3D mov = Vector3D(gamepadRAxis.x, -gamepadRAxis.y, 0);
+        mov.normalize();
+
+        bool movedWithGamepad = false;
+
+        if (fabs(mov.x) > 0.5f || fabs(mov.y) > 0.5f)
+        {
+            movedWithGamepad = true;
+        }
+
+        player->moveGamePad(mov, PLAYER_RADIUS, (const bool**)mapas._colide, mapas.width(), mapas.height(), mapas.mons, characterCount);
+        AdaptMapView();
+
+        if ((Keys[0] || Keys[1] || Keys[2] || Keys[3]) && !movedWithGamepad)
+        {
+            MoveDude();
+        }
     }
+
+    SoundSystem::getInstance()->setupListener(Vector3D(player->x, 0, player->y).v,
+                                              Vector3D(player->x, 0, player->y).v);
 
     // jei uzeina ant daikto, ji pasiima
     ItemPickup();

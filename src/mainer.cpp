@@ -156,8 +156,6 @@ void CheckKeys()
     SDL_GetRelativeMouseState ( &MouseX, &MouseY );
     SDL_GetMouseState(&_MouseX, &_MouseY);
 
-    Game.gamepad.x = JoyX/ 1000.0f;
-    Game.gamepad.y = JoyY/ 1000.0f;
 
     Game.RelativeMouseX = MouseX;
     Game.RelativeMouseY = MouseY;
@@ -191,8 +189,12 @@ void CheckKeys()
         //printf("controller button count %d\n", buttonNum);
 
         SDL_JoystickUpdate ();
-        Game.gamepad.x = SDL_JoystickGetAxis(Joy, 3) / 1000;
-        Game.gamepad.y = SDL_JoystickGetAxis(Joy, 4) / 1000;
+
+        Game.gamepadRAxis.x = SDL_JoystickGetAxis(Joy, 0) / 1000;
+        Game.gamepadRAxis.y = SDL_JoystickGetAxis(Joy, 1) / 1000;
+
+        Game.gamepadLAxis.x = SDL_JoystickGetAxis(Joy, 3) / 1000;
+        Game.gamepadLAxis.y = SDL_JoystickGetAxis(Joy, 4) / 1000;
 
         if (SDL_JoystickGetButton (Joy, 0))
             Game.Keys[4] = 1;

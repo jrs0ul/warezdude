@@ -152,8 +152,12 @@ public:
     TouchData   touches;
 
     int DebugMode;
-    Vector3D gamepad;
-    Vector3D OldGamepad;
+    Vector3D gamepadLAxis;
+    Vector3D OldGamepadLAxis;
+
+    Vector3D gamepadRAxis;
+    Vector3D OldGamepadRAxis;
+
     float MouseX;
     float MouseY;
 

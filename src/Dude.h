@@ -10,60 +10,60 @@ class PicsContainer;
 
 class Dude
 {
-        bool alive;
         int hp;
-    public:
+        bool alive;
+public:
         float x;
         float y;
         float angle;
+        float r,g,b;
 
         int item;
-        unsigned char colid;
         int atim;
-
-        bool enemyseen;
-
-        int greitis; 
         int delay;
 
         int victimID;
 
         int id;
-        unsigned char frame;
         int tim;
         int stim;
 
         int race;
 
-        bool shot;
-        bool spawn;
         int ammo;
-        bool canAtack;
         int reloadtime;
         int startX;
         int startY;
 
-        float r,g,b;
-        bool hit;
         int hittim;
 
         int weaponCount; //kiek gali tureti ginklu
         int currentWeapon; //koks dabar ginklas naudojamas
 
         int lastDamagedBy;
+        unsigned char colid;
+        unsigned char frame;
+        bool enemyseen;
+        bool hit;
+        bool canAtack;
+        bool spawn;
+        bool shot;
 
 
 
-        Dude(int dx=0,int dy=0):x((float)dx), y((float)dy){
+        Dude(float dx = 0, float dy = 0) :
+            hp(ENTITY_INITIAL_HP),
+            x(dx),
+            y(dy),
+            angle(0.f),
+            shot(false)
+        {
             frame=0; tim=0; // dir=0;
-            angle=0;
-            shot=false;
             stim=0;
             ammo = ENTITY_INITIAL_AMMO;
             alive=true;
             canAtack=true;
             reloadtime=0;
-            hp = ENTITY_INITIAL_HP;
             r = g = b = 1.0f;
             hit=false;
             hittim=0;
@@ -74,7 +74,6 @@ class Dude
             atim=0;
             enemyseen=false;
             item=0;
-            greitis=0;
             delay = rand()%2+1;
             alive=true;
 
@@ -87,8 +86,10 @@ class Dude
         //ar kolidina su kokiu nors monstru; count - kiek monstru
         bool isColideWithOthers(DArray<Dude>& chars, int count, float newx, float newy);
         void rotate(float angle);
-        void move(float walkSpeed,float strifeSpeed,float radius, bool** map, int mapsizex, int mapsizey,
-                DArray<Dude>& chars, int charcount, int* dirx, int* diry);
+        bool move(float walkSpeed,float strifeSpeed,float radius, const bool** map, int mapsizex, int mapsizey,
+                DArray<Dude>& chars, int charcount);
+        bool moveGamePad(const Vector3D& movementDir,float radius, const bool** map, int mapsizex, int mapsizey,
+                DArray<Dude>& chars, int charcount);
         void respawn();
         //nupaiso
         void draw(PicsContainer& pics, unsigned index, float posx, float posy, int ScreenWidth, int ScreenHeight);
@@ -115,6 +116,15 @@ class Dude
         void setHP(int newHP){hp = newHP;}
         //true if hp <= 0
         bool damage(int dmg);
+
+private:
+        bool movement(Vector3D dir,
+                      float radius,
+                      const bool** map,
+                      int mapsizex,
+                      int mapsizey,
+                      DArray<Dude>& chars,
+                      int charcount);
 };
 
 
