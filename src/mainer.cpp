@@ -1,13 +1,10 @@
 #ifdef _WIN32
     #ifdef  _MSC_VER
         #define _CRT_SECURE_NO_DEPRECATE 1
-        #define CURL_STATICLIB
         #pragma comment(lib,"SDL2.lib")
         #pragma comment(lib,"SDL2main.lib")
         #pragma comment(lib,"OpenGl32.lib")
-        //#pragma comment(lib,"GLU32.lib")
         #pragma comment(lib,"openal32.lib")
-        #pragma comment(lib,"libcurl_a.lib")
         #pragma comment(lib,"Ws2_32.lib") 
         #pragma comment(lib,"Crypt32.lib")
         #pragma comment(lib,"Wldap32.lib")
