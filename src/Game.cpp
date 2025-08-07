@@ -880,7 +880,7 @@ void Game::StopServer()
 {
 
     int cnt = 0;
-    char buffer[MAX_MESSAGE_DATA_SIZE];
+    char buffer[MAX_MESSAGE_DATA_SIZE]{};
 
     memcpy(&buffer[cnt], "WD3", 3);
     cnt += 3;

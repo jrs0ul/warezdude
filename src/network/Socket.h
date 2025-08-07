@@ -24,7 +24,14 @@ class Socket
 
 public:
 
-    Socket(){_open = false;}
+    Socket()
+    {
+#ifdef _WIN32
+        memset(&wsaData, 0, sizeof(WSADATA));
+#endif
+        sock = 0;
+        _open = false;
+    }
 
     bool openAsServer(int port);
     bool openAsClient();
