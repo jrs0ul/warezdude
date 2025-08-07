@@ -7,24 +7,8 @@
 #include "Decal.h"
 
 
-class CItem{
-public:
- float x;
- float y;
- int value;
-};
 
-enum Items
-{
-    ITEM_CD = 1,
-    ITEM_FLOPPY = 2,
-    ITEM_CARTRIDGE = 3,
-    ITEM_EXIT = 4,
-    ITEM_AMMO_PACK = 5,
-    ITEM_MEDKIT
-};
-
-
+struct Item;
 
 
 const int ColidingTiles[256] = {
@@ -45,14 +29,16 @@ class CMap
 
         Vector3D mapPos; //map starting position on the screen
 public:
-        unsigned _width;
-        unsigned _height;
-        char name[20];
-        unsigned char** tiles;
-        bool** _colide;
-        DArray<CItem> items;
+        DArray<Item> items;
         DArray<Dude> mons;
         DArray<Decal> decals;
+        unsigned char** tiles;
+        bool** _colide;
+        char name[20];
+        Vector3D start;
+        Vector3D exit;
+        unsigned _width;
+        unsigned _height;
         int itmframe;
 
         int timeToComplete;
@@ -61,15 +47,17 @@ public:
         int enemyCount;
 
 
-        Vector3D start;
-        Vector3D exit;
 
-        CMap() : _width(0), _height(0){
-            tiles=0;
-            timeToComplete=0;
-            misionItems=0;
-            goods=0;
-            enemyCount=0;
+        CMap() : 
+        _width(0),
+        _height(0),
+        itmframe(0)
+        {
+            tiles = 0;
+            timeToComplete = 0;
+            misionItems = 0;
+            goods = 0;
+            enemyCount = 0;
         }
 
         Dude* getPlayer();

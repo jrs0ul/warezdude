@@ -63,9 +63,13 @@ class OggStream{
 public:
 
         //opens stream from ogg file
-        OggStream(){
-            //source = 0;
-            //memset(buffers, 0 , sizeof(ALuint)*BUFFERCOUNT);
+        OggStream()
+        {
+            oggFile = nullptr;
+            vorbisInfo = nullptr;
+            source = 0;
+            memset(&oggStream, 0, sizeof(OggVorbis_File));
+            memset(buffers, 0 , sizeof(ALuint)*BUFFERCOUNT);
             volume = 0.2f;
         }
         bool open(const char* path);

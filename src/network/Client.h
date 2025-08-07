@@ -12,6 +12,12 @@ class Client
 
 public:
 
+    Client():
+    client()
+    {
+        memset(&serverAddress, 0, sizeof(sockaddr_in));
+    }
+
     bool open();
     void setServerAddress(const sockaddr_in& addr);
     bool isOpen(){return client.isOpen();}

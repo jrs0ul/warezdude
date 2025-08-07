@@ -1,22 +1,3 @@
-/***************************************************************************
- *   Copyright (C) 2008 by jrs0ul   *
- *   jrs0ul@gmail.com   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
 #include "OggStream.h"
 
 
@@ -68,7 +49,8 @@ bool OggStream::open(const char* path){
     return true;
 }
 //---------------------------------------
-void OggStream::setVolume(float vol){
+void OggStream::setVolume(float vol)
+{
     volume = vol;
     alSourcef(source, AL_GAIN, vol);
 }
@@ -97,14 +79,18 @@ void OggStream::release()
 
 bool OggStream::playback(){
 
-    int iState;
-    alGetSourcei(source, AL_SOURCE_STATE, &iState);
-    if (iState != AL_PLAYING){
+    int iState = 0;
 
+    alGetSourcei(source, AL_SOURCE_STATE, &iState);
+
+    if (iState != AL_PLAYING)
+    {
         int iQueuedBuffers = 0;
         alGetSourcei(source, AL_BUFFERS_QUEUED, &iQueuedBuffers);
         printf("Buffers queued: %d\n", iQueuedBuffers);
-        if (iQueuedBuffers){
+
+        if (iQueuedBuffers)
+        {
             alSourcePlay(source);
         }
     }
@@ -112,18 +98,23 @@ bool OggStream::playback(){
     return true;
 }
 //------------------------------
-void OggStream::stop(){
-    int iState;
+void OggStream::stop()
+{
+    int iState = 0;
+
     alGetSourcei(source, AL_SOURCE_STATE, &iState);
-    if (iState == AL_PLAYING){
+
+    if (iState == AL_PLAYING)
+    {
         alSourceStop(source);
     }
 }
 
 //------------------------------
 
-bool OggStream::playing(){
-    ALenum state;
+bool OggStream::playing()
+{
+    ALenum state = 0;
 
     alGetSourcei(source, AL_SOURCE_STATE, &state);
 

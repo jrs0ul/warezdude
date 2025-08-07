@@ -244,7 +244,7 @@ private:
     void GetMapData(const unsigned char* bufer, int* index);
     void DrawMap(float r,float g, float b);
     void GetDoorInfo(const unsigned char* bufer, unsigned * index, int* dx, int* dy, unsigned char* frame);
-    void KillEnemy(int ID);
+    void KillEnemy(unsigned ID);
     int FPS();
     void DrawSomeText();
     void UpdateClientPosition(const unsigned char* bufer, unsigned * buferindex, unsigned int clientIndex);

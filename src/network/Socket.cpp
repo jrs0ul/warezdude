@@ -15,7 +15,7 @@
 bool Socket::openAsServer(int port)
 {
 #ifdef _WIN32
-    WSAStartup(MAKEWORD(2,0),&wsaData);
+    WSAStartup(MAKEWORD(2,0), &wsaData);
 #endif
     sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -32,7 +32,7 @@ bool Socket::openAsServer(int port)
 
 
 #ifdef _WIN32
-    if (bind(sock,(LPSOCKADDR)&sin,sizeof(sockaddr_in))==SOCKET_ERROR)
+    if (bind(sock,(LPSOCKADDR)&sin,sizeof(sockaddr_in)) == SOCKET_ERROR)
 #else
     if (bind(sock, (sockaddr*)&sin, sizeof(sockaddr_in)) == -1)
 #endif
@@ -72,7 +72,7 @@ bool Socket::openAsServer(int port)
 bool Socket::openAsClient()
 {
 #ifdef _WIN32
-    WSAStartup(MAKEWORD(2,0),&wsaData);
+    WSAStartup(MAKEWORD(2, 0), &wsaData);
 #endif
     sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 

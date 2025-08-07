@@ -23,7 +23,7 @@ void Decal::draw(PicsContainer& pics, unsigned index,
               decalY,
               frame,
               true,
-              1.0f,1.0f,0,
-              COLOR(r,g,b, alpha),
-              COLOR(r, g, b, alpha)); 
+              1.0f, 1.0f, 0.f,
+              color,
+              color); 
 }

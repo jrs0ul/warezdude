@@ -17,6 +17,7 @@
 #include "TextureLoader.h"
 #include "Matrix.h"
 #include "audio/OggStream.h"
+#include "Item.h"
 #include "Consts.h"
 #ifndef _WIN32
 #include <arpa/inet.h>
@@ -297,48 +298,45 @@ void Game::KillPlayer(int index)
     Decal decalas;
     decalas.x = round(mapas.mons[mapas.enemyCount+index].x);
     decalas.y = round(mapas.mons[mapas.enemyCount+index].y);
-    decalas.r = 1.0f;
-    decalas.g = decalas.b = 0.0f;
-    decalas.frame = rand()%2;
+    decalas.color = COLOR(1.f, 0.f, 0.f);
+    decalas.frame = rand() % 2;
     mapas.decals.add(decalas);
 }
 
 //------------------
-void Game::KillEnemy(int ID)
+void Game::KillEnemy(unsigned ID)
 {
     printf("KILLED BY %d\n", mapas.mons[ID].lastDamagedBy);
 
-    if (ID < mapas.enemyCount)
+    if (ID < (unsigned)mapas.enemyCount)
     {
-        
         mapas.mons[ID].shot=true;
 
         AdaptSoundPos(3,mapas.mons[ID].x,mapas.mons[ID].y);
         SoundSystem::getInstance()->playsound(3);
 
         Decal decalas;
-        decalas.x=round(mapas.mons[ID].x);
-        decalas.y=round(mapas.mons[ID].y);
-        decalas.r=1.0f;
-        decalas.g=decalas.b=0.0f;
-        decalas.frame=rand()%2;
+        decalas.x = round(mapas.mons[ID].x);
+        decalas.y = round(mapas.mons[ID].y);
+        decalas.color = COLOR(1.f, 0.f, 0.f);
+        decalas.frame = rand() % 2;
         mapas.decals.add(decalas);
 
-        if (mapas.mons[ID].item)
-        { //jei monstras turejo prarijes kazkoki daikta
-            CItem swalenitem;
-            swalenitem.value=mapas.mons[ID].item;
-            swalenitem.x=mapas.mons[ID].x;
-            swalenitem.y=mapas.mons[ID].y;
-            mapas.addItem(swalenitem.x,swalenitem.y,swalenitem.value);
+        if (mapas.mons[ID].item) // if monster swallowed an item
+        {
+            Item swallowedItem;
+            swallowedItem.value = mapas.mons[ID].item;
+            swallowedItem.x     = mapas.mons[ID].x;
+            swallowedItem.y     = mapas.mons[ID].y;
+            mapas.addItem(swallowedItem.x, swallowedItem.y, swallowedItem.value);
 
-            mapas.mons[ID].item=0;
+            mapas.mons[ID].item = 0;
 
             if (netMode == NETMODE_SERVER)
             {
-                for (unsigned int i=0;i<serveris.clientCount();i++)
+                for (unsigned int i = 0; i < serveris.clientCount(); i++)
                 {
-                    SendItemCreation(swalenitem.x,swalenitem.y,swalenitem.value,i);
+                    SendItemCreation(swallowedItem.x, swallowedItem.y, swallowedItem.value, i);
                 }
             }
 
@@ -346,7 +344,7 @@ void Game::KillEnemy(int ID)
     }
     else
     {
-        KillPlayer(ID-254);
+        KillPlayer(ID - 254);
     }
 
 
@@ -856,13 +854,14 @@ void Game::InitServer()
     netMode = NETMODE_SERVER;
 
     printf("Launching server on port: %d\n", NetPort);
+
     if (serveris.launch(NetPort))
     {
         printf("Server launched!\n");
 
         std::thread t([&]
         {
-            while(true)
+            while(serveris.isRunning())
             {
                 std::lock_guard<std::mutex> lock(messageMutex);
                 serveris.getData();
@@ -903,7 +902,7 @@ bool Game::JoinServer(const char* ip, unsigned port)
     {
         std::thread c([&]
             {
-                while(true)
+                while(client.isOpen())
                 {
                     std::lock_guard<std::mutex> lock(messageMutex);
                     client.getData();
@@ -3071,7 +3070,7 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
 
     for (int i = 0; i < itmcount; i++)
     {
-        CItem itm;
+        Item itm;
 
         memcpy(&itm.x, &bufer[*index], sizeof(float));
         *index += sizeof(float);

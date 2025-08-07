@@ -1,8 +1,10 @@
+#include "map.h"
+
 #include <cstdio>
 #include <wchar.h>
-#include "map.h"
 #include "Xml.h"
 #include "MapGenerator.h"
+#include "Item.h"
 
 
 
@@ -685,11 +687,12 @@ void CMap::ReplaceTiles(unsigned char old, unsigned char fresh){
 }
 
 //-------------------------------------------
-void CMap::addItem(float nx, float ny, int nvalue){
-    CItem newitem;
-    newitem.x=nx;
-    newitem.y=ny;
-    newitem.value=nvalue;
+void CMap::addItem(float nx, float ny, int nvalue)
+{
+    Item newitem;
+    newitem.x = nx;
+    newitem.y = ny;
+    newitem.value = nvalue;
     items.add(newitem);
 
 }
@@ -701,11 +704,15 @@ void CMap::removeItem(int ID){
 }
 
 //-------------------------------------
-void CMap::fadeDecals(){
-    for (unsigned int i=0;i<decals.count();i++){
-        decals[i].alpha-=0.0005f;
-        if (decals[i].alpha<=0.0f)
+void CMap::fadeDecals()
+{
+    for (unsigned int i = 0; i < decals.count(); i++)
+    {
+        decals[i].color.a -= 0.0005f;
+        if (decals[i].color.a <= 0.0f)
+        {
             decals.remove(i);
+        }
     }
-        
+
 }
