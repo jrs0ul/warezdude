@@ -141,6 +141,8 @@ class Game
 
     NetworkingModes netMode;
 
+    int clientInfoSendCounter;
+
 
 public:
 

@@ -73,7 +73,7 @@ Game::Game()
 : imgCount(0)
 {
     Accumulator = 0;
-    DT = 1000.0f/60.0f/1000.0f;
+    DT = 1000.0f / 60.0f / 1000.0f;
     Works = true;
     TimeTicks = 0;
 
@@ -98,6 +98,7 @@ Game::Game()
     mapas.itmframe = 0;
     itmtim=0;
     netMode = NETMODE_NONE;
+    clientInfoSendCounter = 0;
 }
 
 
@@ -167,7 +168,7 @@ void Game::DrawSomeText()
 
     char buf[255];
 
-    sprintf(buf,"FPS : %d",FPS());
+    sprintf(buf,"FPS : %d DeltaTime %f",FPS(), DeltaTime);
     WriteText(20,20, pics, 10, buf, 0.8f,0.6f);
 
     sprintf(buf, "Map width %d height %d", mapas.width(), mapas.height());
@@ -269,8 +270,8 @@ void Game::SendItemCreation(float x, float y, int value, unsigned int clientInde
     char buferis[MAX_MESSAGE_DATA_SIZE];
     int index = 0;
 
-    memcpy(&buferis[index], "WD3", 3);
-    index += 3;
+    strcpy(buferis, NET_HEADER);
+    index += NET_HEADER_LEN;
     buferis[index] = NET_SERVER_MSG_NEW_ITEM;
     ++index;
     memcpy(&buferis[index], &x, sizeof(float));
@@ -594,8 +595,8 @@ void Game::SendKillCommandToClient(unsigned clientIdx, int victimId)
     char buffer[MAX_MESSAGE_DATA_SIZE];
     int pos = 0;
 
-    memcpy(&buffer[pos], "WD3", 3);
-    pos += 3;
+    memcpy(&buffer[pos], NET_HEADER, NET_HEADER_LEN);
+    pos += NET_HEADER_LEN;
     buffer[pos] = NET_SERVER_MSG_KILL_CHARACTER;
     ++pos;
 
@@ -608,8 +609,8 @@ void Game::SendFragsToClient(int clientIdx, int frags)
 {
     char buffer[MAX_MESSAGE_DATA_SIZE];
     int len = 0;
-    memcpy(&buffer[len], "WD3", 3);
-    len += 3;
+    memcpy(&buffer[len], NET_HEADER, NET_HEADER_LEN);
+    len += NET_HEADER_LEN;
     buffer[len] = NET_SERVER_MSG_FRAG;
     ++len;
     memcpy(&buffer[len], &frags, sizeof(int));
@@ -623,6 +624,8 @@ void Game::SendItemCRemove(int itemIndex)
 {
     char bufer[MAX_MESSAGE_DATA_SIZE];
     int index = 0;
+    strcpy(bufer, NET_HEADER);
+    index += NET_HEADER_LEN;
     bufer[index] = NET_CLIENT_MSG_ITEM;
     ++index;
     memcpy(&bufer[index], &itemIndex, sizeof(int));
@@ -634,17 +637,17 @@ void Game::SendItemSRemove(int ItemIndex, int clientIndex, bool playerTaked)
 {
     char bufer[MAX_MESSAGE_DATA_SIZE];
     int index = 0;
-    memcpy(&bufer[index], "WD3", 3);
-    index += 3;
+    memcpy(&bufer[index], NET_HEADER, NET_HEADER_LEN);
+    index += NET_HEADER_LEN;
     bufer[index] = NET_SERVER_MSG_ITEM;
     ++index;
     memcpy(&bufer[index],&ItemIndex,sizeof(int));
     index += sizeof(int);
-    unsigned char plt=0;
+    unsigned char plt = 0;
 
     if (playerTaked)
     {
-        plt=1;
+        plt = 1;
     }
 
     memcpy(&bufer[index],&plt,sizeof(unsigned char));
@@ -657,8 +660,8 @@ void Game::SendMapInfo(int clientIndex, CMap& map)
 {
     char bufer[MAX_MESSAGE_DATA_SIZE];
     int index = 0;
-    memcpy(&bufer[index], "WD3", 3);
-    index += 3;
+    memcpy(&bufer[index], NET_HEADER, NET_HEADER_LEN);
+    index += NET_HEADER_LEN;
     bufer[index] = NET_SERVER_MSG_SERVER_INFO;
 
     ++index;
@@ -694,8 +697,8 @@ void Game::SendMapData(int clientIndex, CMap& map)
     int index = 0;
 
 
-    memcpy(&bufer[index], "WD3", 3);
-    index += 3;
+    strcpy(bufer, NET_HEADER);
+    index += NET_HEADER_LEN;
     bufer[index] = NET_SERVER_MSG_MAP_DATA;
     ++index;
 
@@ -760,6 +763,8 @@ void Game::SendWarpMessage()
 {
     char buferis[MAX_MESSAGE_DATA_SIZE];
     int index = 0;
+    strcpy(buferis, NET_HEADER);
+    index += NET_HEADER_LEN;
     buferis[index] = NET_CLIENT_MSG_NEXT_LEVEL;
     ++index;
     client.sendData(buferis, index);
@@ -882,8 +887,8 @@ void Game::StopServer()
     int cnt = 0;
     char buffer[MAX_MESSAGE_DATA_SIZE]{};
 
-    memcpy(&buffer[cnt], "WD3", 3);
-    cnt += 3;
+    strcpy(buffer, NET_HEADER);
+    cnt += NET_HEADER_LEN;
     buffer[cnt] = NET_SERVER_MSG_SHUTTING_DOWN;
     ++cnt;
 
@@ -912,8 +917,11 @@ bool Game::JoinServer(const char* ip, unsigned port)
 
         c.detach();
 
-        char buf[4];
-        buf[0] = NET_CLIENT_MSG_CONNECT;
+        char buf[MAX_MESSAGE_DATA_SIZE];
+        unsigned index = 0;
+        strcpy(buf, NET_HEADER);
+        index += NET_HEADER_LEN;
+        buf[index] = NET_CLIENT_MSG_CONNECT;
 
         sockaddr_in serverAddress;
         memset(&serverAddress, 0, sizeof(sockaddr_in));
@@ -922,7 +930,7 @@ bool Game::JoinServer(const char* ip, unsigned port)
         serverAddress.sin_port = htons(port);
 
         client.setServerAddress(serverAddress);
-        client.sendData(buf, 1);
+        client.sendData(buf, NET_HEADER_LEN + 1);
 
         netMode = NETMODE_CLIENT;
         return true;
@@ -934,9 +942,12 @@ bool Game::JoinServer(const char* ip, unsigned port)
 void Game::QuitServer()
 {
     netMode = NETMODE_NONE;
-    char buf[4];
-    buf[0] = NET_CLIENT_MSG_QUIT;
-    client.sendData(buf, 1);
+    char buf[MAX_MESSAGE_DATA_SIZE];
+    unsigned index = 0;
+    strcpy(buf, NET_HEADER);
+    index += NET_HEADER_LEN;
+    buf[index] = NET_CLIENT_MSG_QUIT;
+    client.sendData(buf, NET_HEADER_LEN + 1);
     client.shutdown();
 }
 
@@ -945,7 +956,9 @@ void Game::SendClientDoorState(int doorx,int doory, unsigned char doorframe)
 {
     int index = 0;
     char bufer[MAX_MESSAGE_DATA_SIZE];
-    bufer[0] = NET_CLIENT_MSG_DOOR;
+    strcpy(bufer, NET_HEADER);
+    index += NET_HEADER_LEN;
+    bufer[index] = NET_CLIENT_MSG_DOOR;
     ++index;
     memcpy(&bufer[index], &doorx, sizeof(int));
     index += sizeof(int);
@@ -961,8 +974,8 @@ void Game::SendServerDoorState(unsigned int clientIndex, int doorx,int doory, un
     int index = 0;
     char bufer[MAX_MESSAGE_DATA_SIZE];
 
-    memcpy(&bufer[index], "WD3", 3);
-    index += 3;
+    strcpy(bufer, NET_HEADER);
+    index += NET_HEADER_LEN;
     bufer[index] = NET_SERVER_MSG_DOOR;
     ++index;
     memcpy(&bufer[index],&doorx,sizeof(int));
@@ -1119,8 +1132,8 @@ void Game::SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool i
     int index = 0;
     char buf[MAX_MESSAGE_DATA_SIZE];
 
-    memcpy(&buf[index], "WD3", 3);
-    index += 3;
+    memcpy(&buf[index], NET_HEADER, NET_HEADER_LEN);
+    index += NET_HEADER_LEN;
     buf[index] = NET_SERVER_MSG_WEAPON_SHOT;
     ++index;
     memcpy(&buf[index], &monsterindex, sizeof(int));
@@ -1137,6 +1150,8 @@ void Game::SendClientAtackImpulse(int victimID, int hp)
 {
     char buferis[MAX_MESSAGE_DATA_SIZE];
     int index = 0;
+    strcpy(buferis, NET_HEADER);
+    index += NET_HEADER_LEN;
     buferis[index] = NET_CLIENT_MSG_MELEE_ATTACK;
     ++index;
     memcpy(&buferis[index], &victimID, sizeof(int));
@@ -1151,8 +1166,8 @@ void Game::SendAtackImpulse(unsigned int clientIndex, int victim, int hp)
     char buferis[MAX_MESSAGE_DATA_SIZE];
     int index = 0;
 
-    memcpy(&buferis[index], "WD3", 3);
-    index += 3;
+    memcpy(&buferis[index], NET_HEADER, NET_HEADER_LEN);
+    index += NET_HEADER_LEN;
     buferis[index] = NET_SERVER_MSG_MELEE_ATTACK;
     ++index;
     memcpy(&buferis[index],&victim,sizeof(int));
@@ -1950,6 +1965,8 @@ void Game::logic(){
         }
     }
 
+
+
     switch (netMode)
     {
         case NETMODE_NONE: break;
@@ -1957,15 +1974,24 @@ void Game::logic(){
         {
             if (serveris.isRunning())
             {
-                for (int a = 0; a < (int)serveris.clientCount(); ++a)
-                {
-                    char buf[MAX_MESSAGE_DATA_SIZE];
-                    memcpy(&buf, "WD3", 3);
-                    buf[4] = NET_SERVER_MSG_PING;
-                    serveris.sendData(a, buf, 4);
+                ++clientInfoSendCounter;
 
-                    SendPlayerInfoToClient(a);
+                if (clientInfoSendCounter > SERVER_SKIP_SENDING_POS_FRAMES) // we don't need to send creature coords every frame
+                {
+
+                    for (int a = 0; a < (int)serveris.clientCount(); ++a)
+                    {
+                        char buf[MAX_MESSAGE_DATA_SIZE];
+                        memcpy(&buf, NET_HEADER, NET_HEADER_LEN);
+                        buf[NET_HEADER_LEN] = NET_SERVER_MSG_PING;
+                        serveris.sendData(a, buf, NET_HEADER_LEN + 1);
+
+                        SendPlayerInfoToClient(a);
+                    }
+
+                    clientInfoSendCounter = 0;
                 }
+
 
                 ParseMessagesServerGot();
             }
@@ -2220,11 +2246,15 @@ void Game::CoreGameLogic()
 
                 if (netMode == NETMODE_CLIENT)
                 {
-                    char buf[10];
+                    char buf[MAX_MESSAGE_DATA_SIZE];
                     int pos = 0;
+
+                    strcpy(buf, NET_HEADER);
+                    pos += NET_HEADER_LEN;
+
                     buf[pos] = NET_CLIENT_MSG_WEAPON_SHOT;
                     ++pos;
-                    memcpy(&buf[1], &mapas.getPlayer()->ammo, sizeof(int));
+                    memcpy(&buf[pos], &mapas.getPlayer()->ammo, sizeof(int));
                     pos += sizeof(int);
                     unsigned char isMine = 0;
 
@@ -2233,7 +2263,7 @@ void Game::CoreGameLogic()
                         isMine = 1;
                     }
 
-                    memcpy(&buf[5], &isMine, sizeof(unsigned char));
+                    memcpy(&buf[pos], &isMine, sizeof(unsigned char));
                     pos += sizeof(unsigned char);
                     client.sendData(buf, pos);
                 }
@@ -2242,7 +2272,7 @@ void Game::CoreGameLogic()
 
                 if (netMode == NETMODE_SERVER)
                 {
-                    for (int i=0;i<(int)serveris.clientCount();i++)
+                    for (unsigned i = 0; i < serveris.clientCount(); i++)
                     {
                         SendBulletImpulse(255, mapas.mons[mapas.enemyCount].ammo, i, isMine);
                     }
@@ -2758,7 +2788,11 @@ void Game::SendClientCoords()
 {
     char coords[MAX_MESSAGE_DATA_SIZE];
     int cnt = 0;
-    coords[0] = NET_CLIENT_MSG_CHARACTER_DATA;
+
+    strcpy(coords, NET_HEADER);
+    cnt += NET_HEADER_LEN;
+
+    coords[cnt] = NET_CLIENT_MSG_CHARACTER_DATA;
     ++cnt;
     memcpy(&coords[cnt], &mapas.mons[mapas.enemyCount].x, sizeof(float));
     cnt += sizeof(float);
@@ -2783,7 +2817,7 @@ void Game::SendClientCoords()
 void Game::SendPlayerInfoToClient(int clientindex)
 {
     unsigned char z = 0;
-    char coords[1024];
+    char coords[MAX_MESSAGE_DATA_SIZE];
     int cnt = 0;
 
     for (int i = 0; i < mapas.enemyCount+(int)serveris.clientCount()+1; i++)
@@ -2800,8 +2834,8 @@ void Game::SendPlayerInfoToClient(int clientindex)
                 z = (unsigned char)i;
             }
 
-            memcpy(&coords[cnt], "WD3", 3);
-            cnt += 3;
+            memcpy(&coords[cnt], NET_HEADER, NET_HEADER_LEN);
+            cnt += NET_HEADER_LEN;
 
             coords[cnt] = NET_SERVER_MSG_CHARACTER_DATA;
             ++cnt;
@@ -3238,6 +3272,19 @@ void Game::ParseMessagesServerGot()
         while (index < msg->length)
         {
 
+            char NetworkHeader[4] = {0};
+
+            if (msg->length - index >= NET_HEADER_LEN)
+            {
+                memcpy(&NetworkHeader, &(msg->data)[index], NET_HEADER_LEN);
+                index += NET_HEADER_LEN;
+                if (strcmp(NetworkHeader, NET_HEADER) != 0)
+                {
+                    msg->parsed = true;
+                    continue;
+                }
+            }
+
             NetworkCommands command = NET_NOP;
 
             if (msg->length - index >= 1)
@@ -3265,7 +3312,7 @@ void Game::ParseMessagesServerGot()
 
                         mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id + 1;
 
-                        for (int i=0; i < (int)serveris.clientCount(); i++)
+                        for (int i =0; i < (int)serveris.clientCount(); i++)
                         {
                             SendMapInfo(i, mapas);
                         }
@@ -3390,8 +3437,8 @@ void Game::ParseMessagesServerGot()
                                 char data[MAX_MESSAGE_DATA_SIZE];
                                 int len = 0;
 
-                                memcpy(&data[len], "WD3", 3);
-                                len += 3;
+                                strcpy(data, NET_HEADER);
+                                len += NET_HEADER_LEN;
 
                                 data[len] = NET_SERVER_MSG_REMOVE_CHARACTER;
                                 ++len;
@@ -3463,13 +3510,13 @@ void Game::ParseMessagesClientGot()
         while ((unsigned)index < msg->length)
         {
             NetworkCommands command = NET_NOP;
-            char NetworkHeader[4] = {0};
+            char NetworkHeader[NET_HEADER_LEN + 1] = {0};
 
-            if (msg->length - index >= 3)
+            if (msg->length - index >= NET_HEADER_LEN)
             {
-                memcpy(&NetworkHeader, &(msg->data)[index], 3);
-                index += 3;
-                if (strcmp(NetworkHeader, "WD3") != 0)
+                memcpy(&NetworkHeader, &(msg->data)[index], NET_HEADER_LEN);
+                index += NET_HEADER_LEN;
+                if (strcmp(NetworkHeader, NET_HEADER) != 0)
                 {
                     msg->parsed = true;
                     continue;
@@ -3640,9 +3687,10 @@ void Game::ParseMessagesClientGot()
                 case NET_SERVER_MSG_PING:
                     {
                         ++index;
-                        char buf[2];
-                        buf[0] = NET_CLIENT_MSG_PONG;
-                        client.sendData(buf, 1);
+                        char buf[MAX_MESSAGE_DATA_SIZE];
+                        strcpy(buf, NET_HEADER);
+                        buf[NET_HEADER_LEN] = NET_CLIENT_MSG_PONG;
+                        client.sendData(buf, NET_HEADER_LEN + 1);
 
                     } break;
 
