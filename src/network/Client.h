@@ -1,15 +1,14 @@
 #pragma once
 
-#include <queue>
+#include "../DArray.h"
 #include "Socket.h"
 #include "Message.h"
-
 
 class Client
 {
     Socket client;
     sockaddr_in serverAddress;
-    std::queue<Message> receivedPackets;
+    DArray<Message> receivedPackets;
 
 public:
 
@@ -27,8 +26,8 @@ public:
     void shutdown();
 
 
-    unsigned storedPacketCount(){return receivedPackets.size();}
-    Message* fetchOldestPacket();
-    void discardOldestPacket();
+    unsigned storedPacketCount(){return receivedPackets.count();}
+    Message* fetchPacket(unsigned idx);
+    void discardPacket(unsigned idx);
 
 };

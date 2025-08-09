@@ -11,8 +11,7 @@
     #include <netinet/in.h>
 #endif
 
-#include <vector>
-#include <queue>
+#include "../DArray.h"
 #include "Socket.h"
 #include "Message.h"
 
@@ -29,9 +28,9 @@ class Server
 {
 
     Socket server;
-    std::vector<ClientFootprint> connectedClientAddreses;
+    DArray<ClientFootprint> connectedClientAddreses;
 
-    std::queue<Message> receivedPackets;
+    DArray<Message> receivedPackets;
 
 public:
 
@@ -51,9 +50,9 @@ public:
     void addClient(const ClientFootprint& fp);
     void removeClient(unsigned index);
 
-    unsigned storedPacketCount(){return receivedPackets.size();}
-    Message* fetchOldestPacket();
-    void discardOldestPacket();
+    unsigned storedPacketCount(){return receivedPackets.count();}
+    Message* fetchPacket(unsigned idx);
+    void discardPacket(unsigned idx);
 
     int findClientByAddress(const sockaddr_in& addr);
 };

@@ -30,7 +30,7 @@ void Client::getData()
 
         msg.length = len;
         msg.parsed = false;
-        receivedPackets.push(msg);
+        receivedPackets.add(msg);
 
     }
 
@@ -44,18 +44,22 @@ void Client::sendData( const void* data, int len)
 
 void Client::shutdown()
 {
-    std::queue<Message> empty;
-    receivedPackets.swap(empty);
+    receivedPackets.destroy();
     client.shutdown();
 }
 
 
-Message* Client::fetchOldestPacket()
+Message* Client::fetchPacket(unsigned idx)
 {
-    return &receivedPackets.front();
+    if (idx < receivedPackets.count())
+    {
+        return &receivedPackets[idx];
+    }
+
+    return 0;
 }
 
-void Client::discardOldestPacket()
+void Client::discardPacket(unsigned idx)
 {
-    receivedPackets.pop();
+    receivedPackets.remove(idx);
 }
