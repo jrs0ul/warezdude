@@ -8,7 +8,7 @@
 //--------------------------------------------------------------
 unsigned Server::clientCount()
 {
-    return connectedClientAddreses.count();
+    return connectedClientAddreses.size();
 }
 
 //---------------------------------------------------------------
@@ -34,7 +34,7 @@ void Server::getData()
 
         msg.length = len;
         msg.parsed = false;
-        receivedPackets.add(msg);
+        receivedPackets.push(msg);
 
     }
 }
@@ -43,7 +43,7 @@ void Server::getData()
 void Server::sendData(unsigned clientIndex, const char *data, int len)
 {
 
-    if (clientIndex >= connectedClientAddreses.count())
+    if (clientIndex >= connectedClientAddreses.size())
     {
         printf("send fail\n");
         return;
@@ -60,7 +60,7 @@ void Server::sendData(unsigned clientIndex, const char *data, int len)
 void Server::removeClient(unsigned index)
 {
 
-    connectedClientAddreses.remove(index);
+    connectedClientAddreses.erase(connectedClientAddreses.begin() + index);
 
 }
 
@@ -72,28 +72,23 @@ bool Server::isRunning()
 //-------------------------------------
 void Server::addClient(const ClientFootprint& fp)
 {
-    connectedClientAddreses.add(fp);
+    connectedClientAddreses.push_back(fp);
 }
 //----------------------------------
-Message* Server::fetchPacket(unsigned idx)
+Message* Server::fetchOldestPacket()
 {
-    if (idx < receivedPackets.count())
-    {
-        return &receivedPackets[idx];
-    }
-
-    return 0;
+    return &receivedPackets.front();
 }
 //-----------------------------------
-void Server::discardPacket(unsigned idx)
+void Server::discardOldestPacket()
 {
-    receivedPackets.remove(idx);
+    receivedPackets.pop();
 }
 //-----------------------------------
 int Server::findClientByAddress(const sockaddr_in& addr)
 {
 
-    for (unsigned i = 0; i < connectedClientAddreses.count(); ++i)
+    for (unsigned i = 0; i < connectedClientAddreses.size(); ++i)
     {
         if ((connectedClientAddreses[i].address.sin_port == addr.sin_port) &&
             (connectedClientAddreses[i].address.sin_addr.s_addr == addr.sin_addr.s_addr))

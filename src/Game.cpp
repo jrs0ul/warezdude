@@ -868,7 +868,6 @@ void Game::InitServer()
         {
             while(serveris.isRunning())
             {
-                std::lock_guard<std::mutex> lock(messageMutex);
                 serveris.getData();
             }
         });
@@ -909,7 +908,6 @@ bool Game::JoinServer(const char* ip, unsigned port)
             {
                 while(client.isOpen())
                 {
-                    std::lock_guard<std::mutex> lock(messageMutex);
                     client.getData();
                 }
             }
@@ -3245,24 +3243,10 @@ void Game::GetAtackImpulse(const unsigned char* buf,int* index)
 void Game::ParseMessagesServerGot()
 {
 
-    if (!serveris.storedPacketCount())
-    {
-        return;
-    }
-
-    std::lock_guard<std::mutex> lock(messageMutex);
-
-    printf("client packets to parse %u\n", serveris.storedPacketCount());
-
-    for (int msgIdx = serveris.storedPacketCount() - 1; msgIdx >= 0; --msgIdx)
+    while (serveris.storedPacketCount())
     {
 
-        Message* msg = serveris.fetchPacket(msgIdx);
-
-        if (msg->parsed)
-        {
-            continue;
-        }
+        Message* msg = serveris.fetchOldestPacket();
 
 
         int clientIdx = serveris.findClientByAddress(msg->senderAddress);
@@ -3272,7 +3256,7 @@ void Game::ParseMessagesServerGot()
         while (index < msg->length)
         {
 
-            char NetworkHeader[4] = {0};
+            char NetworkHeader[NET_HEADER_LEN] = {0};
 
             if (msg->length - index >= NET_HEADER_LEN)
             {
@@ -3465,22 +3449,11 @@ void Game::ParseMessagesServerGot()
             }
         }
 
-        msg->parsed = true;
+        serveris.discardOldestPacket();
 
-    }
+    } //while
 
-    for (int i = serveris.storedPacketCount() - 1; i >= 0 ; --i)
-    {
-        Message* msg = serveris.fetchPacket(i);
-        if (msg->parsed)
-        {
-            serveris.discardPacket(i);
-        }
-    }
-
-    //printf("packets after %u\n", serveris.storedPacketCount());
-
-
+ 
 }
 //------------------------------
 void Game::ParseMessagesClientGot()
@@ -3490,21 +3463,13 @@ void Game::ParseMessagesClientGot()
         return;
     }
 
-    std::lock_guard<std::mutex> lock(messageMutex);
 
-    printf("server packets to parse %u\n", client.storedPacketCount());
-
-    for (unsigned msgIdx = 0; msgIdx < client.storedPacketCount(); ++msgIdx)
+    while (client.storedPacketCount())
     {
 
-        Message* msg = client.fetchPacket(msgIdx);
+        Message* msg = client.fetchOldestPacket();
 
-        if (msg->parsed)
-        {
-            continue;
-        }
-
-
+     
         int index = 0;
 
         while ((unsigned)index < msg->length)
@@ -3702,20 +3667,9 @@ void Game::ParseMessagesClientGot()
 
         } //while
 
-        msg->parsed = true;
+        client.discardOldestPacket();
 
-    } //for
-    
-    for (int i = client.storedPacketCount() - 1; i >= 0 ; --i)
-    {
-        Message* msg = client.fetchPacket(i);
-        if (msg->parsed)
-        {
-            client.discardPacket(i);
-        }
-    }
-
-    //printf("packets after %u\n", client.storedPacketCount());
+    } //while
 
 
 
