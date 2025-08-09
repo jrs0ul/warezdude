@@ -1,6 +1,6 @@
 <xml>
 <Images>
-<Img src="pics/logo.tga" width="512" height="256" filter="1" />
+<Img src="pics/logo.tga" width="512" height="256" filter="0" />
 <Img src="pics/tileset.tga" width="32" height="32" filter="0" />
 <Img src="pics/monstar.tga" width="32" height="32" filter="0" />
 <Img src="pics/monster.tga" width="32" height="32" filter="0" />
@@ -18,5 +18,6 @@
 <Img src="pics/blood.tga" width="32" height="32" filter="0" />
 <Img src="pics/title.tga" width="256" height="128" filter="0" />
 <Img src="pics/pointer.tga" width="16" height="16" filter="0" />
-<Ing src="pics/cross.tga" width="16" height="16" filter="0" />
+<Img src="pics/cross.tga" width="16" height="16" filter="0" />
+<Img src="pics/gameover.tga" width="256" height="64" filter="0" />
 <Images>

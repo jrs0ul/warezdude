@@ -2,7 +2,7 @@
 #define _SELECTMENIU_H_
 
 #include <cstring>
-#include "ActiveControl.h"
+#include "gui/BasicUiControl.h"
 #include "TextureLoader.h"
 
 struct Smenu{
@@ -19,11 +19,12 @@ struct Smenu{
 
 
 
-class SelectMenu : public ActiveControl
-{ //selecto objectas
+class SelectMenu : public BasicControl
+{
     public:
         char title[30];  //antraste
         Smenu selection;   //meniu
+        unsigned pressedkey;
         unsigned int width;        //plotis
         unsigned int height;       //aukstis
         unsigned char defstate;     //defaultine opcija
@@ -31,8 +32,8 @@ class SelectMenu : public ActiveControl
 
         bool selected;  //jau viskas pasirinkta, enter paspaustas
         bool canceled;  //ar menu atshauktas
-        unsigned pressedkey;
 
+        SelectMenu(){selected = false; canceled = false;}
 
         //priskiriam data dx,dy:lango metrikos dst:defstate
         void init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel, unsigned char dst,unsigned int dheight=0);

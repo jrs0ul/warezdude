@@ -102,8 +102,8 @@ public:
         bool isAlive(){return alive;}
         //gydosi
         void heal();
-        //isitasko
-        void splatter();
+
+        void disintegrationAnimation();
         void appearInRandomPlace(bool** map, int mapwidth, int mapheight);
         //kai kas nors atakuoja - paraudonuoja
         void damageAnim();

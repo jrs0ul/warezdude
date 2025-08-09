@@ -198,9 +198,9 @@ void CheckKeys()
         if (SDL_JoystickGetButton (Joy, 1))
             Game.Keys[5] = 1;
         if (SDL_JoystickGetButton (Joy, 5))
-            Game.Keys[7] = 1;
+            Game.Keys[6] = 1;
         if (SDL_JoystickGetButton (Joy, 4))
-            Game.Keys[7] = 1;
+            Game.Keys[6] = 1;
         if (SDL_JoystickGetButton (Joy, 13))
             Game.Keys[0] = 1;
         if (SDL_JoystickGetButton (Joy, 14))
@@ -210,9 +210,9 @@ void CheckKeys()
         if (SDL_JoystickGetButton (Joy, 16))
             Game.Keys[3] = 1;
         if (SDL_JoystickGetButton (Joy, 6))
-            Game.Keys[6] = 1;
+            Game.Keys[8] = 1;
         if (SDL_JoystickGetButton (Joy, 7))
-            Game.Keys[6] = 1;
+            Game.Keys[7] = 1;
 
 
 

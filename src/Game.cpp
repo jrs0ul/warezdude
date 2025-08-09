@@ -49,7 +49,6 @@ int intro_cchar=0;
 int door_tim=0;
 
 bool fadein=true;
-int fadetim=0;
 int objectivetim=200;
 
 ScroollControl SfxVolumeC, MusicVolumeC;
@@ -91,11 +90,13 @@ Game::Game()
     timeleft=0;
     exitSpawned = false;
     showdebugtext=false;
-    FirstTime=true;
+    FirstTime = true;
+    gameOver = false;
     ms=0;
 
     mapas.itmframe = 0;
     itmtim=0;
+    fadeTimer = 0;
     netMode = NETMODE_NONE;
     clientInfoSendCounter = 0;
 }
@@ -286,18 +287,22 @@ void Game::SendItemCreation(float x, float y, int value, unsigned int clientInde
 //---------------------------
 void Game::KillPlayer(int index)
 {
-    mapas.mons[mapas.enemyCount+index].shot=true;
-    mapas.mons[mapas.enemyCount+index].frame=mapas.mons[mapas.enemyCount+index].weaponCount*4;
-    AdaptSoundPos(2,mapas.mons[mapas.enemyCount+index].x,mapas.mons[mapas.enemyCount+index].y);
+    assert((unsigned)index < mapas.mons.count());
+
+    Dude* player = &mapas.mons[mapas.enemyCount + index];
+
+    player->shot = true;
+    player->frame = player->weaponCount * 4;
+    AdaptSoundPos(2, player->x, player->y);
     SoundSystem::getInstance()->playsound(2);
 
-    mapas.mons[mapas.enemyCount+index].stim=0;
-    timeleft=mapas.timeToComplete;
+    mapas.mons[mapas.enemyCount + index].stim = 0;
+    timeleft = mapas.timeToComplete;
     mapas.mons[mapas.enemyCount+index].setHP(100);
 
     Decal decalas;
-    decalas.x = round(mapas.mons[mapas.enemyCount+index].x);
-    decalas.y = round(mapas.mons[mapas.enemyCount+index].y);
+    decalas.x = player->x;
+    decalas.y = player->y;
     decalas.color = COLOR(1.f, 0.f, 0.f);
     decalas.frame = rand() % 2;
     mapas.decals.add(decalas);
@@ -1383,9 +1388,9 @@ void Game::MonsterAI(int index)
 
     else if (mapas.mons[index].shot)
     { //jei mus kazkas pasove shot=true
-        mapas.mons[index].splatter();
+        mapas.mons[index].disintegrationAnimation();
 
-        if (!mapas.mons[index].shot)
+        if (!mapas.mons[index].shot) //if finally disintegrated
         {
             mapas.mons[index].initMonsterHP();
             mapas.mons[index].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
@@ -1540,6 +1545,7 @@ void Game::GenerateTheMap()
     Dude* player = mapas.getPlayer();
     player->appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
     player->id = 254;
+    player->shot = false;
     player->weaponCount = 3;
     player->currentWeapon = 1;
     player->frame = (player->currentWeapon + 1) * 4 - 2;
@@ -1955,9 +1961,13 @@ void Game::logic(){
         if (ms >= 1000)
         {
             if (timeleft)
+            {
                 timeleft--;
-            else 
+            }
+            else
+            {
                 KillPlayer(0);
+            }
             ms = 0;
         }
     }
@@ -2036,12 +2046,12 @@ void Game::logic(){
 
     if (fadein)
     {
-        fadetim++;
+        fadeTimer++;
 
-        if (fadetim == 160)
+        if (fadeTimer == MAX_FADE_TIMER_VAL)
         {
             fadein = false;
-            fadetim = 0;
+            fadeTimer = 0;
         }
 
     }
@@ -2096,13 +2106,40 @@ void Game::CoreGameLogic()
     }
 
 
+    if (gameOver)
+    {
+        if (Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])
+        {
+            state = GAMESTATE_TITLE;
+            mainmenu.activate();
+            PlayNewSong("evil.ogg");
+            fadein = true;
+            fadeTimer = 0;
+            objectivetim = 200;
+            gameOver = false;
+            return;
+        }
+    }
+
+
     AnimateSlime();
 
     //hero movement
 
     if (mapas.mons[mapas.enemyCount].shot)
     { //hero dies here
-        mapas.mons[mapas.enemyCount].splatter();
+
+        if (netMode != NETMODE_NONE && netGameState == MPMODE_DEATHMATCH)
+        {
+            mapas.mons[mapas.enemyCount].disintegrationAnimation();
+        }
+        else
+        {
+            if (!gameOver)
+            {
+                gameOver = true;
+            }
+        }
 
         if (!mapas.mons[mapas.enemyCount].shot)
         {
@@ -2161,19 +2198,19 @@ void Game::CoreGameLogic()
         player->angle = newAngle;
     }
 
-    if (!Keys[ACTION_NEXT_WEAPON])
-    {
-        nextWepPressed=false;
-    }
-
-    if ((Keys[ACTION_NEXT_WEAPON]) && (!Keys[ACTION_FIRE]) && (!nextWepPressed))
-    {
-        nextWepPressed = true;
-        player->chageNextWeapon();
-    }
-
     if (!player->shot && !player->spawn && player->canAtack)
     {
+        if (!Keys[ACTION_NEXT_WEAPON])
+        {
+            nextWepPressed=false;
+        }
+
+        if ((Keys[ACTION_NEXT_WEAPON]) && (!Keys[ACTION_FIRE]) && (!nextWepPressed))
+        {
+            nextWepPressed = true;
+            player->chageNextWeapon();
+        }
+
         int characterCount = (netMode == NETMODE_SERVER) ? mapas.enemyCount + serveris.clientCount() + 1 :
                                                            mapas.enemyCount + otherClientCount + 1;
         Vector3D mov = Vector3D(gamepadRAxis.x, -gamepadRAxis.y, 0);
@@ -2600,9 +2637,14 @@ void Game::DrawGameplay()
     {
 
         if (fadein)
-            DrawMap(fadetim/160.0f,fadetim/160.0f,fadetim/160.0f);
+        {
+            const float fadeColor = fadeTimer / (MAX_FADE_TIMER_VAL * 1.f);
+            DrawMap(fadeColor, fadeColor, fadeColor);
+        }
         else
+        {
             DrawMap();
+        }
 
 
     }
@@ -2629,6 +2671,11 @@ void Game::DrawGameplay()
     if (ShowMiniMap)
     {
         DrawMiniMap(sys.ScreenWidth - mapas.width() * 4, sys.ScreenHeight - mapas.height() * 4);
+    }
+
+    if (gameOver)
+    {
+        pics.draw(19, sys.ScreenWidth / 2, sys.ScreenHeight / 2, 0, true);
     }
 
 
@@ -2692,11 +2739,7 @@ void Game::DrawGameplay()
         break;
 
 
-    case WM_CHAR:{
-
-        leterKey = (int)wparam;
-                 } break;
-
+   
     case WM_KEYUP:{
         if (wparam == VK_F4) fullscreenswitch();
         if (wparam ==VK_F1) showdebugtext=!showdebugtext;

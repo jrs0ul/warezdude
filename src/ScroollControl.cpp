@@ -6,7 +6,7 @@
 void ScroollControl::init(unsigned int dx, unsigned int dy,
                           const char *dt, long defstate, long dmaxstate, int dstep){
 
-                              x=dx; y=dy;
+                              setpos(dx, dy);
                               strcpy(title,dt);
                               state=defstate;
                               maxstate=dmaxstate;
@@ -20,14 +20,14 @@ void ScroollControl::init(unsigned int dx, unsigned int dy,
 
 void ScroollControl::draw(PicsContainer& pics, unsigned rod, unsigned bg, unsigned font)
 {
-    WriteText(x, y, pics, font, title);
+    WriteText(getX(), getY(), pics, font, title);
 
     for (int i=0;i<maxstate/step;i++)
     {
-        pics.draw(bg, x+10+i,y+16,2);
+        pics.draw(bg, getX() + 10+i, getY() + 16, 2);
     }
 
-    pics.draw(rod, x+10+state/step, y+16+8, 1, true, 1.0f,1.0f, 0.0f, COLOR(1.0f,1.0f,1.0f, 1.f), COLOR(1.f,1.f,1.f,1.f));
+    pics.draw(rod, getX() + 10 + state/step, getY() + 16+8, 1, true, 1.0f,1.0f, 0.0f, COLOR(1.0f,1.0f,1.0f, 1.f), COLOR(1.f,1.f,1.f,1.f));
 
 }
 

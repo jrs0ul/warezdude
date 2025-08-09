@@ -1,9 +1,9 @@
 #ifndef SCROLL_CONTROL_H
 #define SCROLL_CONTROL_H
-#include "ActiveControl.h"
+#include "gui/BasicUiControl.h"
 #include "TextureLoader.h"
 
-class ScroollControl:public ActiveControl{
+class ScroollControl:public BasicControl{
 public:
   char title[30]; //antraste
   bool selected;  //ar pasirinkta

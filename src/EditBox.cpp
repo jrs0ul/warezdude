@@ -7,8 +7,7 @@
 
 void EditBox::init(unsigned int dx, unsigned int dy, const char* dtitl, unsigned char dmaxl)
 {
-    x=dx;
-    y=dy;
+    setpos(dx, dy);
     strcpy(title,dtitl);
     maxlength=dmaxl;
     entered=false;
@@ -61,17 +60,17 @@ void EditBox::draw(PicsContainer& pics, unsigned font, unsigned remelis)
     }
 
     //DrawBlock(device,ekranas,x,y,ilgis*12,40,0,0,125);
-    WriteShadedText(x+2,y+1, pics, font, title);
+    WriteShadedText(getX() + 2, getY() + 1, pics, font, title);
 
     if ((rand()%100)%5==0)
     {
         char tmp[80];
         sprintf(tmp,"%s_",text);   
-        WriteShadedText(x+5,y+16, pics, font,tmp);
+        WriteShadedText(getX() + 5, getY() + 16, pics, font,tmp);
     }
     else
     {
-        WriteShadedText(x+5,y+16, pics, font,text);
+        WriteShadedText(getX() + 5, getY() + 16, pics, font,text);
     }
 
   //coolframe(x,y,ilgis*12,40,remelis,ekranas);

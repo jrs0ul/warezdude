@@ -1,12 +1,12 @@
 #ifndef _EDITBOX_H_
 #define _EDITBOX_H_
 
-#include "ActiveControl.h"
+#include "gui/BasicUiControl.h"
 #include "TextureLoader.h"
 
 
 
-class EditBox:public ActiveControl
+class EditBox : public BasicControl
 {
 public:
         unsigned char maxlength;

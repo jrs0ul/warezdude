@@ -5,9 +5,9 @@
 
 
 
-void SelectMenu::init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel, unsigned char dst,unsigned int dheight){
- x=dx;
- y=dy;
+void SelectMenu::init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel, unsigned char dst,unsigned int dheight)
+{
+    setpos(dx, dy);
  strcpy(title,dt);
  for (int i=0;i<dsel.count;i++)
   strcpy(selection.opt[i],dsel.opt[i]);
@@ -110,28 +110,28 @@ void SelectMenu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsigne
     }
 
     //DrawBlock(device,spraitas,x,y,width,height,0,0,200);
-    WriteText(x+12, y+2, pics, font, title, 1.0f, 1.0f, COLOR(0,0,0, 1.f), COLOR(0,0,0,1.f)); 
-    WriteText(x+10, y+4, pics, font, title); 
+    WriteText(getX() + 12, getY() + 2, pics, font, title, 1.0f, 1.0f, COLOR(0,0,0, 1.f), COLOR(0,0,0,1.f)); 
+    WriteText(getX() + 10, getY() + 4, pics, font, title); 
   
 
     for (unsigned i = start; i< newcount; i++)
     {
         if (icons)
         {
-            pics.draw(icons, x+16, y + 28 + ((i - start) * pics.getInfo(icons)->theight), selection.pics[i]);
-            WriteText(x + 20 + pics.getInfo(icons)->theight,
-                      y + 28 + ((i-start) * pics.getInfo(icons)->theight),
+            pics.draw(icons, getX() + 16, getY() + 28 + ((i - start) * pics.getInfo(icons)->theight), selection.pics[i]);
+            WriteText(getX() + 20 + pics.getInfo(icons)->theight,
+                      getY() + 28 + ((i-start) * pics.getInfo(icons)->theight),
                       pics, font, selection.opt[i], 1.0f,1.2f, COLOR(0,0,0, 1.f));
 
-            WriteText(x + 20 + pics.getInfo(icons)->theight,
-                      y + 28 + ((i-start) * pics.getInfo(icons)->theight),
+            WriteText(getX() + 20 + pics.getInfo(icons)->theight,
+                      getY() + 28 + ((i-start) * pics.getInfo(icons)->theight),
                       pics, font, selection.opt[i]);
 
         }
         else
         {
-            WriteText(x+34, y+26+((i-start)*20), pics, font, selection.opt[i], 1.0f,1.0f, COLOR(0,0,0,1.f), COLOR(0,0,0,1.f));
-            WriteText(x+32,y+28+((i-start)*20), pics,font,selection.opt[i]);
+            WriteText(getX() + 34, getY() + 26+((i-start)*20), pics, font, selection.opt[i], 1.0f,1.0f, COLOR(0,0,0,1.f), COLOR(0,0,0,1.f));
+            WriteText(getX() + 32, getY() + 28+((i-start)*20), pics,font,selection.opt[i]);
 
         }
     }
@@ -139,12 +139,12 @@ void SelectMenu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsigne
 
     if (start>0)
     {
-        pics.draw(rod,x+width-18, y+3, 1);
+        pics.draw(rod, getX() + width-18, getY() + 3, 1);
     }
 
     if (newcount<selection.count)
     {
-        pics.draw(rod, x + width-18, y+height-19,2);
+        pics.draw(rod, getX() + width-18, getY() + height-19,2);
     }
 
     //coolframe(x,y,width,height,frm,spraitas);
@@ -157,11 +157,11 @@ void SelectMenu::draw(PicsContainer& pics, unsigned rod,  unsigned font, unsigne
 
     if ((rand()%100)%10 == 0)
     {
-        pics.draw(rod,x+3,y+28+((state-start)*space));
+        pics.draw(rod, getX() + 3, getY() + 28+((state-start)*space));
     }
     else
     {
-        pics.draw(rod,x+5,y+28+((state-start)*space));
+        pics.draw(rod, getX() + 5, getY() + 28+((state-start)*space));
     }
 
 }

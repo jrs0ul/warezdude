@@ -9,6 +9,8 @@ const int SERVER_SKIP_SENDING_POS_FRAMES  = 1;
 const int TILE_WIDTH                      = 32;
 const int HALF_TILE_WIDTH                 = TILE_WIDTH / 2;
 
+const int MAX_FADE_TIMER_VAL              = 160;
+
 
 const float PLAYER_RADIUS                 = 8.f;
 const int PLAYER_MELEE_DAMAGE             = 15;

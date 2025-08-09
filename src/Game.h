@@ -130,12 +130,14 @@ class Game
     bool exitSpawned;
     bool showdebugtext;
     bool FirstTime;
+    bool gameOver;
     int ms;
 
 
     int otherClientCount; //  This number is received from server, for server itself it is 0
 
     int itmtim;
+    int fadeTimer;
 
     NetworkingModes netMode;
 

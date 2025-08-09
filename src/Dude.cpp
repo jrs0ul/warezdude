@@ -371,7 +371,7 @@ int Dude::hitIt(Dude& enemy, float vectorx, float vectory, int damage)
 }
 
 //-------------------------------
-void Dude::splatter()
+void Dude::disintegrationAnimation()
 {
 
     stim++;
