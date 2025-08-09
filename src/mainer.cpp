@@ -294,6 +294,8 @@ int main(int argc, char* argv[])
 
             tick = SDL_GetTicks() + 1000 / 61;
         }
+        
+        Game.network();
 
         SDL_Delay(0.6);
 

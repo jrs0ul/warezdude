@@ -8,7 +8,6 @@
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "native-activity", __VA_ARGS__))
 #include "audio/AndroidSoundSystem.h"
 #endif
-#include <mutex>
 #include "Vectors.h"
 #include "TouchData.h"
 #include "SysConfig.h"
@@ -107,7 +106,6 @@ class Game
 
     Client client;
     Server serveris;
-    std::mutex messageMutex;
 
     SystemConfig sys;
     OggStream music;
@@ -188,6 +186,7 @@ public:
 
     void init();
     void render();
+    void network();
     void logic();
     void destroy();
     void loadConfig();

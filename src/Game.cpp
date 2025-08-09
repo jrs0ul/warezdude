@@ -3,7 +3,6 @@
 
 #include <cstdio>     //sprinf
 #include <ctime>
-#include <thread>
 #include <cassert>
 
 #include "Dude.h"
@@ -853,6 +852,26 @@ void Game::ItemPickup()
     }
 
 }
+//--------------------------------
+void Game::network()
+{
+
+    switch(netMode)
+    {
+        case NETMODE_NONE : break;
+        case NETMODE_SERVER:
+                            {
+                                serveris.getData();
+                            } break;
+        case NETMODE_CLIENT:
+                            {
+                                client.getData();
+                            } break;
+    }
+
+}
+
+
 //---------------------------------
 void Game::InitServer()
 {
@@ -864,16 +883,6 @@ void Game::InitServer()
     {
         printf("Server launched!\n");
 
-        std::thread t([&]
-        {
-            while(serveris.isRunning())
-            {
-                std::lock_guard<std::mutex> lock(messageMutex);
-                serveris.getData();
-            }
-        });
-
-        t.detach();
     }
     else
     {
@@ -905,18 +914,6 @@ bool Game::JoinServer(const char* ip, unsigned port)
 {
     if (client.open())
     {
-        std::thread c([&]
-            {
-                while(client.isOpen())
-                {
-                    std::lock_guard<std::mutex> lock(messageMutex);
-                    client.getData();
-                }
-            }
-        );
-
-        c.detach();
-
         char buf[MAX_MESSAGE_DATA_SIZE];
         unsigned index = 0;
         strcpy(buf, NET_HEADER);
@@ -3250,7 +3247,6 @@ void Game::ParseMessagesServerGot()
         return;
     }
 
-    std::lock_guard<std::mutex> lock(messageMutex);
 
     printf("client packets to parse %u\n", serveris.storedPacketCount());
 
@@ -3490,7 +3486,6 @@ void Game::ParseMessagesClientGot()
         return;
     }
 
-    std::lock_guard<std::mutex> lock(messageMutex);
 
     printf("server packets to parse %u\n", client.storedPacketCount());
 
