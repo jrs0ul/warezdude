@@ -1,22 +1,4 @@
-/***************************************************************************
- *   Copyright (C) 2008 by jrs0ul                                          *
- *   jrs0ul@gmail.com                                                      *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
+
 #include "SysConfig.h"
 #include <cwchar>
 #include <cstdio>
@@ -26,7 +8,7 @@
 
 
     bool SystemConfig::load(const char * config){
-        
+
         Xml conf;
 
 
@@ -86,7 +68,10 @@
         return true;
     }
 //------------------------------------------
-    bool SystemConfig::write(const char * config){
+bool SystemConfig::write(const char * config)
+{
+
+    printf("writing: %s\n", config);
 
         char buf[255];
         wchar_t wbuf[255];
@@ -98,6 +83,7 @@
 
         XmlNode _width;
         sprintf(buf, "%f", musicVolume);
+        printf("%s\n", buf);
         mbstowcs(wbuf, buf, 255);
         _width.setName(L"MusicVolume");
         _width.setValue(wbuf);
@@ -125,16 +111,13 @@
         Settings.addChild(_isWindowed);
 
 
-
-
-      
        conf.root.addChild(Settings);
 
 
-        if (!conf.write(config)){
+        if (!conf.write(config))
+        {
             conf.destroy();
             return false;
-        
         }
         conf.destroy();
         return true;

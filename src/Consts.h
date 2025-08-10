@@ -12,6 +12,8 @@ const int HALF_TILE_WIDTH                 = TILE_WIDTH / 2;
 const int MAX_FADE_TIMER_VAL              = 160;
 
 
+const float ITEM_RADIUS                   = 8.f;
+
 const float PLAYER_RADIUS                 = 8.f;
 const int PLAYER_MELEE_DAMAGE             = 15;
 
@@ -22,6 +24,8 @@ const int PROJECTILE_EXPLOSION_DURATION   = 5;
 
 const int ENTITY_INITIAL_AMMO             = 20;
 const int ENTITY_INITIAL_HP               = 100;
+
+const int AMMO_PICKUP_VALUE               = 20;
 
 
 const int MONSTER_MAX_RACE                = 3;

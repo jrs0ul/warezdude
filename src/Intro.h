@@ -1,23 +1,25 @@
 #pragma once
 
 
-const int INTRO_TEXT_LINE_WIDTH = 100;
-const int INTRO_TEXT_LINE_COUNT = 100;
+const int INTRO_TEXT_LINE_WIDTH   = 100;
+const int INTRO_TEXT_LINE_COUNT   = 100;
+const int INTRO_SHOW_LETTER_DELAY = 5;
+const int INTRO_LINES_ON_SCREEN   = 18;
 
 class PicsContainer;
 
 class Intro
 {
     char IntroText[INTRO_TEXT_LINE_COUNT][INTRO_TEXT_LINE_WIDTH];
-    int lin;
-    int tim;
-    int cline;
+    int totalLines;
+    int timer;
+    int currentLine;
     int gline;
-    int cchar;
+    int currentChar;
 
 
 public:
-    Intro(){ reset();}
+    Intro();
     void logic();
     void reset();
     void load(const char* filename);

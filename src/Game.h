@@ -23,7 +23,6 @@
 #include "maplist.h"
 
 
-const int GameKeyCount = 10;
 
 
 
@@ -111,6 +110,8 @@ class Game
 
     Intro intro;
 
+    DArray<int> loot;
+
 
     Client client;
     Server serveris;
@@ -135,7 +136,6 @@ class Game
     DArray<int> fragTable;
     int mustCollectItems;
     int timeleft;
-    bool exitSpawned;
     bool showdebugtext;
     bool FirstTime;
     bool gameOver;
@@ -153,6 +153,8 @@ class Game
 
 
 public:
+
+    static const int GameKeyCount = 20;
 
     GameState state;
     MultiplayerModes netGameState;
@@ -209,13 +211,13 @@ private:
     void SendWarpMessage();
     void ItemPickup();
     void SendItemCRemove(int itemIndex);
-    void GoToLevel(int level, int otherplayer);
+    void goToEnding();
+    void GoToLevel(int currentHp, int level, int otherplayer);
     void SendItemSRemove(int ItemIndex, int clientIndex, bool playerTaked);
     //mapo pavadinimas, klientu skaicius
     void SendMapInfo(int clientIndex, CMap& map);
     //monster races amd item positions
     void SendMapData(int clientIndex, CMap& map);
-    void PutExit();
     void InitServer();
     void StopServer();
     bool JoinServer(const char* ip, unsigned port);
@@ -233,8 +235,8 @@ private:
     void BeatEnemy(int aID, int damage);
     void SendAtackImpulse(unsigned int clientIndex, int victim, int hp);
     void SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine);
-    void GenerateTheMap();
-    void LoadTheMap(const char* name, bool createItems, int otherPlayers);
+    void GenerateTheMap(int currentHp);
+    void LoadTheMap(const char* name, bool createItems, int otherPlayers, int currentHp);
     void LoadFirstMap();
     void TitleMenuLogic();
     void HandleBullets();
@@ -263,6 +265,7 @@ private:
     void DrawMiniMap(int x, int y);
     void LoadMap(const char* mapname, int otherplayers);
     void HelpScreenLogic();
+    void EndingLogic();
     int PlayerCount();
     void LoadShader(ShaderProgram* shader, const char* name);
     void IntroScreenLogic();
@@ -276,7 +279,6 @@ private:
     void CoreGameLogic();
     void DrawNum(int x, int y, int num);
     void DrawHelp();
-    void DrawIntro();
 };
 
 

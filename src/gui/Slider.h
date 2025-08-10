@@ -1,7 +1,8 @@
-#ifndef SCROLL_CONTROL_H
-#define SCROLL_CONTROL_H
+#pragma once
+
 #include "BasicUiControl.h"
-#include "../TextureLoader.h"
+
+class PicsContainer;
 
 class ScroollControl:public BasicControl{
 public:
@@ -23,4 +24,3 @@ public:
   void draw( PicsContainer& pics, unsigned rod, unsigned bg,  unsigned font);
 };
 
-#endif //SCROLL_CONTROL_H

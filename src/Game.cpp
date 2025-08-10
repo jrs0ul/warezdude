@@ -15,6 +15,7 @@
 #include "TextureLoader.h"
 #include "Matrix.h"
 #include "audio/OggStream.h"
+#include "Intro.h"
 #include "Item.h"
 #include "Consts.h"
 #ifndef _WIN32
@@ -35,12 +36,6 @@ bool godmode=false;
 
 bool ShowMiniMap=false;
 bool mapkey=false;
-
-/*int lin=0; //kiek intro eiluciu
-int intro_tim=0;
-int intro_cline=0;
-int intro_gline=0; 
-int intro_cchar=0;*/
 
 int door_tim=0;
 
@@ -78,7 +73,6 @@ Game::Game()
     frags = 0;
     mustCollectItems = 0;
     timeleft=0;
-    exitSpawned = false;
     showdebugtext=false;
     FirstTime = true;
     gameOver = false;
@@ -90,8 +84,13 @@ Game::Game()
     netMode = NETMODE_NONE;
     clientInfoSendCounter = 0;
 }
-
-
+//-------------------------------------
+void PlaySoundAt(SoundSystem* ss, float x, float y, int soundIndex)
+{
+    ss->setSoundPos(soundIndex, Vector3D(x, 0, y).v);
+    ss->playsound(soundIndex);
+}
+//---------------------------------------
 void AdaptSoundPos(int soundIndex, float soundx,float soundy){
 
     SoundSystem* ss = SoundSystem::getInstance();
@@ -543,36 +542,21 @@ void Game::AdaptMapView()
 
 }
 
-//---------------------------
-void Game::PutExit(){
-
-    if (netGameState == MPMODE_DEATHMATCH)
-    {
-        return;
-    }
-
-    int ex = mapas.exit.x;
-    int ey = mapas.exit.y;
-
-    mapas.addItem(ex * TILE_WIDTH, ey * TILE_WIDTH, ITEM_EXIT);
-    exitSpawned = true;
-}
 
 //----------------------------
-void Game::GoToLevel(int level, int otherplayer)
+void Game::GoToLevel(int level, int otherplayer, int currentHp)
 {
-    exitSpawned = false;
 
     if (netGameState == MPMODE_DEATHMATCH)
     {
         char mapname[255];
-        mapai.getMapName(level,mapname);
+        mapai.getMapName(level, mapname);
 
-        LoadTheMap(mapname, true, otherplayer);
+        LoadTheMap(mapname, true, otherplayer, currentHp);
     }
     else
     {
-        GenerateTheMap();
+        GenerateTheMap(currentHp);
     }
 
     fadein = true;
@@ -768,40 +752,31 @@ void Game::SendWarpMessage()
 //-------------------------
 void Game::ItemPickup()
 {
+    Dude* player = mapas.getPlayer();
 
-    for (unsigned long i=0; i<mapas.items.count(); i++)
+    for (unsigned long i = 0; i < mapas.items.count(); ++i)
     {
-        if (CirclesColide(mapas.mons[mapas.enemyCount].x,
-                    mapas.mons[mapas.enemyCount].y,8,
-                    mapas.items[i].x,mapas.items[i].y,4))
+        if (CirclesColide(player->x, player->y, PLAYER_RADIUS, mapas.items[i].x, mapas.items[i].y, ITEM_RADIUS))
         {
 
-            int item=mapas.items[i].value;
-            if ((item != 0) && ((item != 6) || (mapas.mons[mapas.enemyCount].getHP() < 100)))
+            int item = mapas.items[i].value;
+
+            if ((item != 0) && ((item != ITEM_MEDKIT) || (player->getHP() < ENTITY_INITIAL_HP)))
             { //daiktas bus paimtas
 
                 SoundSystem* ss = SoundSystem::getInstance();
 
-                if ((item != 6) && (item != 3) && (item != 4))
+                if (item == ITEM_MEDKIT)
                 {
-                    AdaptSoundPos(1, mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
-                    ss->playsound(1);
+                    PlaySoundAt(ss, player->x, player->y, 6);
+                }
+                else if (item == ITEM_CARTRIDGE)
+                {
+                    PlaySoundAt(ss, player->x, player->y, 7);
                 }
                 else
                 {
-                    if (item==6)
-                    {//hp up
-                        AdaptSoundPos(6, mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
-                        ss->playsound(6);  
-                    }
-                    else
-                    {
-                        if (item==3)
-                        {
-                            AdaptSoundPos(7,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
-                            ss->playsound(7);
-                        }
-                    }
+                    PlaySoundAt(ss, player->x, player->y, 1);
                 }
 
 
@@ -812,7 +787,7 @@ void Game::ItemPickup()
                     case NETMODE_CLIENT : SendItemCRemove(i); break;
                     case NETMODE_SERVER :
                     {
-                        for (unsigned int a=0; a<serveris.clientCount(); a++)
+                        for (unsigned int a = 0; a < serveris.clientCount(); a++)
                         {
                             SendItemSRemove(i, a, true);
                         }
@@ -826,22 +801,23 @@ void Game::ItemPickup()
 
                 if ((item < ITEM_AMMO_PACK) && (item > 0))
                 {
+                    loot.add(item);
                     mustCollectItems--;
                 }
-
                 else
-                    if (item==5)
-                        mapas.mons[mapas.enemyCount].ammo+=20;
-                    else
-                        if (item==6)
-                            mapas.mons[mapas.enemyCount].heal();
+                {
+                    if (item == ITEM_AMMO_PACK)
+                    {
+                        mapas.mons[mapas.enemyCount].ammo += AMMO_PICKUP_VALUE;
+                    }
+                    else if (item == ITEM_MEDKIT)
+                    {
+                        mapas.mons[mapas.enemyCount].heal();
+                    }
+                }
 
             }
 
-            //exitas
-            if (item==4){
-                
-            }
         }
 
     }
@@ -1055,23 +1031,30 @@ void Game::DoorsInteraction()
     }
 
 }
+//-------------------------
+void Game::goToEnding()
+{
+    state = GAMESTATE_ENDING;
+    PlayNewSong("crazy.ogg");
+}
+
+
 //-----------------------------
 void Game::CheckForExit()
 {
-    int playerX = round(mapas.getPlayer()->x / 32);
-    int playerY = round(mapas.getPlayer()->y / 32);
+    Dude* player = mapas.getPlayer();
+    const int playerX = round(player->x / TILE_WIDTH);
+    const int playerY = round(player->y / TILE_WIDTH);
 
     //printf("%d %d %d\n", playerY, playerX, mapas.tiles[playerY][playerX]);
 
-    if (mapas.tiles[playerY][playerX] == 81)
+    if (mapas.tiles[playerY][playerX] == TILE_EXIT)
     {
         mapai.current++;
+
         if (mapai.current == MAP_COUNT)
         {
-            mapai.current=0;
-            state = GAMESTATE_ENDING;
-            PlayNewSong("crazy.ogg");
-
+            goToEnding();
         }
 
         int otherPlayers = (netMode == NETMODE_SERVER) ? serveris.clientCount() : 0;
@@ -1082,7 +1065,7 @@ void Game::CheckForExit()
         }
         else
         {
-            GoToLevel(mapai.current, otherPlayers); //server, offline
+            GoToLevel(mapai.current, otherPlayers, player->getHP()); //server, offline
         }
 
 
@@ -1408,7 +1391,7 @@ void Game::MonsterAI(int index)
         {
             for (unsigned i=0; i < mapas.items.count(); i++)
             {
-                if ((!mapas.mons[index].item) && (mapas.items[i].value != ITEM_EXIT))
+                if (!mapas.mons[index].item)
                 {
                     if (CirclesColide(mapas.items[i].x, mapas.items[i].y, 8.0f, mapas.mons[index].x,mapas.mons[index].y,16.0f))
                     {
@@ -1479,7 +1462,7 @@ void Game::AnimateSlime()
     }
 }
 //-------------------------------------------------------
-void Game::GenerateTheMap()
+void Game::GenerateTheMap(int currentHp)
 {
     bulbox.destroy();
     mapas.destroy();
@@ -1529,13 +1512,14 @@ void Game::GenerateTheMap()
         mapas.mons.add(m);
     }
 
-    Dude d;
-    mapas.addMonster(d);
-
+    Dude thePlayer;
+    mapas.addMonster(thePlayer);
     Dude* player = mapas.getPlayer();
+
     player->appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
     player->id = 254;
     player->shot = false;
+    player->setHP(currentHp);
     player->weaponCount = 3;
     player->currentWeapon = 1;
     player->frame = (player->currentWeapon + 1) * 4 - 2;
@@ -1557,7 +1541,7 @@ void Game::GenerateTheMap()
 
 
 //-------------------------------------------------------
-void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers)
+void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers, int currentHp)
 {
     bulbox.destroy();
     mapas.destroy();
@@ -1590,6 +1574,7 @@ void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers)
         player->appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
     }
 
+    player->setHP(currentHp);
     player->id = 254;
     AdaptMapView();
 }
@@ -1598,7 +1583,7 @@ void Game::LoadFirstMap()
 {
     if (netMode != NETMODE_CLIENT) //offline & server
     {
-        GenerateTheMap();
+        GenerateTheMap(ENTITY_INITIAL_HP);
     }
 }
 
@@ -1781,7 +1766,7 @@ void Game::TitleMenuLogic()
                 mapmenu.reset();
                 mapmenu.deactivate();
                 InitServer();
-                GoToLevel(mapai.current, serveris.clientCount());
+                GoToLevel(mapai.current, serveris.clientCount(), ENTITY_INITIAL_HP);
             }
         }
 
@@ -1822,12 +1807,18 @@ void Game::TitleMenuLogic()
             else{
                 MusicVolumeC.deactivate();
                 options.activate();
-                sys.musicVolume=MusicVolumeC.state*-1;
+                sys.musicVolume = MusicVolumeC.state / 1000.f;
+                printf("new music volume %f\n", sys.musicVolume);
                 ResetVolume();
                 MusicVolumeC.reset();
+                char buf[1024];
+                printf("Document path: %s\n", DocumentPath);
+                sprintf(buf, "%s/settings.cfg", DocumentPath);
+                sys.write(buf);
             }
 
-            if (MusicVolumeC.canceled){
+            if (MusicVolumeC.canceled)
+            {
                 MusicVolumeC.deactivate();
                 options.activate();
                 MusicVolumeC.reset();
@@ -1874,7 +1865,7 @@ void Game::HelpScreenLogic()
 {
     itmtim++;
 
-    if (itmtim>10)
+    if (itmtim > 10)
     {
         mapas.itmframe++; //animuoti daiktai
         if (mapas.itmframe > 3)
@@ -1897,6 +1888,36 @@ void Game::HelpScreenLogic()
 
         PlayNewSong("music.ogg");
         LoadFirstMap();
+
+    }
+
+}
+//-----------------------------
+void Game::EndingLogic()
+{
+    itmtim++;
+
+    if (itmtim > 10)
+    {
+        mapas.itmframe++; //animuoti daiktai
+        if (mapas.itmframe > 3)
+        {
+            mapas.itmframe = 0;
+        }
+
+        itmtim=0;
+    }
+
+
+    if (Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])
+    {
+        state = GAMESTATE_TITLE;
+        intro.reset();
+        loot.destroy();
+        mapai.current = 0;
+        FirstTime = true;
+        mainmenu.activate();
+        PlayNewSong("evil.ogg");
 
     }
 
@@ -1992,23 +2013,11 @@ void Game::logic(){
 
     switch(state)
     {
-        case GAMESTATE_TITLE  : TitleMenuLogic();  break;
+        case GAMESTATE_TITLE  : TitleMenuLogic();   break;
         case GAMESTATE_INTRO  : IntroScreenLogic(); break;
         case GAMESTATE_HELP   : HelpScreenLogic();  break;
-        case GAMESTATE_ENDING :
-                                {
-                                    if (Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])
-                                    {
-                                        state = GAMESTATE_TITLE;
-
-                                        mainmenu.activate();
-                                        FirstTime = true;
-                                        PlayNewSong("evil.ogg");
-
-                                    }
-
-                                } break;
-        case GAMESTATE_GAME : CoreGameLogic(); break;
+        case GAMESTATE_ENDING : EndingLogic();      break;
+        case GAMESTATE_GAME   : CoreGameLogic();    break;
     }
 
     if (fadein)
@@ -2067,19 +2076,13 @@ void Game::CoreGameLogic()
     }
 
 
-    if ((mustCollectItems < 1) && (!exitSpawned))  //  no more items ? Let's spawn exit
-    {
-        PutExit();
-    }
 
 
     if (gameOver)
     {
         if (Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])
         {
-            state = GAMESTATE_TITLE;
-            mainmenu.activate();
-            PlayNewSong("evil.ogg");
+            goToEnding();
             fadein = true;
             fadeTimer = 0;
             objectivetim = 200;
@@ -2394,6 +2397,7 @@ void Game::DrawHelp()
 {
     pics.draw(13, 320, 240, 0, true);
     WriteShadedText(130, 70, pics, 10, "Colect these:");
+
     pics.draw(11, 150, 90, mapas.itmframe, false);
     pics.draw(11, 200, 90, mapas.itmframe + 4, false);
     pics.draw(11, 250, 90, mapas.itmframe + 8, false);
@@ -2408,9 +2412,10 @@ void Game::DrawHelp()
     WriteShadedText(140,355, pics, 10, "Tab: minimap");
     WriteShadedText(140,370, pics, 10, "CTRL: fire");
     WriteShadedText(140,385, pics, 10, "SPACE: opens door");
+
     int monframe = mapas.itmframe;
 
-    if (monframe==3)
+    if (monframe == 3)
     {
         monframe=0;
     }
@@ -2567,7 +2572,32 @@ void Game::DrawTitleScreen()
 void Game::DrawEndScreen()
 {
     pics.draw(14, 320, 240, 0, true,  1.25f,1.9f);
-    WriteText(260,430, pics, 10, "The End...to be continued ?");
+
+    char levelstr[255];
+    sprintf(levelstr, "Levels completed: %d", mapai.current);
+    WriteText(20, 40, pics, 10, levelstr);
+    WriteText(20, 80, pics, 10, "Your loot:");
+
+
+    int itemY = 100;
+    int itemX = 20;
+
+    for (unsigned i = 0; i < loot.count(); ++i)
+    {
+
+        pics.draw(11, itemX, itemY, (loot[i] - 1) * 4 + mapas.itmframe, false);
+
+        itemX += 32;
+
+        if (itemX > sys.ScreenWidth - 20)
+        {
+            itemY += 32;
+            itemX = 20;
+        }
+
+    }
+
+    WriteText(260, sys.ScreenHeight - 50, pics, 10, "Press SPACE to continue...");
 }
 //------------------------------------
 void Game::DrawGameplay()
@@ -2908,7 +2938,7 @@ void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
 
                 if (strcmp(mapname,mapas.name)!=0)
                 {//jei mapas ne tas pats tai uzloadinam
-                    LoadTheMap(mapname, false, otherClientCount);
+                    LoadTheMap(mapname, false, otherClientCount, ENTITY_INITIAL_HP);
                     Client_GotMapData = true;
                     state = GAMESTATE_GAME;
                 }
@@ -3345,11 +3375,12 @@ void Game::ParseMessagesServerGot()
                     {
                         ++index;
                         mapai.current++;
-                        int kiek = serveris.clientCount();
+                        const int otherPlayerCount = serveris.clientCount();
 
-                        GoToLevel(mapai.current,kiek);
+                        Dude* player = mapas.getPlayer();
+                        GoToLevel(mapai.current, otherPlayerCount, player->getHP());
 
-                        for (int a =0; a<(int)serveris.clientCount(); a++)
+                        for (int a = 0; a < (int)serveris.clientCount(); ++a)
                         {
                             SendMapInfo(a, mapas);
                             SendMapData(a, mapas);
@@ -3709,6 +3740,7 @@ void Game::LoadShader(ShaderProgram* shader, const char* name)
 void Game::loadConfig()
 {
     char buf[1024];
+    printf("Document path: %s\n", DocumentPath);
     sprintf(buf, "%s/settings.cfg", DocumentPath);
     sys.load(buf);
 
@@ -3786,12 +3818,13 @@ void Game::init()
     ipedit.init(0,sys.ScreenHeight-100,"Enter Server's IP",20);
 
     SfxVolumeC.init(20,sys.ScreenHeight-100,"Sfx Volume:",0,10000,100);
-    MusicVolumeC.init(20,sys.ScreenHeight-100,"Music Volume:",0,10000,100);
+    MusicVolumeC.init(20, sys.ScreenHeight-100, "Music Volume:", (long)(sys.musicVolume * 1000), 1000, 10);
 
 
     intro.load("intro.itf");
 
     InitAudio();
+    ResetVolume();
 
 
     PlayNewSong("evil.ogg");

@@ -2,37 +2,43 @@
 #include "TextureLoader.h"
 #include "gui/Text.h"
 
+Intro::Intro()
+{
+    memset(IntroText, 0, sizeof(IntroText));
+    reset();
+    totalLines = 0;
+}
 
 void Intro::reset()
 {
-    memset(IntroText, 0, sizeof(IntroText));
-    cline = 0;
-    cchar = 0;
+    currentLine = 0;
+    currentChar = 0;
     gline = 0;
+    timer = 0;
 }
 
 void Intro::logic()
 {
-    if (gline <= lin)
+    if (gline < totalLines)
     {
-        tim++;
+        timer++;
 
-        if (tim == 5)
+        if (timer == INTRO_SHOW_LETTER_DELAY)
         {
-            tim = 0;
-            cchar++;
+            timer = 0;
+            currentChar++;
 
-            if ((IntroText[cline][cchar] == '\0'))
+            if ((IntroText[currentLine][currentChar] == '\0'))
             {
-                cline++;
+                currentLine++;
                 gline++;
 
-                if (cline == 18)
+                if (currentLine == INTRO_LINES_ON_SCREEN)
                 {
-                    cline = 0;
+                    currentLine = 0;
                 }
 
-                cchar = 0;
+                currentChar = 0;
 
             }
         }
@@ -60,18 +66,17 @@ void Intro::load(const char* filename)
     {
         c = fgetc(f);
 
-        if ((c != EOF) || (lin < 100))
+        if ((c != EOF) || (totalLines < INTRO_TEXT_LINE_COUNT))
         {
-            if ((c != '\n') && (pos < 100))
+            if ((c != '\n') && (pos < INTRO_TEXT_LINE_WIDTH))
             {
-                IntroText[lin][pos] = c;
+                IntroText[totalLines][pos] = c;
                 pos++;
             }
             else
             {
-                IntroText[lin][pos]='\0';
-                puts(IntroText[lin]);
-                lin++;
+                IntroText[totalLines][pos]='\0';
+                totalLines++;
                 pos = 0;
             }
 
@@ -89,22 +94,22 @@ void Intro::draw(PicsContainer& pics)
 
     char buf[2];
 
-    for (int i = 0; i < cline; i++)
+    for (int i = 0; i < currentLine; i++)
     {
-        WriteShadedText(30, 25 * i + 20, pics, 10, IntroText[i + 18 * (gline / 18)]);
+        WriteShadedText(30, 25 * i + 20, pics, 10, IntroText[i + INTRO_LINES_ON_SCREEN * (gline / INTRO_LINES_ON_SCREEN)]);
     }
 
-    for (int a=0; a < cchar; a++)
+    for (int a = 0; a < currentChar; a++)
     {
         sprintf(buf, "%c", IntroText[gline][a]);
         WriteShadedText(
                   30 + a * 11, 
-                  25 * cline + 20,
+                  25 * currentLine + 20,
                   pics,
                   10,
                   buf
                   );
     }
 
-    WriteShadedText(30,450, pics, 10, "hit RETURN to skip ...");
+    WriteShadedText(30, 450, pics, 10, "hit RETURN to skip ...");
 }

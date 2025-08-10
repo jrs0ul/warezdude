@@ -161,8 +161,8 @@ void CheckKeys()
     Game.MouseY = _MouseY;
 
 
-    memcpy(Game.OldKeys, Game.Keys, 20);
-    memset(Game.Keys, 0, 20);
+    memcpy(Game.OldKeys, Game.Keys, Game::GameKeyCount);
+    memset(Game.Keys, 0, Game::GameKeyCount);
 
     if ( keys[SDL_SCANCODE_W] )    Game.Keys[0] = 1;
     if ( keys[SDL_SCANCODE_S] )    Game.Keys[1] = 1;
@@ -294,6 +294,7 @@ int main(int argc, char* argv[])
 
             tick = SDL_GetTicks() + 1000 / 61;
         }
+
         
         Game.network();
 
