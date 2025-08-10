@@ -169,6 +169,12 @@ void Game::DrawSomeText()
         WriteText(20, 60, pics, 10,buf, 0.8f, 1);
     }
 
+    for (unsigned i = 0; i < mapas.mons.count(); ++i)
+    {
+        sprintf(buf, "mons[%d].shot = %d", i, mapas.mons[i].shot);
+        WriteText(20, 80 + 20 * i, pics, 10, buf, 0.8f, 0.8f);
+    }
+
 
 }
 
@@ -3088,18 +3094,21 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
 //----------------------------------
 void Game::UpdateClientPosition(const unsigned char* bufer, unsigned * buferindex, unsigned int clientIndex)
 {
-    memcpy(&mapas.mons[mapas.enemyCount+1+clientIndex].x,&bufer[*buferindex],sizeof(float));
+    const unsigned clientIdx = mapas.enemyCount + 1 + clientIndex;
+    assert(clientIdx < mapas.mons.count());
+
+    memcpy(&mapas.mons[clientIdx].x, &bufer[*buferindex], sizeof(float));
+    *buferindex += sizeof(float);
+    memcpy(&mapas.mons[clientIdx].y, &bufer[*buferindex], sizeof(float));    
     *buferindex+=sizeof(float);
-    memcpy(&mapas.mons[mapas.enemyCount+1+clientIndex].y,&bufer[*buferindex],sizeof(float));    
+    memcpy(&mapas.mons[clientIdx].angle, &bufer[*buferindex],sizeof(float));    
     *buferindex+=sizeof(float);
-    memcpy(&mapas.mons[mapas.enemyCount+1+clientIndex].angle,&bufer[*buferindex],sizeof(float));    
-    *buferindex+=sizeof(float);
-    memcpy(&mapas.mons[mapas.enemyCount+1+clientIndex].frame,&bufer[*buferindex],sizeof(unsigned char));
+    memcpy(&mapas.mons[clientIdx].frame, &bufer[*buferindex],sizeof(unsigned char));
     (*buferindex)++;
 
-    unsigned char stats=bufer[*buferindex];
-    (stats & 0x80) ?  mapas.mons[mapas.enemyCount+1+clientIndex].shot=true : mapas.mons[mapas.enemyCount+1+clientIndex].shot=false;
-    (stats & 0x40) ? mapas.mons[mapas.enemyCount+1+clientIndex].spawn=true : mapas.mons[mapas.enemyCount+1+clientIndex].spawn=false;
+    unsigned char stats = bufer[*buferindex];
+    mapas.mons[clientIdx].shot = (stats & 0x80) ? true : false;
+    mapas.mons[clientIdx].spawn = (stats & 0x40) ? true : false;
 }
 
 //--------------------------------------------------------------
@@ -3292,7 +3301,10 @@ void Game::ParseMessagesServerGot()
                 case NET_CLIENT_MSG_CHARACTER_DATA:
                     {
                         ++index;
-                        UpdateClientPosition(msg->data, &index, clientIdx);
+                        if (serveris.clientCount())
+                        {
+                            UpdateClientPosition(msg->data, &index, clientIdx);
+                        }
                     } break;
 
                 case NET_CLIENT_MSG_WEAPON_SHOT:
@@ -3419,7 +3431,9 @@ void Game::ParseMessagesServerGot()
 
                         serveris.removeClient(clientIdx);
                         fragTable.remove(clientIdx);
+                        printf("removing idx %d(monster idx:%d) enemy count %d, total mons %ld\n", clientIdx, mapas.enemyCount + clientIdx + 1, mapas.enemyCount, mapas.mons.count());
                         mapas.mons.remove(mapas.enemyCount + clientIdx + 1);
+                        printf("%d\n", mapas.getPlayer()->shot);
                     } break;
 
                 case NET_CLIENT_MSG_PONG:
@@ -3509,9 +3523,10 @@ void Game::ParseMessagesClientGot()
                     {
                         client.shutdown();
                         netMode = NETMODE_NONE;
-                        state = GAMESTATE_TITLE;
-                        mainmenu.activate();
-                        PlayNewSong("evil.ogg");
+                        goToEnding();
+                        fadein = true;
+                        fadeTimer = 0;
+                        objectivetim = 200;
                         return;
                     } break;
 
