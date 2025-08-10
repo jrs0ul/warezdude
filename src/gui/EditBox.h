@@ -1,8 +1,8 @@
 #ifndef _EDITBOX_H_
 #define _EDITBOX_H_
 
-#include "gui/BasicUiControl.h"
-#include "TextureLoader.h"
+#include "BasicUiControl.h"
+#include "../TextureLoader.h"
 
 
 

@@ -1,6 +1,6 @@
-#include <cstdio>
-#include "gui/Text.h"
 #include "EditBox.h"
+#include <cstdio>
+#include "Text.h"
 
 
 

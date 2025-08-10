@@ -8,9 +8,8 @@
 #include "Dude.h"
 #include "BulletContainer.h"
 #include "TextureLoader.h"
-#include "EditBox.h"
 #include "bullet.h"
-#include "ScroollControl.h"
+#include "gui/Slider.h"
 #include "gui/Text.h"
 #include "Usefull.h"
 #include "TextureLoader.h"
@@ -36,32 +35,23 @@ bool godmode=false;
 
 bool ShowMiniMap=false;
 bool mapkey=false;
-bool mainkey=false;
-bool triger=false;
 
-char IntroText[100][100]={0};
-int lin=0; //kiek intro eiluciu
+/*int lin=0; //kiek intro eiluciu
 int intro_tim=0;
 int intro_cline=0;
 int intro_gline=0; 
-int intro_cchar=0;
+int intro_cchar=0;*/
 
 int door_tim=0;
 
 bool fadein=true;
 int objectivetim=200;
 
-ScroollControl SfxVolumeC, MusicVolumeC;
-EditBox ipedit;
+bool Client_GotMapData = false;
 
-int leterKey;
 
-bool Client_GotMapData=false;
-
-//long mousepowx,mousepowy;
-
-bool noAmmo=false;
-bool nextWepPressed=false;
+bool noAmmo = false;
+bool nextWepPressed = false;
 
 
 
@@ -1115,8 +1105,8 @@ void Game::CheckForExit()
 void Game::SlimeReaction(int index)
 {
 
-    const int montileY = round(mapas.mons[index].y/32);
-    const int montileX = round(mapas.mons[index].x/32);
+    const int montileY = round(mapas.mons[index].y / TILE_WIDTH);
+    const int montileX = round(mapas.mons[index].x / TILE_WIDTH);
 
     if ((!mapas.mons[index].shot)&&(!mapas.mons[index].spawn)&&(!godmode)
         &&((mapas.tiles[montileY][montileX] == slime)
@@ -1713,7 +1703,6 @@ void Game::TitleMenuLogic()
             if (!ipedit.entered)
             {
                 ipedit.getInput(EditText, globalKEY);
-                leterKey=0;
             }
             else
             {
@@ -1875,33 +1864,11 @@ void Game::IntroScreenLogic()
     if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!FirstTime))
     {
         state = GAMESTATE_HELP;
-        intro_cline = 0;
-        intro_cchar = 0;
-        intro_gline = 0;
+        intro.reset();
     }
 
-    if (intro_gline <= lin)
-    {
-        intro_tim++;
-        if (intro_tim==5)
-        {
-            intro_tim=0;
-            intro_cchar++;
-
-            if ((IntroText[intro_cline][intro_cchar]=='\0'))
-            {
-                intro_cline++;
-                intro_gline++;
-
-                if (intro_cline==18)
-                    intro_cline=0;
-
-                intro_cchar=0;
-
-            }
-        }
-    }
-}
+    intro.logic();
+   }
 //---------------------------------------------------------------
 void Game::HelpScreenLogic()
 {
@@ -2456,34 +2423,6 @@ void Game::DrawHelp()
 
 
 }
-//-------------------------------------
-void Game::DrawIntro()
-{
-    pics.draw(13, 320, 240, 0, true);
-
-    char buf[2];
-
-    for (int i=0;i<intro_cline;i++)
-    {
-        WriteShadedText(30, 25 * i + 20, pics, 10, IntroText[i+18*(intro_gline/18)]);
-    }
-
-    for (int a=0; a<intro_cchar; a++)
-    {
-        sprintf(buf, "%c", IntroText[intro_gline][a]);
-        WriteShadedText(
-                  30 + a * 11, 
-                  25 * intro_cline + 20,
-                  pics,
-                  10,
-                  buf
-                  );
-    }
-
-    WriteShadedText(30,450, pics, 10, "hit RETURN to skip ...");
-}
-
-
 
 //---------------------------
 void Game::DrawMissionObjectives()
@@ -2538,7 +2477,7 @@ void Game::render()
     switch(state)
     {
         case GAMESTATE_TITLE  : DrawTitleScreen(); break;
-        case GAMESTATE_INTRO  : DrawIntro();       break;
+        case GAMESTATE_INTRO  : intro.draw(pics);  break;
         case GAMESTATE_HELP   : DrawHelp();        break;
         case GAMESTATE_ENDING : DrawEndScreen();   break;
         case GAMESTATE_GAME   : DrawGameplay();    break;
@@ -2781,46 +2720,6 @@ void Game::DrawGameplay()
 
     return DefWindowProc(hwnd, msg,wparam, lparam);
 }*/
-
-
-//-------------------------------
-
-void LoadIntro(){
-    FILE* f;
-    puts("Loading intro text...");
-    f = fopen("intro.itf","rt");
-
-    if (!f)
-    {
-        puts("bumer,could not open intro.itf");
-        return;
-    }
-
-
-    int pos=0;
-    int c=';';
-    while (c!=EOF){
-        c=fgetc(f);
-        printf("%c", c);
-        if ((c!=EOF)||(lin<100)){
-            if ((c!='\n')&&(pos<100)){
-                IntroText[lin][pos]=c;
-                pos++;
-            }
-            else{
-                IntroText[lin][pos]='\0';
-                puts(IntroText[lin]);
-                lin++;
-                pos=0;
-            }
-
-
-        }
-    }
-    fclose(f);
-    
-
-}
 
 //----------------------------------------
 //siuncia kliento info i serva
@@ -3890,7 +3789,7 @@ void Game::init()
     MusicVolumeC.init(20,sys.ScreenHeight-100,"Music Volume:",0,10000,100);
 
 
-    LoadIntro();
+    intro.load("intro.itf");
 
     InitAudio();
 

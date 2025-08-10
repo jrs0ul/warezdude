@@ -1,6 +1,6 @@
 #include <cstring>
-#include "ScroollControl.h"
-#include "gui/Text.h"
+#include "Slider.h"
+#include "Text.h"
 
 
 void ScroollControl::init(unsigned int dx, unsigned int dy,

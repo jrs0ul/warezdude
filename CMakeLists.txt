@@ -13,19 +13,19 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_executable(warezdude3
-                    src/mainer.cpp
                     src/Dude.cpp
                     src/MapGenerator.cpp
                     src/map.cpp
                     src/bullet.cpp
                     src/Decal.cpp
+                    src/Intro.cpp
                     src/BulletContainer.cpp
                     src/maplist.cpp
-                    src/SelectMenu.cpp
+                    src/gui/SelectMenu.cpp
                     src/OSTools.cpp
                     src/gui/Text.cpp
-                    src/ScroollControl.cpp
-                    src/EditBox.cpp
+                    src/gui/Slider.cpp
+                    src/gui/EditBox.cpp
                     src/SysConfig.cpp
                     src/network/Socket.cpp
                     src/network/Client.cpp
@@ -43,6 +43,7 @@ add_executable(warezdude3
                     src/audio/OggStream.cpp
                     src/audio/SoundSystem.cpp
                     src/Game.cpp
+                    src/mainer.cpp
                     )
 
 target_link_libraries(warezdude3 

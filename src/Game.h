@@ -12,7 +12,10 @@
 #include "TouchData.h"
 #include "SysConfig.h"
 #include "ShaderProgram.h"
-#include "SelectMenu.h"
+#include "gui/SelectMenu.h"
+#include "gui/Slider.h"
+#include "gui/EditBox.h"
+#include "Intro.h"
 #include "network/Server.h"
 #include "network/Client.h"
 #include "BulletContainer.h"
@@ -90,8 +93,6 @@ enum NetworkCommands
 };
 
 
-
-
 class Game
 {
 
@@ -103,6 +104,13 @@ class Game
 
     MapList mapai;
     CMap mapas;
+
+    ScroollControl SfxVolumeC;
+    ScroollControl MusicVolumeC;
+    EditBox ipedit;
+
+    Intro intro;
+
 
     Client client;
     Server serveris;

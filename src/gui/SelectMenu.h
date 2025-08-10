@@ -2,8 +2,8 @@
 #define _SELECTMENIU_H_
 
 #include <cstring>
-#include "gui/BasicUiControl.h"
-#include "TextureLoader.h"
+#include "BasicUiControl.h"
+#include "../TextureLoader.h"
 
 struct Smenu{
   char opt[20][30];
@@ -14,8 +14,6 @@ struct Smenu{
  };
 
 //--------------------------------------
-
-
 
 
 

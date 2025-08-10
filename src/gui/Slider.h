@@ -1,7 +1,7 @@
 #ifndef SCROLL_CONTROL_H
 #define SCROLL_CONTROL_H
-#include "gui/BasicUiControl.h"
-#include "TextureLoader.h"
+#include "BasicUiControl.h"
+#include "../TextureLoader.h"
 
 class ScroollControl:public BasicControl{
 public:
