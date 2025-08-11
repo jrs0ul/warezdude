@@ -293,7 +293,7 @@ void Game::KillPlayer(int index)
 {
     assert((unsigned)index < mapas.mons.count());
 
-    Dude* player = &mapas.mons[mapas.enemyCount + index];
+    Dude* player = &mapas.mons[index];
 
     player->shot = true;
     player->frame = player->weaponCount * 4;
@@ -353,7 +353,7 @@ void Game::KillEnemy(unsigned ID)
     }
     else
     {
-        KillPlayer(ID - 254);
+        KillPlayer(ID);
     }
 
 
@@ -1292,7 +1292,7 @@ void Game::MonsterAI(int index)
                         }
                         else
                         {
-                            KillPlayer(i-mapas.enemyCount);
+                            KillPlayer(i);
                         }
                     }
                 }
@@ -3476,6 +3476,12 @@ void Game::ParseMessagesServerGot()
                                 int idx = mapas.enemyCount + clientIdx;
                                 memcpy(&data[len], &idx, sizeof(int));
                                 len += sizeof(int);
+
+                                int newIndexForThatClient = (i > (unsigned)clientIdx) ? i - 1 : i;
+
+                                memcpy(&data[len], &newIndexForThatClient, sizeof(int));
+                                len += sizeof(int);
+
                                 serveris.sendData(i, data, len);
                             }
                         }
@@ -3592,7 +3598,10 @@ void Game::ParseMessagesClientGot()
                         ++index;
                         int idxToRemove;
                         memcpy(&idxToRemove, &(msg->data)[index], sizeof(int));
+                        index += sizeof(int);
 
+                        memcpy(&clientMyIndex, &(msg->data)[index], sizeof(int));
+                        index += sizeof(int);
                         mapas.removeMonster(idxToRemove);
 
                     } break;
