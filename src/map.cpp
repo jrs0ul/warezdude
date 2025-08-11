@@ -2,6 +2,7 @@
 
 #include <cstdio>
 #include <wchar.h>
+#include <cassert>
 #include "Xml.h"
 #include "MapGenerator.h"
 #include "Item.h"
@@ -9,9 +10,10 @@
 
 
 
-Dude* CMap::getPlayer()
+Dude* CMap::getPlayer(unsigned clientIdx)
 {
-    return &mons[enemyCount];
+    assert(enemyCount + clientIdx < mons.count());
+    return &mons[enemyCount + clientIdx];
 }
 //-----------------------------------------
 void CMap::addMonster(Dude &newmonster){

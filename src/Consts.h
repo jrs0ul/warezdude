@@ -6,6 +6,8 @@ const char NET_HEADER[NET_HEADER_LEN + 1] = "WD3";
 
 const int SERVER_SKIP_SENDING_POS_FRAMES  = 1;
 
+const int MINIMAP_TILE_WIDTH              = 4;
+
 const int TILE_WIDTH                      = 32;
 const int HALF_TILE_WIDTH                 = TILE_WIDTH / 2;
 

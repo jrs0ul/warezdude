@@ -60,7 +60,7 @@ public:
             enemyCount = 0;
         }
 
-        Dude* getPlayer();
+        Dude* getPlayer(unsigned clientIdx = 0);
 
         unsigned width(){return _width;}
         unsigned height(){return _height;}

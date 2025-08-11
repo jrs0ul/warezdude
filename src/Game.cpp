@@ -42,7 +42,6 @@ int door_tim=0;
 bool fadein=true;
 int objectivetim=200;
 
-bool Client_GotMapData = false;
 
 bool nextWepPressed = false;
 
@@ -82,6 +81,8 @@ Game::Game()
     fadeTimer = 0;
     netMode = NETMODE_NONE;
     clientInfoSendCounter = 0;
+    Client_GotMapData = false;
+    clientMyIndex = 0;
 }
 //-------------------------------------
 void PlaySoundAt(SoundSystem* ss, float x, float y, int soundIndex)
@@ -170,7 +171,7 @@ void Game::DrawSomeText()
 
     for (unsigned i = 0; i < mapas.mons.count(); ++i)
     {
-        sprintf(buf, "mons[%d].shot = %d", i, mapas.mons[i].shot);
+        sprintf(buf, "mons[%d] id=%d x=%.2f shot=%d", i, mapas.mons[i].id, mapas.mons[i].x, mapas.mons[i].shot);
         WriteText(20, 80 + 20 * i, pics, 10, buf, 0.8f, 0.8f);
     }
 
@@ -209,31 +210,40 @@ void Game::DrawMiniMap(int x, int y)
     {
         for (unsigned a = 0; a < mapas.width(); a++)
         {
-            int frame=0;
+            int frame = 0;
 
-            if ((mapas.tiles[i][a]!=65) && (mapas.tiles[i][a]!=67) && (mapas.tiles[i][a]!=69)
-                && (mapas.tiles[i][a]!=71))
+            if ((mapas.tiles[i][a] != 65) && (mapas.tiles[i][a] != 67) && (mapas.tiles[i][a] != 69)
+                    && (mapas.tiles[i][a] != 71))
             {
                 frame = mapas.colide(a, i);
             }
 
             if (frame)
             {
-                pics.draw(12, a*4+x,i*4+y,frame, false, 1.f, 1.f, 0.f, COLOR(1,1,1,0.6f), COLOR(1,1,1,0.6f));
+                pics.draw(12,
+                          a * MINIMAP_TILE_WIDTH + x,
+                          i * MINIMAP_TILE_WIDTH + y,
+                          frame, false, 1.f, 1.f, 0.f, COLOR(1,1,1,0.6f), COLOR(1,1,1,0.6f));
             }
         }
     }
 
-        pics.draw(12, x+(round(mapas.mons[mapas.enemyCount].x/32.0f)*4),
-                                            y+(round(mapas.mons[mapas.enemyCount].y/32.0f)*4),
-                                            3, false);
+    Dude* player = mapas.getPlayer((netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0);
 
-        for (unsigned i = 0; i<mapas.items.count(); i++)
-        {
-            pics.draw(12, x+(round(mapas.items[i].x/32.0f)*4),
-                          y+(round(mapas.items[i].y/32.0f)*4),
-                                            4, false);
-        }
+    pics.draw(12,
+              x + (round(player->x / 32.0f) * MINIMAP_TILE_WIDTH),
+              y + (round(player->y / 32.0f) * MINIMAP_TILE_WIDTH),
+              3,
+              false);
+
+    for (unsigned i = 0; i<mapas.items.count(); i++)
+    {
+        pics.draw(12,
+                  x + (round(mapas.items[i].x / 32.0f) * MINIMAP_TILE_WIDTH),
+                  y + (round(mapas.items[i].y / 32.0f) * MINIMAP_TILE_WIDTH),
+                  4,
+                  false);
+    }
 
 
 }
@@ -453,7 +463,7 @@ void Game::DrawStats()
 //the hero and camera movement
 void Game::MoveDude()
 {
-    Dude* player = mapas.getPlayer();
+    Dude* player = mapas.getPlayer((netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0);
 
     if ((Keys[0]) || (Keys[1]) || (Keys[2]) || (Keys[3]))
     {
@@ -502,7 +512,9 @@ void Game::MoveDude()
 void Game::AdaptMapView()
 {
 
-    Dude* player = mapas.getPlayer();
+    int clientIndex = (netMode == NETMODE_CLIENT)? (clientMyIndex + 1) : 0;
+    Dude* player = mapas.getPlayer(clientIndex);
+
     const float HALF_SCREEN_W = sys.ScreenWidth / 2.f;
     const float HALF_SCREEN_H = sys.ScreenHeight / 2.f;
 
@@ -649,26 +661,32 @@ void Game::SendMapInfo(int clientIndex, CMap& map)
 
     ++index;
     int len = (int)strlen(map.name); 
-    int totalpacketlen = len + sizeof(int) + 1 + 1;
 
-    memcpy(&bufer[index], &totalpacketlen,sizeof(int)); //paketo dydis
+    memcpy(&bufer[index], &len, sizeof(int)); //map name len
     index += sizeof(int);
 
-    memcpy(&bufer[index], &len, sizeof(int)); //mapo pavadinimo ilgis
-    index += sizeof(int);
-
-    memcpy(&bufer[index], map.name, strlen(map.name)); //mapo pavadinimas
+    memcpy(&bufer[index], map.name, strlen(map.name)); //map name
     index += (int)strlen(map.name);
 
-    unsigned int kiekis = serveris.clientCount(); 
-    memcpy(&bufer[index], &kiekis, sizeof(unsigned int)); //client count
+    unsigned int totalClientCount = serveris.clientCount(); 
+    memcpy(&bufer[index], &totalClientCount, sizeof(unsigned int)); //client count
     index += sizeof(unsigned int);
 
+    for (unsigned i = 0; i < serveris.clientCount(); ++i)        // all the IDs
+    {
+        int id = map.mons[map.enemyCount + 1 + i].id;
+        memcpy(&bufer[index], &id, sizeof(int));
+        index += sizeof(int);
+    }
+
+    memcpy(&bufer[index], &clientIndex, sizeof(int)); //your index in the server
+    index += sizeof(int);
+
     char gameType = (char)netGameState;
-    bufer[index] = gameType;
+    bufer[index] = gameType;                        //  the game type : coop or deathmatch
     ++index;
 
-    serveris.sendData(clientIndex,bufer,index);
+    serveris.sendData(clientIndex, bufer, index);
 
 }
 //------------------------------------------------
@@ -757,7 +775,8 @@ void Game::SendWarpMessage()
 //-------------------------
 void Game::ItemPickup()
 {
-    Dude* player = mapas.getPlayer();
+    int clientIndex = (netMode == NETMODE_CLIENT)? (clientMyIndex + 1) : 0;
+    Dude* player = mapas.getPlayer(clientIndex);
 
     for (unsigned long i = 0; i < mapas.items.count(); ++i)
     {
@@ -966,43 +985,45 @@ void Game::SendServerDoorState(unsigned int clientIndex, int doorx,int doory, un
 void Game::DoorsInteraction()
 {
 
+    int clientIndex = (netMode == NETMODE_CLIENT)? (clientMyIndex + 1) : 0;
+    Dude* player = mapas.getPlayer(clientIndex);
+
     if (door_tim == 0)
     {
-        Vector3D vec = MakeVector(20.0f, 0, mapas.mons[mapas.enemyCount].angle);
+        Vector3D vec = MakeVector(20.0f, 0, player->angle);
 
-        int drx=round(((mapas.mons[mapas.enemyCount].x+vec.x)/32.0f));
-        int dry=round(((mapas.mons[mapas.enemyCount].y-vec.y)/32.0f));
+        const int drx = round((player->x + vec.x) / 32.f);
+        const int dry = round((player->y - vec.y) / 32.f);
 
         SoundSystem* ss = SoundSystem::getInstance();
 
 
         if (Keys[ACTION_OPEN])
         {
-            if ((mapas.tiles[dry][drx]==67)
-                ||(mapas.tiles[dry][drx]==65)
-                ||(mapas.tiles[dry][drx]==69)
-                ||(mapas.tiles[dry][drx]==71))
-            {// atidarom
+            //  opening
+            if ((mapas.tiles[dry][drx] == 67) ||
+                (mapas.tiles[dry][drx] == 65) ||
+                (mapas.tiles[dry][drx] == 69) ||
+                (mapas.tiles[dry][drx] == 71))
+            {
                 mapas.tiles[dry][drx]++;
                 mapas._colide[dry][drx] = false;
                 door_tim = 1;
-                AdaptSoundPos(8, mapas.mons[mapas.enemyCount].x, mapas.mons[mapas.enemyCount].y);
+                AdaptSoundPos(8, player->x, player->y);
                 ss->playsound(8);
             }
-            else                        //uzdarom
-                if ((mapas.tiles[dry][drx]==68)
-                    ||(mapas.tiles[dry][drx]==66)
-                    ||(mapas.tiles[dry][drx]==70)
-                    ||(mapas.tiles[dry][drx]==72)
+            else if ((mapas.tiles[dry][drx] == 68) ||  //  closing
+                     (mapas.tiles[dry][drx] == 66) ||
+                     (mapas.tiles[dry][drx] == 70) ||
+                     (mapas.tiles[dry][drx] == 72)
                     )
             {
-
-                if (!CirclesColide(mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y,16.0f,drx*32.0f,dry*32.0f,8.0f))
+                if (!CirclesColide(player->x, player->y, 16.0f, drx * 32.0f, dry * 32.0f, 8.0f))
                 {
                     mapas.tiles[dry][drx]--;
                     mapas._colide[dry][drx] = true;
-                    door_tim=1;
-                    AdaptSoundPos(9, mapas.mons[mapas.enemyCount].x, mapas.mons[mapas.enemyCount].y);
+                    door_tim = 1;
+                    AdaptSoundPos(9, player->x, player->y);
                     ss->playsound(9);
                 }
             }
@@ -1020,15 +1041,16 @@ void Game::DoorsInteraction()
                  } break;
                 case NETMODE_CLIENT:
                 {
-                    SendClientDoorState(drx,dry,mapas.tiles[dry][drx]);
+                    SendClientDoorState(drx, dry, mapas.tiles[dry][drx]);
                 }
             }
 
         }
-    } 
+    }
     else
     {
         door_tim++;
+
         if (door_tim == 30)
         {
             door_tim=0;
@@ -1047,7 +1069,9 @@ void Game::goToEnding()
 //-----------------------------
 void Game::CheckForExit()
 {
-    Dude* player = mapas.getPlayer();
+
+    int clientIndex = (netMode == NETMODE_CLIENT)? (clientMyIndex + 1) : 0;
+    Dude* player = mapas.getPlayer(clientIndex);
     const int playerX = round(player->x / TILE_WIDTH);
     const int playerY = round(player->y / TILE_WIDTH);
 
@@ -1143,6 +1167,10 @@ void Game::SendClientMeleeImpulseToServer(int victimID, int hp)
 //----------------------------------------
 void Game::SendClientShootImpulseToServer()
 {
+
+    int clientIndex = (netMode == NETMODE_CLIENT)? (clientMyIndex + 1) : 0;
+    Dude* player = mapas.getPlayer(clientIndex);
+
     char buf[MAX_MESSAGE_DATA_SIZE];
     int pos = 0;
 
@@ -1151,11 +1179,11 @@ void Game::SendClientShootImpulseToServer()
 
     buf[pos] = NET_CLIENT_MSG_WEAPON_SHOT;
     ++pos;
-    memcpy(&buf[pos], &mapas.getPlayer()->ammo, sizeof(int));
+    memcpy(&buf[pos], &(player->ammo), sizeof(int));
     pos += sizeof(int);
     unsigned char isMine = 0;
 
-    if (mapas.mons[mapas.enemyCount].currentWeapon == 2)
+    if (player->currentWeapon == 2)
     {
         isMine = 1;
     }
@@ -1362,7 +1390,7 @@ void Game::MonsterAI(int index)
                     {
                         for (unsigned int i=0;i < serveris.clientCount(); i++)
                         {
-                            SendBulletImpulse(index,mapas.mons[index].ammo,i, false);
+                            SendBulletImpulse(index, mapas.mons[index].ammo, i, false);
                         }
                     }
                 }
@@ -2122,7 +2150,8 @@ void Game::CoreGameLogic()
     AnimateSlime();
 
     //hero movement
-    Dude* player = mapas.getPlayer();
+    int clientIndex = (netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0;
+    Dude* player = mapas.getPlayer(clientIndex);
 
     if (player->shot)
     { //hero dies here
@@ -2257,20 +2286,20 @@ void Game::CoreGameLogic()
             {
                 case 1: stillHaveAmmo = player->shoot(true, false, &bulbox); break;
                 case 2: stillHaveAmmo = player->shoot(true, true, &bulbox); break;
-                case 0: BeatEnemy(mapas.enemyCount, PLAYER_MELEE_DAMAGE); break;
+                case 0: BeatEnemy(mapas.enemyCount + clientIndex, PLAYER_MELEE_DAMAGE); break;
             }
 
             if (player->currentWeapon > 0 && stillHaveAmmo)
             {
                 if (player->currentWeapon == 1)
                 {
-                    AdaptSoundPos(0,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y); 
+                    AdaptSoundPos(0, player->x, player->y); 
                     SoundSystem::getInstance()->playsound(0); 
 
                 }
-                if (mapas.mons[mapas.enemyCount].currentWeapon==2)
+                if (player->currentWeapon == 2)
                 {
-                    AdaptSoundPos(12,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
+                    AdaptSoundPos(12, player->x, player->y);
                     SoundSystem::getInstance()->playsound(12);
                 }
 
@@ -2279,13 +2308,13 @@ void Game::CoreGameLogic()
                    SendClientShootImpulseToServer();
                 }
 
-                const bool isMine = (mapas.mons[mapas.enemyCount].currentWeapon == 2) ? true : false;
+                const bool isMine = (player->currentWeapon == 2) ? true : false;
 
                 if (netMode == NETMODE_SERVER)
                 {
                     for (unsigned i = 0; i < serveris.clientCount(); i++)
                     {
-                        SendBulletImpulse(255, mapas.mons[mapas.enemyCount].ammo, i, isMine);
+                        SendBulletImpulse(mapas.enemyCount + clientIndex, player->ammo, i, isMine);
                     }
                 }
 
@@ -2299,7 +2328,7 @@ void Game::CoreGameLogic()
                 }
                 else
                 {
-                    AdaptSoundPos(4,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y);
+                    AdaptSoundPos(4, player->x, player->y);
                     SoundSystem::getInstance()->playsound(4);
 
                     if (!noAmmo)
@@ -2311,9 +2340,9 @@ void Game::CoreGameLogic()
         }
     }
     //--
-    if (!mapas.mons[mapas.enemyCount].canAtack)
+    if (!player->canAtack)
     {
-        mapas.mons[mapas.enemyCount].reload(25);
+        player->reload(25);
     }
 
 
@@ -2325,7 +2354,7 @@ void Game::CoreGameLogic()
 
             if (!mapas.mons[i].hit)
             {
-                AdaptSoundPos(10,mapas.mons[i].x,mapas.mons[i].y);
+                AdaptSoundPos(10, mapas.mons[i].x, mapas.mons[i].y);
                 SoundSystem::getInstance()->playsound(10);
             }
         }
@@ -2764,6 +2793,8 @@ void Game::DrawGameplay()
 //siuncia kliento info i serva
 void Game::SendClientCoords()
 {
+    Dude* player = mapas.getPlayer(clientMyIndex + 1);
+
     char coords[MAX_MESSAGE_DATA_SIZE];
     int cnt = 0;
 
@@ -2772,20 +2803,26 @@ void Game::SendClientCoords()
 
     coords[cnt] = NET_CLIENT_MSG_CHARACTER_DATA;
     ++cnt;
-    memcpy(&coords[cnt], &mapas.mons[mapas.enemyCount].x, sizeof(float));
+    memcpy(&coords[cnt], &(player->x), sizeof(float));
     cnt += sizeof(float);
-    memcpy(&coords[cnt], &mapas.mons[mapas.enemyCount].y, sizeof(float));
+    memcpy(&coords[cnt], &(player->y), sizeof(float));
     cnt += sizeof(float);
-    memcpy(&coords[cnt], &mapas.mons[mapas.enemyCount].angle, sizeof(float));
+    memcpy(&coords[cnt], &(player->angle), sizeof(float));
     cnt += sizeof(float);
-    memcpy(&coords[cnt], &mapas.mons[mapas.enemyCount].frame, sizeof(unsigned char));
+    memcpy(&coords[cnt], &(player->frame), sizeof(unsigned char));
     cnt += sizeof(unsigned char);
     unsigned char stats=0x0;
 
-    if (mapas.mons[mapas.enemyCount].shot)
+    if (player->shot)
+    {
         stats|=0x80;
-    if (mapas.mons[mapas.enemyCount].spawn)
+    }
+
+    if (player->spawn)
+    {
         stats|=0x40;
+    }
+
     coords[cnt]=stats;
     cnt++;
 
@@ -2798,19 +2835,21 @@ void Game::SendPlayerInfoToClient(int clientindex)
     char coords[MAX_MESSAGE_DATA_SIZE];
     int cnt = 0;
 
-    for (int i = 0; i < mapas.enemyCount+(int)serveris.clientCount()+1; i++)
+    for (int i = 0; i < mapas.enemyCount+(int)serveris.clientCount() + 1; i++)
     {
-        if (i-mapas.enemyCount-1 != clientindex)
+        if (i - mapas.enemyCount - 1 != clientindex)
         {
 
-            if ((i >= mapas.enemyCount) && ((i - mapas.enemyCount - 1) < clientindex))
+            /*if ((i >= mapas.enemyCount) && ((i - mapas.enemyCount - 1) < clientindex))
             {
                 z = (unsigned char)(i+1);
             }
             else
             {
                 z = (unsigned char)i;
-            }
+            }*/
+
+            z = i;
 
             memcpy(&coords[cnt], NET_HEADER, NET_HEADER_LEN);
             cnt += NET_HEADER_LEN;
@@ -2861,8 +2900,8 @@ void Game::GetCharData(const unsigned char* bufer, int bufersize, int* index )
     {
 
         unsigned char monum=0;
-        memcpy(&monum,&bufer[*index],sizeof(unsigned char));
-        *index+=sizeof(unsigned char);
+        memcpy(&monum, &bufer[*index], sizeof(unsigned char));
+        *index += sizeof(unsigned char);
         memcpy(&mapas.mons[monum].x,&bufer[*index],sizeof(float));
         *index+=sizeof(float);
         memcpy(&mapas.mons[monum].y,&bufer[*index],sizeof(float));
@@ -2900,92 +2939,90 @@ void Game::GetCharData(const unsigned char* bufer, int bufersize, int* index )
     }
 }
 //---------------------------------------------
-void Game::GetMapInfo(const unsigned char* bufer, int bufersize, int* index)
+void Game::GetMapInfo(const unsigned char* bufer, int* index)
 {
+
+    ++(*index);
 
     int mapnamelen = 0;
     char mapname[255];
 
-    if (bufersize-(*index) >= (int)sizeof(int))
+    memcpy(&mapnamelen, &bufer[*index], sizeof(int));
+    *index += sizeof(int);
+
+    if (mapnamelen)
     {
-        int totallen = 0;
-        memcpy(&totallen, &bufer[*index], sizeof(int));
+
+        memcpy(mapname, &bufer[*index], mapnamelen);
+        *index += mapnamelen;
+        mapname[mapnamelen] = 0;
+    }
+
+    int oldClientCount = otherClientCount;
+
+    memcpy(&otherClientCount, &bufer[*index], sizeof(int));
+    *index += sizeof(unsigned int);
+
+
+    clientIds.destroy();
+
+    for (int i = 0; i < otherClientCount; ++i)
+    {
+        int id = 0;
+        memcpy(&id, &bufer[*index], sizeof(int));
+        clientIds.add(id);
         *index += sizeof(int);
+    }
 
-        if ((bufersize-(*index) >= totallen) && (totallen>0))
-        {
-            memcpy(&mapnamelen, &bufer[*index], sizeof(int));
-            *index += sizeof(int);
+    memcpy(&clientMyIndex, &bufer[*index], sizeof(int));
+    *index += sizeof(int);
 
-            if (mapnamelen)
-            {
+    netGameState = (MultiplayerModes)bufer[*index];
+     ++(*index);
 
-                if (bufersize-(*index) >= mapnamelen)
-                {
-                    memcpy(mapname,&bufer[*index],mapnamelen);
-                }
+     if (mapnamelen)
+     {
 
-                *index+=mapnamelen;
-                mapname[mapnamelen] = 0;
-            }
+         if (strcmp(mapname, mapas.name) != 0)
+         {//jei mapas ne tas pats tai uzloadinam
+             LoadTheMap(mapname, false, otherClientCount, ENTITY_INITIAL_HP);
+             Client_GotMapData = true;
+             state = GAMESTATE_GAME;
+         }
+         else
+         {
+             populateClientDudes(oldClientCount);
+         }
+     }
+     else
+     {
+         state = GAMESTATE_GAME;
 
-            int klientaiold = otherClientCount;
-            //gaunam klientu skaiciu
-            if (bufersize-(*index) >= (int)sizeof(int))
-            {
-                memcpy(&otherClientCount, &bufer[*index],sizeof(int));
-            }
+         if (Client_GotMapData)
+         {
+            populateClientDudes(oldClientCount);
+         }
 
-            *index += sizeof(unsigned int);
-
-            netGameState = (MultiplayerModes)bufer[*index];
-
-            ++(*index);
-
-            if (mapnamelen)
-            {
-
-                if (strcmp(mapname,mapas.name)!=0)
-                {//jei mapas ne tas pats tai uzloadinam
-                    LoadTheMap(mapname, false, otherClientCount, ENTITY_INITIAL_HP);
-                    Client_GotMapData = true;
-                    state = GAMESTATE_GAME;
-                }
-                else
-                {
-
-                    if (otherClientCount - klientaiold)
-                    {
-                        for (int i=0; i < (otherClientCount - klientaiold); ++i)
-                        {
-                            Dude n;
-                            n.id = mapas.mons[mapas.mons.count() - 1].id + 1;
-                            mapas.mons.add(n);
-                        }
-                    }
-
-                }
-            }
-            else
-            {
-                state = GAMESTATE_GAME;
-
-                if ((otherClientCount - klientaiold) && Client_GotMapData)
-                {
-                    Dude naujas;
-                    for (int i=0; i < (otherClientCount - klientaiold); i++)
-                    {
-                        Dude n;
-                        n.id = mapas.mons[mapas.mons.count() - 1].id + 1;
-                        mapas.mons.add(n);
-                    }
-                }
+     }
+}
+//------------------------------------
+void Game::populateClientDudes(int oldClientCount)
+{
 
 
-            }
-        }
+    for (int i = 0; i < otherClientCount - oldClientCount; i++)
+    {
+        Dude n;
+        mapas.mons.add(n);
+    }
+
+    for (int i = 0; i < otherClientCount; ++i)
+    {
+        mapas.mons[mapas.enemyCount + 1 + i].id = clientIds[i];
     }
 }
+
+
 //------------------------------------
 void Game::GetMapData(const unsigned char* bufer, int* index)
 {
@@ -3045,23 +3082,24 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
             mapas.addMonster(monster);
         }
 
+
         Dude d;
+        d.id = 254;
+        d.weaponCount = 3;
+        d.currentWeapon = 1;
         mapas.addMonster(d);
+        mapas.mons[mapas.mons.count()-1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
 
-        Dude* player = mapas.getPlayer();
-        player->appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
-        player->id = 254;
-        player->weaponCount = 3;
-        player->currentWeapon = 1;
-        player->frame = (player->currentWeapon + 1) * 4 - 2;
-
-        Dude naujas;
         for (int i = 0; i < otherClientCount; i++)
         {
-            mapas.mons.add(naujas);
-            mapas.mons[mapas.mons.count()-1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+            Dude n;
+            n.weaponCount = 3;
+            n.currentWeapon = 1;
+            n.frame = (n.currentWeapon + 1) * 4 - 2;
 
-            mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id + 1;
+            n.id = clientIds[i];
+            mapas.mons.add(n);
+            mapas.mons[mapas.mons.count()-1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
         }
 
         AdaptMapView();
@@ -3158,15 +3196,7 @@ void Game::ServerParseWeaponShot(const unsigned char* buffer, unsigned * bufferi
         {
             if (a != (unsigned)clientIndex)
             {
-                if ((a < (unsigned)clientIndex) && ( clientIndex > 0))
-                {
-                    SendBulletImpulse(255 + clientIndex, mapas.mons[mapas.enemyCount + clientIndex].ammo, a, isMine);
-                }
-                else
-                {
-                    SendBulletImpulse(256 + clientIndex, mapas.mons[mapas.enemyCount + clientIndex].ammo,a,isMine);
-                }
-
+                SendBulletImpulse(mapas.enemyCount + 1 + clientIndex, mapas.mons[mapas.enemyCount + 1 + clientIndex].ammo, a, isMine);
             }
         }
     }
@@ -3341,6 +3371,7 @@ void Game::ParseMessagesServerGot()
 
                         Dude naujas;
                         mapas.mons.add(naujas);
+                        mapas.mons[mapas.mons.count() - 1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
                         int zeroFrags = 0;
                         fragTable.add(zeroFrags);
 
@@ -3442,7 +3473,8 @@ void Game::ParseMessagesServerGot()
 
                                 data[len] = NET_SERVER_MSG_REMOVE_CHARACTER;
                                 ++len;
-                                memcpy(&data[len], &mapas.mons[mapas.enemyCount + clientIdx].id, sizeof(int));
+                                int idx = mapas.enemyCount + clientIdx;
+                                memcpy(&data[len], &idx, sizeof(int));
                                 len += sizeof(int);
                                 serveris.sendData(i, data, len);
                             }
@@ -3547,11 +3579,7 @@ void Game::ParseMessagesClientGot()
                         return;
                     } break;
 
-                case NET_SERVER_MSG_SERVER_INFO:
-                    {
-                        ++index;
-                        GetMapInfo(msg->data, msg->length, &index);
-                    } break;
+                case NET_SERVER_MSG_SERVER_INFO: GetMapInfo(msg->data, &index); break;
 
                 case NET_SERVER_MSG_MAP_DATA:
                     {
@@ -3562,24 +3590,10 @@ void Game::ParseMessagesClientGot()
                 case NET_SERVER_MSG_REMOVE_CHARACTER:
                     {
                         ++index;
-                        int idToRemove;
-                        memcpy(&idToRemove, &(msg->data)[index], sizeof(int));
+                        int idxToRemove;
+                        memcpy(&idxToRemove, &(msg->data)[index], sizeof(int));
 
-                        int idxToRemove = -1;
-
-                        for (unsigned i = mapas.enemyCount; i < mapas.mons.count(); ++i)
-                        {
-                            if (mapas.mons[i].id == idToRemove + 1)
-                            {
-                                idxToRemove = i;
-                                break;
-                            }
-                        }
-
-                        if (idxToRemove != -1)
-                        {
-                            mapas.removeMonster(idxToRemove);
-                        }
+                        mapas.removeMonster(idxToRemove);
 
                     } break;
 
@@ -3610,38 +3624,19 @@ void Game::ParseMessagesClientGot()
                         memcpy(&ind, &(msg->data)[index], sizeof(int));
                         index += sizeof(int);
 
-                        if (ind < 254)
+                        memcpy(&mapas.mons[ind].ammo, &(msg->data)[index],sizeof(int));
+                        index+=sizeof(int);
+                        unsigned char cisMine=0;
+                        memcpy(&cisMine, &(msg->data)[index], sizeof(unsigned char));
+                        index += sizeof(unsigned char);
+                        bool isMine=false;
+
+                        if (cisMine)
                         {
-                            memcpy(&mapas.mons[ind].ammo, &(msg->data)[index],sizeof(int));
-                            index+=sizeof(int);
-                            unsigned char cisMine=0;
-                            memcpy(&cisMine, &(msg->data)[index], sizeof(unsigned char));
-                            index += sizeof(unsigned char);
-                            bool isMine=false;
-
-                            if (cisMine)
-                            {
-                                isMine=true;
-                            }
-
-                            mapas.mons[ind].shoot(true, isMine, &bulbox);
+                            isMine=true;
                         }
-                        else
-                        {
-                            memcpy(&mapas.mons[mapas.enemyCount+(ind-254)].ammo, &(msg->data)[index], sizeof(int));
-                            index += sizeof(int);
-                            unsigned char cisMine=0;
-                            memcpy(&cisMine, &(msg->data)[index], sizeof(unsigned char));
-                            index += sizeof(unsigned char);
-                            bool isMine=false;
 
-                            if (cisMine)
-                            {
-                                isMine=true;
-                            }
-
-                            mapas.mons[mapas.enemyCount+(ind-254)].shoot(true, isMine, &bulbox);
-                        }
+                        mapas.mons[ind].shoot(true, isMine, &bulbox);
                     } break;
 
                 case NET_SERVER_MSG_ITEM:

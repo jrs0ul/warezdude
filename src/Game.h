@@ -152,6 +152,9 @@ class Game
 
     int clientInfoSendCounter;
 
+    int  clientMyIndex;
+    bool Client_GotMapData;
+
 
 public:
 
@@ -161,6 +164,7 @@ public:
     MultiplayerModes netGameState;
 
     char EditText[255];
+    DArray<int> clientIds; // how it is in server
 
     TouchData   touches;
 
@@ -251,12 +255,13 @@ private:
     bool OnHit(Bullet& bul);
     void DrawStats();
     void SendPlayerInfoToClient(int clientindex);
-    void GetMapInfo(const unsigned char* bufer, int bufersize, int* index);
+    void GetMapInfo(const unsigned char* bufer, int* index);
     void KillPlayer(int index);
     void GetAtackImpulse(const unsigned char* buf,int* index);
     void SendItemCreation(float x, float y, int value, unsigned int clientIndex);
     void GetNewItemInfo(unsigned char* bufer, int* index);
     void GetMapData(const unsigned char* bufer, int* index);
+    void populateClientDudes(int oldClientCount);
     void DrawMap(float r,float g, float b);
     void GetDoorInfo(const unsigned char* bufer, unsigned * index, int* dx, int* dy, unsigned char* frame);
     void KillEnemy(unsigned ID);
