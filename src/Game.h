@@ -139,6 +139,7 @@ class Game
     bool showdebugtext;
     bool FirstTime;
     bool gameOver;
+    bool noAmmo;
     int ms;
 
 
@@ -226,7 +227,8 @@ private:
     void DoorsInteraction();
     void CheckForExit();
     void SlimeReaction(int index);
-    void SendClientAtackImpulse(int victimID, int hp);
+    void SendClientMeleeImpulseToServer(int victimID, int hp);
+    void SendClientShootImpulseToServer();
     void SendClientCoords();
     void SendClientDoorState(int doorx,int doory, unsigned char doorframe);
     void AdaptMapView();

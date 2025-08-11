@@ -335,16 +335,16 @@ bool Dude::shoot(bool useBullets, bool isMine, CBulletContainer* bulcon)
 
         Bullet newbul;
 
-        newbul.x = x+(cos(-angle) * 8.0f);
-        newbul.y = y+(sin(angle) * 10.0f);
-        newbul.parentID=id;
-        newbul.tim=0;
-        newbul.angle=angle;
-        newbul.frame=isMine;
-        newbul.exists=true;
-        newbul.explode=false;
+        newbul.x          = x+(cos(-angle) * 8.0f);
+        newbul.y          = y+(sin(angle) * 10.0f);
+        newbul.parentID   = id;
+        newbul.tim        = 0;
+        newbul.angle      = angle;
+        newbul.frame      = isMine;
+        newbul.exists     = true;
+        newbul.explode    = false;
         newbul.explodetim = 0; 
-        newbul.isMine=isMine;
+        newbul.isMine     = isMine;
 
 
         ammo--;

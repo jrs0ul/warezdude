@@ -44,8 +44,6 @@ int objectivetim=200;
 
 bool Client_GotMapData = false;
 
-
-bool noAmmo = false;
 bool nextWepPressed = false;
 
 
@@ -76,6 +74,7 @@ Game::Game()
     showdebugtext=false;
     FirstTime = true;
     gameOver = false;
+    noAmmo = false;
     ms=0;
 
     mapas.itmframe = 0;
@@ -1127,7 +1126,7 @@ void Game::SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool i
     serveris.sendData(clientIndex, buf, index);
 }
 //------------------------------------------
-void Game::SendClientAtackImpulse(int victimID, int hp)
+void Game::SendClientMeleeImpulseToServer(int victimID, int hp)
 {
     char buferis[MAX_MESSAGE_DATA_SIZE];
     int index = 0;
@@ -1140,6 +1139,30 @@ void Game::SendClientAtackImpulse(int victimID, int hp)
     memcpy(&buferis[index], &hp, sizeof(int));
     index += sizeof(int);
     client.sendData(buferis, index);
+}
+//----------------------------------------
+void Game::SendClientShootImpulseToServer()
+{
+    char buf[MAX_MESSAGE_DATA_SIZE];
+    int pos = 0;
+
+    strcpy(buf, NET_HEADER);
+    pos += NET_HEADER_LEN;
+
+    buf[pos] = NET_CLIENT_MSG_WEAPON_SHOT;
+    ++pos;
+    memcpy(&buf[pos], &mapas.getPlayer()->ammo, sizeof(int));
+    pos += sizeof(int);
+    unsigned char isMine = 0;
+
+    if (mapas.mons[mapas.enemyCount].currentWeapon == 2)
+    {
+        isMine = 1;
+    }
+
+    memcpy(&buf[pos], &isMine, sizeof(unsigned char));
+    pos += sizeof(unsigned char);
+    client.sendData(buf, pos);
 }
 //----------------------------------------
 void Game::SendAtackImpulse(unsigned int clientIndex, int victim, int hp)
@@ -1200,7 +1223,7 @@ void Game::BeatEnemy(int aID, int damage)
                                        } break;
                     case NETMODE_CLIENT:
                                        {
-                                           SendClientAtackImpulse(mapas.mons[i].id, mapas.mons[i].getHP());
+                                           SendClientMeleeImpulseToServer(mapas.mons[i].id, mapas.mons[i].getHP());
                                        }
                 }
 
@@ -2101,13 +2124,14 @@ void Game::CoreGameLogic()
     AnimateSlime();
 
     //hero movement
+    Dude* player = mapas.getPlayer();
 
-    if (mapas.mons[mapas.enemyCount].shot)
+    if (player->shot)
     { //hero dies here
 
         if (netMode != NETMODE_NONE && netGameState == MPMODE_DEATHMATCH)
         {
-            mapas.mons[mapas.enemyCount].disintegrationAnimation();
+            player->disintegrationAnimation();
         }
         else
         {
@@ -2117,17 +2141,17 @@ void Game::CoreGameLogic()
             }
         }
 
-        if (!mapas.mons[mapas.enemyCount].shot)
+        if (!player->shot) // disintegration has ended
         {
 
             if (netMode == NETMODE_NONE)
             {
-                mapas.mons[mapas.enemyCount].x = (float)mapas.start.x;
-                mapas.mons[mapas.enemyCount].y = (float)mapas.start.y;
+                player->x = (float)mapas.start.x;
+                player->y = (float)mapas.start.y;
             }
             else
             {
-                mapas.mons[mapas.enemyCount].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+                player->appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
             }
 
             AdaptMapView();
@@ -2136,15 +2160,14 @@ void Game::CoreGameLogic()
     }
 
 
-    Dude* player = mapas.getPlayer();
 
     if (player->spawn)
-    { //respawn      
+    { //respawn
         player->respawn();
 
         if ((player->ammo < 1) && (!player->spawn))
         {
-            player->ammo = 20;
+            player->ammo = ENTITY_INITIAL_AMMO;
         }
     }
 
@@ -2155,7 +2178,7 @@ void Game::CoreGameLogic()
     {
         Vector3D dir = gamepadLAxis;
 
-        player->angle = M_PI / 2 - atan2(dir.x, dir.y);
+        player->angle = M_PI / 2.f - atan2(dir.x, dir.y);
     }
 
 
@@ -2211,7 +2234,6 @@ void Game::CoreGameLogic()
     SoundSystem::getInstance()->setupListener(Vector3D(player->x, 0, player->y).v,
                                               Vector3D(player->x, 0, player->y).v);
 
-    // jei uzeina ant daikto, ji pasiima
     ItemPickup();
 
 
@@ -2224,26 +2246,26 @@ void Game::CoreGameLogic()
     }
 
 
-    //saunam
-    if ((Keys[ACTION_FIRE]) && (!mapas.mons[mapas.enemyCount].shot) && 
-            (mapas.mons[mapas.enemyCount].isAlive()) && (!mapas.mons[mapas.enemyCount].spawn))
+    //shooting
+    if ((Keys[ACTION_FIRE]) && (!player->shot) && 
+            (player->isAlive()) && (!player->spawn))
     {
 
-        if (mapas.mons[mapas.enemyCount].canAtack)
+        if (player->canAtack)
         {
-            bool res = false;
+            bool stillHaveAmmo = false;
 
-            switch(mapas.mons[mapas.enemyCount].currentWeapon)
+            switch(player->currentWeapon)
             {
-                case 1: res = mapas.mons[mapas.enemyCount].shoot(true, false, &bulbox); break;
-                case 2: res = mapas.mons[mapas.enemyCount].shoot(true, true, &bulbox); break;
+                case 1: stillHaveAmmo = player->shoot(true, false, &bulbox); break;
+                case 2: stillHaveAmmo = player->shoot(true, true, &bulbox); break;
                 case 0: BeatEnemy(mapas.enemyCount, PLAYER_MELEE_DAMAGE); break;
             }
 
-            if ((mapas.mons[mapas.enemyCount].currentWeapon>0)&&(res))
+            if (player->currentWeapon > 0 && stillHaveAmmo)
             {
-                if (mapas.mons[mapas.enemyCount].currentWeapon==1){
-
+                if (player->currentWeapon == 1)
+                {
                     AdaptSoundPos(0,mapas.mons[mapas.enemyCount].x,mapas.mons[mapas.enemyCount].y); 
                     SoundSystem::getInstance()->playsound(0); 
 
@@ -2256,26 +2278,7 @@ void Game::CoreGameLogic()
 
                 if (netMode == NETMODE_CLIENT)
                 {
-                    char buf[MAX_MESSAGE_DATA_SIZE];
-                    int pos = 0;
-
-                    strcpy(buf, NET_HEADER);
-                    pos += NET_HEADER_LEN;
-
-                    buf[pos] = NET_CLIENT_MSG_WEAPON_SHOT;
-                    ++pos;
-                    memcpy(&buf[pos], &mapas.getPlayer()->ammo, sizeof(int));
-                    pos += sizeof(int);
-                    unsigned char isMine = 0;
-
-                    if (mapas.mons[mapas.enemyCount].currentWeapon == 2)
-                    {
-                        isMine = 1;
-                    }
-
-                    memcpy(&buf[pos], &isMine, sizeof(unsigned char));
-                    pos += sizeof(unsigned char);
-                    client.sendData(buf, pos);
+                   SendClientShootImpulseToServer();
                 }
 
                 const bool isMine = (mapas.mons[mapas.enemyCount].currentWeapon == 2) ? true : false;
@@ -2289,12 +2292,12 @@ void Game::CoreGameLogic()
                 }
 
             }
-            else if (mapas.mons[mapas.enemyCount].currentWeapon>0)
+            else if (player->currentWeapon > 0)
             {
                 if (noAmmo)
                 {
-                    mapas.mons[mapas.enemyCount].chageNextWeapon();
-                    noAmmo=false;
+                    player->chageNextWeapon();
+                    noAmmo = false;
                 }
                 else
                 {
@@ -2303,7 +2306,7 @@ void Game::CoreGameLogic()
 
                     if (!noAmmo)
                     {
-                        noAmmo=true;
+                        noAmmo = true;
                     }
                 }
             }
@@ -2331,27 +2334,26 @@ void Game::CoreGameLogic()
     }
 
 
-    SlimeReaction(mapas.enemyCount); // herojaus reakcija i slime
+    SlimeReaction(mapas.enemyCount); // hero reaction to slime
 
-    DoorsInteraction();//open doors
+    DoorsInteraction();  //open doors
 
     CheckForExit();
 
-    HandleBullets();//kulku ai-------------
+    HandleBullets();  //bullet ai
 
-    for (int i=0; i<mapas.enemyCount; ++i)
+
+    if (netMode != NETMODE_CLIENT) // offline & server
     {
-        if (netMode != NETMODE_CLIENT) //  offline & server
+
+        for (int i=0; i < mapas.enemyCount; ++i)
         {
             MonsterAI(i);
         }
-    }
 
-    //zudom playerius jei pas juos nebeliko gifkiu
+        //let's kill players with 0 hp
 
-    if (netMode != NETMODE_CLIENT)
-    {
-        for (unsigned i = 0; i < mapas.mons.count();i++)
+        for (unsigned i = 0; i < mapas.mons.count(); ++i)
         {
             if ((mapas.mons[i].getHP() <= 0) && (!mapas.mons[i].shot))
             {
