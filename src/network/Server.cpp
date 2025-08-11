@@ -45,7 +45,7 @@ void Server::sendData(unsigned clientIndex, const char *data, int len)
 
     if (clientIndex >= connectedClientAddreses.count())
     {
-        printf("send fail\n");
+        printf("clientIndex %u does not exist\n", clientIndex);
         return;
     }
 

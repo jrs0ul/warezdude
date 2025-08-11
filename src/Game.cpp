@@ -2105,8 +2105,6 @@ void Game::CoreGameLogic()
     }
 
 
-
-
     if (gameOver)
     {
         if (Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])
@@ -2319,7 +2317,7 @@ void Game::CoreGameLogic()
     }
 
 
-    for (int i = mapas.enemyCount;i<mapas.enemyCount+PlayerCount();i++)
+    for (int i = mapas.enemyCount; i < mapas.enemyCount + PlayerCount(); ++i)
     {
         if (mapas.mons[i].hit)
         {
@@ -2369,15 +2367,18 @@ void Game::CoreGameLogic()
                         {
                             int lastDamager = mapas.mons[mapas.enemyCount + (victimId - 254)].lastDamagedBy;
 
-                            if (lastDamager == 254)
+                            if (lastDamager >= 254)
                             {
-                                ++frags;
-                            }
-                            else
-                            {
-                                int clientWithFrag = lastDamager - 255;
-                                ++fragTable[clientWithFrag];
-                                SendFragsToClient(clientWithFrag, fragTable[clientWithFrag]);
+                                if (lastDamager == 254)
+                                {
+                                    ++frags;
+                                }
+                                else
+                                {
+                                    int clientWithFrag = lastDamager - 255;
+                                    ++fragTable[clientWithFrag];
+                                    SendFragsToClient(clientWithFrag, fragTable[clientWithFrag]);
+                                }
                             }
 
                             if (victimId - 255 < (int)clientIdx)
@@ -3094,23 +3095,82 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
 
 }
 //----------------------------------
-void Game::UpdateClientPosition(const unsigned char* bufer, unsigned * buferindex, unsigned int clientIndex)
+void Game::ServerParseCharacterData(const unsigned char* bufer, unsigned * buferindex, int clientIndex)
 {
+    ++(*buferindex);
+
+    if (clientIndex == -1) // client not found
+    {
+        *buferindex += sizeof(float);
+        *buferindex += sizeof(float);
+        *buferindex += sizeof(float);
+        (*buferindex)++;
+        return;
+    }
+
     const unsigned clientIdx = mapas.enemyCount + 1 + clientIndex;
-    assert(clientIdx < mapas.mons.count());
 
     memcpy(&mapas.mons[clientIdx].x, &bufer[*buferindex], sizeof(float));
     *buferindex += sizeof(float);
-    memcpy(&mapas.mons[clientIdx].y, &bufer[*buferindex], sizeof(float));    
-    *buferindex+=sizeof(float);
-    memcpy(&mapas.mons[clientIdx].angle, &bufer[*buferindex],sizeof(float));    
-    *buferindex+=sizeof(float);
-    memcpy(&mapas.mons[clientIdx].frame, &bufer[*buferindex],sizeof(unsigned char));
+    memcpy(&mapas.mons[clientIdx].y, &bufer[*buferindex], sizeof(float));
+    *buferindex += sizeof(float);
+    memcpy(&mapas.mons[clientIdx].angle, &bufer[*buferindex], sizeof(float));
+    *buferindex += sizeof(float);
+    memcpy(&mapas.mons[clientIdx].frame, &bufer[*buferindex], sizeof(unsigned char));
     (*buferindex)++;
 
     unsigned char stats = bufer[*buferindex];
     mapas.mons[clientIdx].shot = (stats & 0x80) ? true : false;
     mapas.mons[clientIdx].spawn = (stats & 0x40) ? true : false;
+}
+//--------------------------------------------------------------
+void Game::ServerParseWeaponShot(const unsigned char* buffer, unsigned * bufferindex, int clientIndex)
+{
+    ++(*bufferindex);
+    unsigned char cisMine = 0;
+
+
+    if (clientIndex != -1) //only if client exists
+    {
+        memcpy(&mapas.mons[mapas.enemyCount + 1 + clientIndex].ammo, &buffer[*bufferindex], sizeof(int));
+    }
+
+    *bufferindex += sizeof(int);
+
+    memcpy(&cisMine, &buffer[*bufferindex], sizeof(unsigned char));
+
+    *bufferindex += sizeof(unsigned char);
+
+    bool isMine = false;
+
+    if (cisMine)
+    {
+        isMine = true;
+    }
+
+    if (clientIndex != -1) // only if client exists
+    {
+
+        mapas.mons[mapas.enemyCount + 1 + clientIndex].shoot(true, isMine, &bulbox);
+
+
+        for (unsigned int a = 0; a < serveris.clientCount(); a++)
+        {
+            if (a != (unsigned)clientIndex)
+            {
+                if ((a < (unsigned)clientIndex) && ( clientIndex > 0))
+                {
+                    SendBulletImpulse(255 + clientIndex, mapas.mons[mapas.enemyCount + clientIndex].ammo, a, isMine);
+                }
+                else
+                {
+                    SendBulletImpulse(256 + clientIndex, mapas.mons[mapas.enemyCount + clientIndex].ammo,a,isMine);
+                }
+
+            }
+        }
+    }
+
 }
 
 //--------------------------------------------------------------
@@ -3231,7 +3291,7 @@ void Game::ParseMessagesServerGot()
     }
 
 
-    printf("client packets to parse %u\n", serveris.storedPacketCount());
+    //printf("client packets to parse %u\n", serveris.storedPacketCount());
 
     for (int msgIdx = serveris.storedPacketCount() - 1; msgIdx >= 0; --msgIdx)
     {
@@ -3300,51 +3360,8 @@ void Game::ParseMessagesServerGot()
 
                     } break;
 
-                case NET_CLIENT_MSG_CHARACTER_DATA:
-                    {
-                        ++index;
-                        if (serveris.clientCount())
-                        {
-                            UpdateClientPosition(msg->data, &index, clientIdx);
-                        }
-                    } break;
-
-                case NET_CLIENT_MSG_WEAPON_SHOT:
-                    {
-                        unsigned char cisMine=0;
-
-                        ++index;
-                        memcpy(&mapas.mons[mapas.enemyCount + 1 + clientIdx].ammo, &(msg->data)[index],sizeof(int));
-                        index+=sizeof(int);
-                        memcpy(&cisMine, &(msg->data)[index],sizeof(unsigned char));
-                        index+=sizeof(unsigned char);
-                        bool isMine = false;
-
-                        if (cisMine)
-                        {
-                            isMine = true;
-                        }
-
-                        mapas.mons[mapas.enemyCount+1 + clientIdx].shoot(true,isMine,&bulbox);
-
-
-                        for (unsigned int a = 0; a < serveris.clientCount(); a++)
-                        {//isiunciam isovimo impulsa kitiems
-                            if (a != (unsigned)clientIdx)
-                            {
-                                if ((a < (unsigned)clientIdx) && ( clientIdx > 0))
-                                {
-                                    SendBulletImpulse(255 + clientIdx, mapas.mons[mapas.enemyCount + clientIdx].ammo, a, isMine);
-                                }
-                                else
-                                {
-                                    SendBulletImpulse(256 + clientIdx, mapas.mons[mapas.enemyCount + clientIdx].ammo,a,isMine);
-                                }
-
-                            }
-                        }
-                    } break;
-
+                case NET_CLIENT_MSG_CHARACTER_DATA: ServerParseCharacterData(msg->data, &index, clientIdx); break;
+                case NET_CLIENT_MSG_WEAPON_SHOT:    ServerParseWeaponShot(msg->data, &index, clientIdx); break;
                 case NET_CLIENT_MSG_ITEM:
                     {
                         ++index;
@@ -3433,9 +3450,7 @@ void Game::ParseMessagesServerGot()
 
                         serveris.removeClient(clientIdx);
                         fragTable.remove(clientIdx);
-                        printf("removing idx %d(monster idx:%d) enemy count %d, total mons %ld\n", clientIdx, mapas.enemyCount + clientIdx + 1, mapas.enemyCount, mapas.mons.count());
                         mapas.mons.remove(mapas.enemyCount + clientIdx + 1);
-                        printf("%d\n", mapas.getPlayer()->shot);
                     } break;
 
                 case NET_CLIENT_MSG_PONG:

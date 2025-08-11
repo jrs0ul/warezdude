@@ -262,7 +262,8 @@ private:
     void KillEnemy(unsigned ID);
     int FPS();
     void DrawSomeText();
-    void UpdateClientPosition(const unsigned char* bufer, unsigned * buferindex, unsigned int clientIndex);
+    void ServerParseCharacterData(const unsigned char* bufer, unsigned * buferindex, int clientIndex);
+    void ServerParseWeaponShot(const unsigned char* buffer, unsigned * bufferindex, int clientIndex);
     void GetCharData(const unsigned char* bufer, int bufersize, int* index);
     void DrawMiniMap(int x, int y);
     void LoadMap(const char* mapname, int otherplayers);
