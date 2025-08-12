@@ -40,7 +40,7 @@
 
 SDLVideo SDL;
 SDL_Joystick *Joy = 0;
-SDL_GameControllerType controllerType = 0;
+SDL_GameControllerType controllerType = SDL_CONTROLLER_TYPE_UNKNOWN;
 int JoyX = 0;
 int JoyY = 0;
 int MouseX, MouseY; //relative mouse coords
