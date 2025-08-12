@@ -40,6 +40,7 @@
 
 SDLVideo SDL;
 SDL_Joystick *Joy = 0;
+SDL_GameControllerType controllerType = 0;
 int JoyX = 0;
 int JoyY = 0;
 int MouseX, MouseY; //relative mouse coords
@@ -47,6 +48,12 @@ int _MouseX, _MouseY;
 unsigned long tick;
 
 static std::string buffer;
+
+const char* GamePadTypes[] = {"Unknown", "XBOX 360", "XBOX One", "Playstation 3",
+                              "Playstation 4", "Nintendo Switch PRO", "Virtual",
+                              "Playstation 5", "Amazon Luna", "Google Stadia",
+                              "NVIDIA Shield", "Nintendo Switch Joycon LEFT",
+                              "Nintendo Swithch Joycon RIGHT", "Nintendo Switch Joycon PAIR"};
 
 Game Game;
 
@@ -264,6 +271,15 @@ int main(int argc, char* argv[])
     if(SDL_NumJoysticks() > 0)
     {
         Joy = SDL_JoystickOpen(0);
+        if (SDL_IsGameController(0))
+        {
+            controllerType = SDL_GameControllerTypeForIndex(0);
+            printf("game controller type: %s\n", GamePadTypes[controllerType]);
+        }
+        else
+        {
+            printf("Generic DirectX Joystick\n");
+        }
     }
 
     ConfGL();

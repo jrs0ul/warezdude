@@ -303,7 +303,7 @@ void Game::KillPlayer(int index)
     SoundSystem::getInstance()->playsound(2);
 
     mapas.mons[index].stim = 0;
-    timeleft = mapas.timeToComplete;
+    //timeleft = mapas.timeToComplete;
     mapas.mons[index].setHP(100);
 
     Decal decalas;
@@ -454,7 +454,7 @@ void Game::DrawStats()
     }
 
 
-    if (mapas.timeToComplete && netGameState == MPMODE_COOP)
+    if (mapas.timeToComplete)
     {
         int min = timeleft / 60;
         int sec = timeleft - min * 60;
@@ -2003,7 +2003,7 @@ int Game::PlayerCount()
 
 void Game::logic(){
 
-    if ((mapas.timeToComplete) && (state == GAMESTATE_GAME) && (netGameState == MPMODE_COOP))
+    if ((mapas.timeToComplete) && (state == GAMESTATE_GAME))
     {
         ms += 10;
 
@@ -2015,8 +2015,23 @@ void Game::logic(){
             }
             else
             {
-                int idx = (netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0;
-                KillPlayer(mapas.enemyCount + idx);
+                if (netGameState == MPMODE_DEATHMATCH)
+                {
+                    if (netMode == NETMODE_SERVER)
+                    {
+                        StopServer();
+                        goToEnding();
+                        fadein = true;
+                        fadeTimer = 0;
+                        objectivetim = 200;
+                        gameOver = false;
+                    }
+                }
+                else
+                {
+                    int idx = (netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0;
+                    KillPlayer(mapas.enemyCount + idx);
+                }
             }
             ms = 0;
         }
@@ -3394,6 +3409,7 @@ void Game::ParseMessagesServerGot()
                         }
 
                         SendMapData(serveris.clientCount() - 1, mapas);
+                        ServerSendTimerSync(serveris.clientCount() - 1);
 
                     } break;
 
@@ -3521,6 +3537,27 @@ void Game::ParseMessagesServerGot()
 
 
 }
+//-----------------------------
+void Game::ServerSendTimerSync(unsigned clientIdx)
+{
+    char buffer[MAX_MESSAGE_DATA_SIZE];
+    int index = 0;
+    memcpy(&buffer[index], NET_HEADER, NET_HEADER_LEN);
+    index += NET_HEADER_LEN;
+    buffer[index] = NET_SERVER_MSG_SYNC_TIMER;
+    ++index;
+    memcpy(&buffer[index], &timeleft, sizeof(int));
+    index += sizeof(int);
+
+    serveris.sendData(clientIdx, buffer, index);
+}
+//------------------------------
+void Game::GetServerTimeMsg(const unsigned char* buffer, int* bufferindex)
+{
+    ++(*bufferindex);
+    memcpy(&timeleft, &buffer[*bufferindex], sizeof(int));
+    *bufferindex += sizeof(int);
+}
 //------------------------------
 void Game::ParseMessagesClientGot()
 {
@@ -3587,6 +3624,7 @@ void Game::ParseMessagesClientGot()
                     } break;
 
                 case NET_SERVER_MSG_SERVER_INFO: GetMapInfo(msg->data, &index); break;
+                case NET_SERVER_MSG_SYNC_TIMER:  GetServerTimeMsg(msg->data, &index); break;
 
                 case NET_SERVER_MSG_MAP_DATA:
                     {

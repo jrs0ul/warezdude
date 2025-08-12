@@ -88,7 +88,8 @@ enum NetworkCommands
     NET_SERVER_MSG_NEW_ITEM,
     NET_SERVER_MSG_MELEE_ATTACK,
     NET_SERVER_MSG_PING,
-    NET_SERVER_MSG_SHUTTING_DOWN
+    NET_SERVER_MSG_SHUTTING_DOWN,
+    NET_SERVER_MSG_SYNC_TIMER
 };
 
 
@@ -270,6 +271,8 @@ private:
     void DrawSomeText();
     void ServerParseCharacterData(const unsigned char* bufer, unsigned * buferindex, int clientIndex);
     void ServerParseWeaponShot(const unsigned char* buffer, unsigned * bufferindex, int clientIndex);
+    void ServerSendTimerSync(unsigned clientIdx);
+    void GetServerTimeMsg(const unsigned char* buffer, int * bufferindex);
     void GetCharData(const unsigned char* bufer, int bufersize, int* index);
     void DrawMiniMap(int x, int y);
     void LoadMap(const char* mapname, int otherplayers);
