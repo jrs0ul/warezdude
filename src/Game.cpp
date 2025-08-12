@@ -171,7 +171,8 @@ void Game::DrawSomeText()
 
     for (unsigned i = 0; i < mapas.mons.count(); ++i)
     {
-        sprintf(buf, "mons[%d] id=%d x=%.2f shot=%d", i, mapas.mons[i].id, mapas.mons[i].x, mapas.mons[i].shot);
+        sprintf(buf, "mons[%d] id=%d x=%.2f hp=%d shot=%d", 
+                i, mapas.mons[i].id, mapas.mons[i].x, mapas.mons[i].getHP(), mapas.mons[i].shot);
         WriteText(20, 80 + 20 * i, pics, 10, buf, 0.8f, 0.8f);
     }
 
@@ -381,7 +382,7 @@ bool Game::OnHit(Bullet& bul)
 
     for (int i=0; i < mapas.enemyCount + players; i++)
     {
-        if (CirclesColide(mapas.mons[i].x,mapas.mons[i].y,8,bul.x,bul.y,8))
+        if (CirclesColide(mapas.mons[i].x, mapas.mons[i].y, 8, bul.x, bul.y, 8))
         {
 
             tmpID = mapas.mons[i].id;
@@ -412,14 +413,18 @@ bool Game::OnHit(Bullet& bul)
 void Game::DrawStats()
 {
     const unsigned STAT_ICON = 9;
+    Dude* player = mapas.getPlayer((netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0);
+
 
     pics.draw(STAT_ICON,
               30,
               sys.ScreenHeight - 40,
-              2, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
+              2, false, 1.f, 1.f, 0.f, 
+              COLOR(1.f, 1.f, 1.f, 0.6f), 
+              COLOR(1.f, 1.f, 1.f, 0.6f));
     DrawNum(58,
             sys.ScreenHeight - 40,
-            mapas.mons[mapas.enemyCount].getHP());
+            player->getHP());
 
 
     pics.draw(STAT_ICON,
@@ -428,7 +433,7 @@ void Game::DrawStats()
               0, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f)); 
     DrawNum(155,
             sys.ScreenHeight - 40,
-            mapas.mons[mapas.enemyCount].ammo);
+            player->ammo);
 
     if (mapas.misionItems && netGameState == MPMODE_COOP)
     {
@@ -817,11 +822,8 @@ void Game::ItemPickup()
                         }
                     }
                 }
-
                 //------------------------
                 mapas.removeItem(i);
-
-
 
                 if ((item < ITEM_AMMO_PACK) && (item > 0))
                 {
@@ -832,11 +834,11 @@ void Game::ItemPickup()
                 {
                     if (item == ITEM_AMMO_PACK)
                     {
-                        mapas.mons[mapas.enemyCount].ammo += AMMO_PICKUP_VALUE;
+                        player->ammo += AMMO_PICKUP_VALUE;
                     }
                     else if (item == ITEM_MEDKIT)
                     {
-                        mapas.mons[mapas.enemyCount].heal();
+                        player->heal();
                     }
                 }
 
@@ -1193,7 +1195,7 @@ void Game::SendClientShootImpulseToServer()
     client.sendData(buf, pos);
 }
 //----------------------------------------
-void Game::SendAtackImpulse(unsigned int clientIndex, int victim, int hp)
+void Game::SendServerMeleeImpulseToClient(unsigned int clientIndex, int victim, int hp)
 {
     char buferis[MAX_MESSAGE_DATA_SIZE];
     int index = 0;
@@ -1228,30 +1230,14 @@ void Game::BeatEnemy(int aID, int damage)
                     case NETMODE_NONE: break;
                     case NETMODE_SERVER:
                                        {
-                                           for (unsigned a = 0; a < serveris.clientCount(); a++)
+                                           for (unsigned clientIdx = 0; clientIdx < serveris.clientCount(); ++clientIdx)
                                            {
-
-                                               int z = i;
-
-                                               if (i >= (unsigned)mapas.enemyCount)
-                                               {
-                                                   if ((i - mapas.enemyCount - 1) < a)
-                                                   {
-                                                       z = i + 1;
-                                                   }
-
-                                                   if ((i - mapas.enemyCount - 1) == a)
-                                                   {
-                                                       z = mapas.enemyCount;
-                                                   }
-                                               }
-
-                                               SendAtackImpulse(a, z, mapas.mons[i].getHP());
+                                                SendServerMeleeImpulseToClient(clientIdx, i, mapas.mons[i].getHP());
                                            }
                                        } break;
                     case NETMODE_CLIENT:
                                        {
-                                           SendClientMeleeImpulseToServer(mapas.mons[i].id, mapas.mons[i].getHP());
+                                           SendClientMeleeImpulseToServer(i, mapas.mons[i].getHP());
                                        }
                 }
 
@@ -1486,15 +1472,18 @@ void Game::MonsterAI(int index)
 void Game::HandleBullets()
 {
 
-    for (int i=0;i<bulbox.count();i++){
+    for (int i=0;i<bulbox.count();i++)
+    {
         bulbox.buls[i].ai(mapas._colide, mapas.width(), mapas.height());
 
         if (OnHit(bulbox.buls[i]))
+        {
             if (!bulbox.buls[i].explode)
             {
                 bulbox.buls[i].explode = true;
                 bulbox.buls[i].frame=2;
             }
+        }
 
         bulbox.removeDead(); //pasaliname neaktyvias kulkas
     }   
@@ -2011,7 +2000,8 @@ void Game::logic(){
             }
             else
             {
-                KillPlayer(0);
+                int idx = (netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0;
+                KillPlayer(mapas.enemyCount + idx);
             }
             ms = 0;
         }
@@ -2384,17 +2374,15 @@ void Game::CoreGameLogic()
         {
             if ((mapas.mons[i].getHP() <= 0) && (!mapas.mons[i].shot))
             {
-                KillEnemy(mapas.mons[i].id);
+                KillEnemy(i);
 
                 if (netMode == NETMODE_SERVER)
                 {
                     for (unsigned clientIdx = 0; clientIdx < serveris.clientCount(); ++clientIdx)
                     {
-                        int victimId = mapas.mons[i].id;
-
-                        if (victimId >= 254) //players
+                        if (i >= (unsigned)mapas.enemyCount) //players
                         {
-                            int lastDamager = mapas.mons[mapas.enemyCount + (victimId - 254)].lastDamagedBy;
+                            int lastDamager = mapas.mons[i].lastDamagedBy;
 
                             if (lastDamager >= 254)
                             {
@@ -2410,17 +2398,9 @@ void Game::CoreGameLogic()
                                 }
                             }
 
-                            if (victimId - 255 < (int)clientIdx)
-                            {
-                                ++victimId;
-                            }
-                            else if (victimId - 255 == (int)clientIdx)
-                            {
-                                victimId = 254;
-                            }
                         }
 
-                        SendKillCommandToClient(clientIdx, victimId);
+                        SendKillCommandToClient(clientIdx, i);
                     }
                 }
             }
@@ -3014,6 +2994,7 @@ void Game::populateClientDudes(int oldClientCount)
     {
         Dude n;
         mapas.mons.add(n);
+        mapas.mons[mapas.mons.count()-1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
     }
 
     for (int i = 0; i < otherClientCount; ++i)
@@ -3252,45 +3233,22 @@ void Game::GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int
 {
     int victim;
     int hp;
-    memcpy(&victim,&buf[*index],sizeof(int));
-    *index+=sizeof(int);
-    memcpy(&hp,&buf[*index],sizeof(int));
-    *index+=sizeof(int);
+    memcpy(&victim, &buf[*index], sizeof(int));
+    *index += sizeof(int);
+    memcpy(&hp, &buf[*index], sizeof(int));
+    *index += sizeof(int);
 
 
+    mapas.mons[victim].hit = true;
+    mapas.mons[victim].setHP(hp);
 
-    int playerID=0;
 
-    if (victim>254)
+    for (unsigned clientIdx = 0; clientIdx < serveris.clientCount(); ++clientIdx)
     {
-        int tmpID=victim-254;
-        if (ClientIndex>=tmpID)
+
+        if (ClientIndex != (int)clientIdx) // don't send to the same client who did attack
         {
-            playerID=tmpID-1;
-        }
-
-        playerID=mapas.enemyCount+playerID;
-    }
-    else
-    {
-        playerID=victim;
-    }
-
-    mapas.mons[playerID].hit=true;
-    mapas.mons[playerID].setHP(hp);
-
-
-
-    for (unsigned a = 0; a < serveris.clientCount(); a++)
-    {
-
-        int z=playerID;
-        if ((playerID >= mapas.enemyCount) && ((playerID-mapas.enemyCount-1) < (int)a))
-            z= playerID+1;
-
-        if (ClientIndex != (int)a)
-        {
-            SendAtackImpulse(a, z, hp);
+            SendServerMeleeImpulseToClient(clientIdx, victim, hp);
         }
     }
 
@@ -3609,13 +3567,13 @@ void Game::ParseMessagesClientGot()
                 case NET_SERVER_MSG_KILL_CHARACTER:
                     {
                         ++index;
-                        int victimID = -1;
-                        memcpy(&victimID, &(msg->data)[index], sizeof(int));
+                        int victimIdx = -1;
+                        memcpy(&victimIdx, &(msg->data)[index], sizeof(int));
                         index += sizeof(int);
 
-                        if (victimID != -1)
+                        if (victimIdx != -1)
                         {
-                            KillEnemy(victimID);
+                            KillEnemy(victimIdx);
                         }
                     } break;
 

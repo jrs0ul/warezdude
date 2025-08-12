@@ -239,7 +239,7 @@ private:
     void DrawMissionObjectives();
     void MonsterAI(int index);
     void BeatEnemy(int aID, int damage);
-    void SendAtackImpulse(unsigned int clientIndex, int victim, int hp);
+    void SendServerMeleeImpulseToClient(unsigned int clientIndex, int victim, int hp);
     void SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine);
     void GenerateTheMap(int currentHp);
     void LoadTheMap(const char* name, bool createItems, int otherPlayers, int currentHp);

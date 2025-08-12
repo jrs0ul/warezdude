@@ -396,14 +396,15 @@ bool CMap::load(const char* path, bool createItems, int otherplayers){
 
         Dude playeris;
         playeris.id = 254;
-        playeris.weaponCount=3;
-        playeris.currentWeapon=1;
+        playeris.weaponCount = 3;
+        playeris.currentWeapon = 1;
         playeris.frame = (playeris.currentWeapon+1)*4-2;
         mons.add(playeris);
 
         for (int i=0;i<otherplayers;i++)
         {
             playeris.id++;
+            playeris.appearInRandomPlace(_colide, width(), height());
             mons.add(playeris);
         }
     }

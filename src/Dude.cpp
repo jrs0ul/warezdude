@@ -382,6 +382,7 @@ void Dude::disintegrationAnimation()
 
         if (stim > 50)
         {
+            hp = ENTITY_INITIAL_HP;
             shot=false;
             stim=0;
             spawn=true; 
