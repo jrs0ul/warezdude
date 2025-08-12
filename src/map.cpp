@@ -719,3 +719,17 @@ void CMap::fadeDecals()
     }
 
 }
+//------------------------
+
+int CMap::findCreatureById(int id)
+{
+    for (unsigned i = 0; i < mons.count(); ++i)
+    {
+        if (mons[i].id == id)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}

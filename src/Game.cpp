@@ -109,13 +109,10 @@ int Game::FPS()
 
 //-------------------------------------------
 
-void Game::DeleteAudio(){
-
-
+void Game::DeleteAudio()
+{
     music.stop();
     music.release();
-
-
 }
 
 
@@ -1789,6 +1786,8 @@ void Game::TitleMenuLogic()
                 if (netgame.state == 1)
                 {
                     netGameState = MPMODE_DEATHMATCH;
+                    fragTable.destroy();
+                    fragTable.add(0);
                     mapmenu.activate();
                     netgame.reset();
                     netgame.deactivate();
@@ -2405,28 +2404,33 @@ void Game::CoreGameLogic()
 
                 if (netMode == NETMODE_SERVER)
                 {
-                    for (unsigned clientIdx = 0; clientIdx < serveris.clientCount(); ++clientIdx)
+
+                    if (i >= (unsigned)mapas.enemyCount) //players
                     {
-                        if (i >= (unsigned)mapas.enemyCount) //players
+                        int lastDamagerID = mapas.mons[i].lastDamagedBy;
+                        int lastDamagerIdx = mapas.findCreatureById(mapas.mons[i].lastDamagedBy);
+
+                        printf("Last damager id: %d idx: %d\n", lastDamagerID, lastDamagerIdx);
+
+                        if (lastDamagerIdx >= mapas.enemyCount)
                         {
-                            int lastDamager = mapas.mons[i].lastDamagedBy;
+                            int clientWithFrag = lastDamagerID - mapas.enemyCount;
+                            ++fragTable[clientWithFrag];
 
-                            if (lastDamager >= mapas.enemyCount)
+                            if (lastDamagerIdx == mapas.enemyCount)
                             {
-                                if (lastDamager == mapas.enemyCount)
-                                {
-                                    ++frags;
-                                }
-                                else
-                                {
-                                    int clientWithFrag = lastDamager;
-                                    ++fragTable[clientWithFrag];
-                                    SendFragsToClient(clientWithFrag - mapas.enemyCount - 1, fragTable[clientWithFrag]);
-                                }
+                                ++frags;
                             }
-
+                            else
+                            {
+                                SendFragsToClient(lastDamagerIdx - mapas.enemyCount - 1, fragTable[clientWithFrag]);
+                            }
                         }
 
+                    }
+
+                    for (unsigned clientIdx = 0; clientIdx < serveris.clientCount(); ++clientIdx)
+                    {
                         SendKillCommandToClient(clientIdx, i);
                     }
                 }
@@ -2617,29 +2621,38 @@ void Game::DrawTitleScreen()
 void Game::DrawEndScreen()
 {
     pics.draw(14, 320, 240, 0, true,  1.25f,1.9f);
-
     char levelstr[255];
-    sprintf(levelstr, "Levels completed: %d", mapai.current);
-    WriteText(20, 40, pics, 10, levelstr);
-    WriteText(20, 80, pics, 10, "Your loot:");
 
-
-    int itemY = 100;
-    int itemX = 20;
-
-    for (unsigned i = 0; i < loot.count(); ++i)
+    if (netGameState == MPMODE_DEATHMATCH)
     {
+        sprintf(levelstr, "your frags: %d", frags);
+        WriteText(20, 40, pics, 10, levelstr);
 
-        pics.draw(11, itemX, itemY, (loot[i] - 1) * 4 + mapas.itmframe, false);
+    }
+    else
+    {
+        sprintf(levelstr, "Levels completed: %d", mapai.current);
+        WriteText(20, 40, pics, 10, levelstr);
+        WriteText(20, 80, pics, 10, "Your loot:");
 
-        itemX += 32;
 
-        if (itemX > sys.ScreenWidth - 20)
+        int itemY = 100;
+        int itemX = 20;
+
+        for (unsigned i = 0; i < loot.count(); ++i)
         {
-            itemY += 32;
-            itemX = 20;
-        }
 
+            pics.draw(11, itemX, itemY, (loot[i] - 1) * 4 + mapas.itmframe, false);
+
+            itemX += 32;
+
+            if (itemX > sys.ScreenWidth - 20)
+            {
+                itemY += 32;
+                itemX = 20;
+            }
+
+        }
     }
 
     WriteText(260, sys.ScreenHeight - 50, pics, 10, "Press SPACE to continue...");
@@ -3269,7 +3282,7 @@ void Game::GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int
 
     mapas.mons[victim].hit = true;
     mapas.mons[victim].setHP(hp);
-    mapas.mons[victim].lastDamagedBy = mapas.enemyCount + 1 + ClientIndex;
+    mapas.mons[victim].lastDamagedBy = mapas.mons[mapas.enemyCount + 1 + ClientIndex].id;
 
 
     for (unsigned clientIdx = 0; clientIdx < serveris.clientCount(); ++clientIdx)
@@ -3277,7 +3290,7 @@ void Game::GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int
 
         if (ClientIndex != (int)clientIdx) // don't send to the same client who did the attack
         {
-            SendServerMeleeImpulseToClient(clientIdx, victim, hp, mapas.enemyCount + 1 + ClientIndex);
+            SendServerMeleeImpulseToClient(clientIdx, victim, hp, mapas.mons[victim].lastDamagedBy);
         }
     }
 
@@ -3289,18 +3302,18 @@ void Game::GetAttackImpulseFromServer(const unsigned char* buf, int* index)
 
     int victim = 0;
     int hp = 0;
-    int attackerIdx = 0;
+    int attackerId = 0;
 
     memcpy(&victim, &buf[*index], sizeof(int));
     *index += sizeof(int);
     memcpy(&hp, &buf[*index], sizeof(int));
     *index += sizeof(int);
-    memcpy(&attackerIdx, &buf[*index], sizeof(int));
+    memcpy(&attackerId, &buf[*index], sizeof(int));
     *index += sizeof(int);
 
     mapas.mons[victim].hit = true;
     mapas.mons[victim].setHP(hp);
-    mapas.mons[victim].lastDamagedBy = attackerIdx; //who's the attacker ?
+    mapas.mons[victim].lastDamagedBy = attackerId; //who's the attacker ?
 
 }
 //---------------------------------
@@ -3462,7 +3475,7 @@ void Game::ParseMessagesServerGot()
 
                                 data[len] = NET_SERVER_MSG_REMOVE_CHARACTER;
                                 ++len;
-                                int idx = mapas.enemyCount + clientIdx;
+                                int idx = mapas.enemyCount + 1 + clientIdx;
                                 memcpy(&data[len], &idx, sizeof(int));
                                 len += sizeof(int);
 
@@ -3476,7 +3489,6 @@ void Game::ParseMessagesServerGot()
                         }
 
                         serveris.removeClient(clientIdx);
-                        fragTable.remove(clientIdx);
                         mapas.mons.remove(mapas.enemyCount + clientIdx + 1);
                     } break;
 

@@ -89,6 +89,7 @@ public:
         void addMonster(Dude& newmonster);
         void removeMonster(int index);
         void fadeDecals();
+        int findCreatureById(int id);
 
         void destroy();
 
