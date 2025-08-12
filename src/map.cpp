@@ -395,7 +395,7 @@ bool CMap::load(const char* path, bool createItems, int otherplayers){
     {
 
         Dude playeris;
-        playeris.id = 254;
+        playeris.id = enemyCount;
         playeris.weaponCount = 3;
         playeris.currentWeapon = 1;
         playeris.frame = (playeris.currentWeapon+1)*4-2;

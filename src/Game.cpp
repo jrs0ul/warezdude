@@ -25,11 +25,8 @@
 
 //===================================GLOBALS
 
-const int slime=35;
-
 const unsigned NetPort=6666;
 
-int slimtim=0;
 bool slimeswap=false;
 
 bool godmode=false;
@@ -44,8 +41,6 @@ int objectivetim=200;
 
 
 bool nextWepPressed = false;
-
-
 
 //==================================================
 
@@ -83,6 +78,7 @@ Game::Game()
     clientInfoSendCounter = 0;
     Client_GotMapData = false;
     clientMyIndex = 0;
+    slimeTimer = 0;
 }
 //-------------------------------------
 void PlaySoundAt(SoundSystem* ss, float x, float y, int soundIndex)
@@ -174,6 +170,13 @@ void Game::DrawSomeText()
         sprintf(buf, "mons[%d] id=%d x=%.2f hp=%d shot=%d", 
                 i, mapas.mons[i].id, mapas.mons[i].x, mapas.mons[i].getHP(), mapas.mons[i].shot);
         WriteText(20, 80 + 20 * i, pics, 10, buf, 0.8f, 0.8f);
+    }
+
+    for (unsigned i = 0; i < fragTable.count(); ++i)
+    {
+        sprintf(buf, "%d. %d frags", i, fragTable[i]);
+        WriteText(20, (sys.ScreenHeight - 100) + 20 * i, pics, 10, buf, 0.8f, 0.8f);
+
     }
 
 
@@ -293,6 +296,7 @@ void Game::SendItemCreation(float x, float y, int value, unsigned int clientInde
 void Game::KillPlayer(int index)
 {
     assert((unsigned)index < mapas.mons.count());
+    printf("PLAYER KILLED BY %d\n", mapas.mons[index].lastDamagedBy);
 
     Dude* player = &mapas.mons[index];
 
@@ -301,9 +305,9 @@ void Game::KillPlayer(int index)
     AdaptSoundPos(2, player->x, player->y);
     SoundSystem::getInstance()->playsound(2);
 
-    mapas.mons[mapas.enemyCount + index].stim = 0;
+    mapas.mons[index].stim = 0;
     timeleft = mapas.timeToComplete;
-    mapas.mons[mapas.enemyCount+index].setHP(100);
+    mapas.mons[index].setHP(100);
 
     Decal decalas;
     decalas.x = player->x;
@@ -316,10 +320,10 @@ void Game::KillPlayer(int index)
 //------------------
 void Game::KillEnemy(unsigned ID)
 {
-    printf("KILLED BY %d\n", mapas.mons[ID].lastDamagedBy);
 
     if (ID < (unsigned)mapas.enemyCount)
     {
+        printf("MONSTER KILLED BY %d\n", mapas.mons[ID].lastDamagedBy);
         mapas.mons[ID].shot=true;
 
         AdaptSoundPos(3,mapas.mons[ID].x,mapas.mons[ID].y);
@@ -387,7 +391,7 @@ bool Game::OnHit(Bullet& bul)
 
             tmpID = mapas.mons[i].id;
 
-            if ((bul.parentID!=tmpID) && //bullet should not hit the shooter
+            if ((bul.parentID != tmpID) && //bullet should not hit the shooter
                 (!mapas.mons[i].shot) &&
                 (!mapas.mons[i].spawn))
             {
@@ -617,6 +621,7 @@ void Game::SendFragsToClient(int clientIdx, int frags)
     len += sizeof(int);
 
     serveris.sendData(clientIdx, buffer, len);
+    printf("sent %d frags to client %d\n", frags, clientIdx);
 }
 //-----------------------------------
 //klientas servui isiuncia infa apie paimta daikta
@@ -1116,21 +1121,24 @@ void Game::CheckForExit()
 }
 
 //-------
-void Game::SlimeReaction(int index)
+int Game::slimeReaction(int index)
 {
 
     const int montileY = round(mapas.mons[index].y / TILE_WIDTH);
     const int montileX = round(mapas.mons[index].x / TILE_WIDTH);
 
-    if ((!mapas.mons[index].shot)&&(!mapas.mons[index].spawn)&&(!godmode)
-        &&((mapas.tiles[montileY][montileX] == slime)
-        ||(mapas.tiles[montileY][montileX] == slime + 1))&&
-        (slimtim == 5))
+    if ((!mapas.mons[index].shot)&&(!mapas.mons[index].spawn) && (!godmode) &&
+        ((mapas.tiles[montileY][montileX] == TILE_SLIME) ||
+        (mapas.tiles[montileY][montileX] == TILE_SLIME + 1)) &&
+        (slimeTimer == 5))
     {
         mapas.mons[index].damage(SLIME_DAMAGE);
         mapas.mons[index].lastDamagedBy = DAMAGER_NOBODY;
         mapas.mons[index].hit = true;
+        return SLIME_DAMAGE;
     }
+
+    return 0;
 }
 //-----------------------------
 void Game::SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine)
@@ -1195,7 +1203,7 @@ void Game::SendClientShootImpulseToServer()
     client.sendData(buf, pos);
 }
 //----------------------------------------
-void Game::SendServerMeleeImpulseToClient(unsigned int clientIndex, int victim, int hp)
+void Game::SendServerMeleeImpulseToClient(unsigned int clientIndex, int victim, int hp, int attacker)
 {
     char buferis[MAX_MESSAGE_DATA_SIZE];
     int index = 0;
@@ -1204,11 +1212,14 @@ void Game::SendServerMeleeImpulseToClient(unsigned int clientIndex, int victim, 
     index += NET_HEADER_LEN;
     buferis[index] = NET_SERVER_MSG_MELEE_ATTACK;
     ++index;
-    memcpy(&buferis[index],&victim,sizeof(int));
+    memcpy(&buferis[index], &victim, sizeof(int));
     index += sizeof(int);
-    memcpy(&buferis[index],&hp,sizeof(int));
+    memcpy(&buferis[index], &hp, sizeof(int));
     index += sizeof(int);
-    serveris.sendData(clientIndex,buferis,index);
+    memcpy(&buferis[index], &attacker, sizeof(int));
+    index += sizeof(int);
+
+    serveris.sendData(clientIndex, buferis, index);
 }
 
 //----------------------------------
@@ -1232,7 +1243,7 @@ void Game::BeatEnemy(int aID, int damage)
                                        {
                                            for (unsigned clientIdx = 0; clientIdx < serveris.clientCount(); ++clientIdx)
                                            {
-                                                SendServerMeleeImpulseToClient(clientIdx, i, mapas.mons[i].getHP());
+                                                SendServerMeleeImpulseToClient(clientIdx, i, mapas.mons[i].getHP(), mapas.mons[i].lastDamagedBy);
                                            }
                                        } break;
                     case NETMODE_CLIENT:
@@ -1491,19 +1502,24 @@ void Game::HandleBullets()
 //-------------------------------
 void Game::AnimateSlime()
 {
-    if (mapas.tiles){
-        slimtim++;
-        if (slimtim>25){
-            slimtim=0;
-            if (!slimeswap){
-                mapas.ReplaceTiles(slime,slime+1);
-                slimeswap=true;
-            }
-            else{
-                mapas.ReplaceTiles(slime+1,slime);
-                slimeswap=false;
-            }
+    if (mapas.tiles)
+    {
+        slimeTimer++;
 
+        if (slimeTimer > 25)
+        {
+            slimeTimer = 0;
+
+            if (!slimeswap)
+            {
+                mapas.ReplaceTiles(TILE_SLIME, TILE_SLIME + 1);
+                slimeswap = true;
+            }
+            else
+            {
+                mapas.ReplaceTiles(TILE_SLIME + 1, TILE_SLIME);
+                slimeswap = false;
+            }
         }
     }
 }
@@ -1563,7 +1579,7 @@ void Game::GenerateTheMap(int currentHp)
     Dude* player = mapas.getPlayer();
 
     player->appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
-    player->id = 254;
+    player->id = mapas.enemyCount;
     player->shot = false;
     player->setHP(currentHp);
     player->weaponCount = 3;
@@ -1621,7 +1637,7 @@ void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers, int 
     }
 
     player->setHP(currentHp);
-    player->id = 254;
+    player->id = mapas.enemyCount;
     AdaptMapView();
 }
 //-------------------------------------------------------
@@ -2351,7 +2367,18 @@ void Game::CoreGameLogic()
     }
 
 
-    SlimeReaction(mapas.enemyCount); // hero reaction to slime
+    if (netMode == NETMODE_NONE || netMode == NETMODE_SERVER)
+    {
+        for (unsigned i = mapas.enemyCount; i < mapas.mons.count(); ++i)
+        {
+            const int dmg = slimeReaction(i); // hero reaction to slime
+
+            if (i > (unsigned)mapas.enemyCount && dmg)
+            {
+                SendServerMeleeImpulseToClient(i - mapas.enemyCount - 1, i, mapas.mons[i].getHP(), DAMAGER_NOBODY);
+            }
+        }
+    }
 
     DoorsInteraction();  //open doors
 
@@ -2363,7 +2390,7 @@ void Game::CoreGameLogic()
     if (netMode != NETMODE_CLIENT) // offline & server
     {
 
-        for (int i=0; i < mapas.enemyCount; ++i)
+        for (int i = 0; i < mapas.enemyCount; ++i)
         {
             MonsterAI(i);
         }
@@ -2384,17 +2411,17 @@ void Game::CoreGameLogic()
                         {
                             int lastDamager = mapas.mons[i].lastDamagedBy;
 
-                            if (lastDamager >= 254)
+                            if (lastDamager >= mapas.enemyCount)
                             {
-                                if (lastDamager == 254)
+                                if (lastDamager == mapas.enemyCount)
                                 {
                                     ++frags;
                                 }
                                 else
                                 {
-                                    int clientWithFrag = lastDamager - 255;
+                                    int clientWithFrag = lastDamager;
                                     ++fragTable[clientWithFrag];
-                                    SendFragsToClient(clientWithFrag, fragTable[clientWithFrag]);
+                                    SendFragsToClient(clientWithFrag - mapas.enemyCount - 1, fragTable[clientWithFrag]);
                                 }
                             }
 
@@ -2435,7 +2462,7 @@ void Game::DrawHelp()
 
     if (monframe == 3)
     {
-        monframe=0;
+        monframe = 0;
     }
 
     pics.draw(3, 100,270, monframe, false);
@@ -2466,8 +2493,8 @@ void Game::DrawMissionObjectives()
     }
 
     sprintf(buf,"Time remaining:%d:%d",mapas.timeToComplete/60,mapas.timeToComplete-60*(mapas.timeToComplete/60));
-    WriteText(sys.ScreenWidth/2-100, 
-              sys.ScreenHeight/2+50,
+    WriteText(sys.ScreenWidth/2 - 100, 
+              sys.ScreenHeight/2 + 50,
               pics,
               10,
               buf,
@@ -3065,7 +3092,7 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
 
 
         Dude d;
-        d.id = 254;
+        d.id = mapas.enemyCount;
         d.weaponCount = 3;
         d.currentWeapon = 1;
         mapas.addMonster(d);
@@ -3231,6 +3258,7 @@ void Game::GetNewItemInfo(unsigned char* bufer, int* index)
 //---------------------------------------
 void Game::GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int ClientIndex)
 {
+    ++(*index);
     int victim;
     int hp;
     memcpy(&victim, &buf[*index], sizeof(int));
@@ -3241,31 +3269,38 @@ void Game::GetClientAtackImpulse(const unsigned char* buf, unsigned * index, int
 
     mapas.mons[victim].hit = true;
     mapas.mons[victim].setHP(hp);
+    mapas.mons[victim].lastDamagedBy = mapas.enemyCount + 1 + ClientIndex;
 
 
     for (unsigned clientIdx = 0; clientIdx < serveris.clientCount(); ++clientIdx)
     {
 
-        if (ClientIndex != (int)clientIdx) // don't send to the same client who did attack
+        if (ClientIndex != (int)clientIdx) // don't send to the same client who did the attack
         {
-            SendServerMeleeImpulseToClient(clientIdx, victim, hp);
+            SendServerMeleeImpulseToClient(clientIdx, victim, hp, mapas.enemyCount + 1 + ClientIndex);
         }
     }
 
 }
 //----------------------------------
-//klientas paima infa apie atka
-void Game::GetAtackImpulse(const unsigned char* buf,int* index)
+void Game::GetAttackImpulseFromServer(const unsigned char* buf, int* index)
 {
-    int victim;
-    int hp;
-    memcpy(&victim,&buf[*index],sizeof(int));
-    *index+=sizeof(int);
-    memcpy(&hp,&buf[*index],sizeof(int));
-    *index+=sizeof(int);
+    ++(*index);
 
-    mapas.mons[victim].hit=true;
+    int victim = 0;
+    int hp = 0;
+    int attackerIdx = 0;
+
+    memcpy(&victim, &buf[*index], sizeof(int));
+    *index += sizeof(int);
+    memcpy(&hp, &buf[*index], sizeof(int));
+    *index += sizeof(int);
+    memcpy(&attackerIdx, &buf[*index], sizeof(int));
+    *index += sizeof(int);
+
+    mapas.mons[victim].hit = true;
     mapas.mons[victim].setHP(hp);
+    mapas.mons[victim].lastDamagedBy = attackerIdx; //who's the attacker ?
 
 }
 //---------------------------------
@@ -3409,11 +3444,7 @@ void Game::ParseMessagesServerGot()
 
                     } break;
 
-                case NET_CLIENT_MSG_MELEE_ATTACK:
-                    {
-                        ++index;
-                        GetClientAtackImpulse(msg->data, &index, clientIdx);
-                    } break;
+                case NET_CLIENT_MSG_MELEE_ATTACK : GetClientAtackImpulse(msg->data, &index, clientIdx); break;
 
                 case NET_CLIENT_MSG_QUIT:
                     {
@@ -3639,13 +3670,7 @@ void Game::ParseMessagesClientGot()
                         GetNewItemInfo(msg->data, &index);
                     } break;
 
-                case NET_SERVER_MSG_MELEE_ATTACK:
-                    {
-                        ++index;
-                        GetAtackImpulse(msg->data, &index);
-
-                    } break;
-
+                case NET_SERVER_MSG_MELEE_ATTACK: GetAttackImpulseFromServer(msg->data, &index); break;
                 case NET_SERVER_MSG_PING:
                     {
                         ++index;

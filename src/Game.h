@@ -147,6 +147,7 @@ class Game
 
     int itmtim;
     int fadeTimer;
+    int slimeTimer;
 
     NetworkingModes netMode;
 
@@ -230,7 +231,7 @@ private:
     void SendServerDoorState(unsigned int clientIndex, int doorx,int doory, unsigned char doorframe);
     void DoorsInteraction();
     void CheckForExit();
-    void SlimeReaction(int index);
+    int  slimeReaction(int index);
     void SendClientMeleeImpulseToServer(int victimID, int hp);
     void SendClientShootImpulseToServer();
     void SendClientCoords();
@@ -239,7 +240,7 @@ private:
     void DrawMissionObjectives();
     void MonsterAI(int index);
     void BeatEnemy(int aID, int damage);
-    void SendServerMeleeImpulseToClient(unsigned int clientIndex, int victim, int hp);
+    void SendServerMeleeImpulseToClient(unsigned int clientIndex, int victim, int hp, int attacker);
     void SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine);
     void GenerateTheMap(int currentHp);
     void LoadTheMap(const char* name, bool createItems, int otherPlayers, int currentHp);
@@ -257,7 +258,7 @@ private:
     void SendPlayerInfoToClient(int clientindex);
     void GetMapInfo(const unsigned char* bufer, int* index);
     void KillPlayer(int index);
-    void GetAtackImpulse(const unsigned char* buf,int* index);
+    void GetAttackImpulseFromServer(const unsigned char* buf, int* index);
     void SendItemCreation(float x, float y, int value, unsigned int clientIndex);
     void GetNewItemInfo(unsigned char* bufer, int* index);
     void GetMapData(const unsigned char* bufer, int* index);

@@ -67,7 +67,7 @@ public:
             r = g = b = 1.0f;
             hit=false;
             hittim=0;
-            id=254;
+            id=0;
 
             victimID=0;
             colid=0;

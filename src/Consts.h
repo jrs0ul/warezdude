@@ -43,6 +43,7 @@ const unsigned char TILE_ROCKS            = 8;
 const unsigned char TILE_WALL             = 19;
 const unsigned char TILE_V_WALL           = 20;
 const unsigned char TILE_H_WALL           = 21;
+const unsigned char TILE_SLIME            = 35;
 const unsigned char TILE_EXIT             = 81;
 
 const int MAP_COUNT                       = 8;
