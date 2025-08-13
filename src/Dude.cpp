@@ -410,9 +410,11 @@ void Dude::damageAnim(){
     g=b=0;
     r=1.0f;
     hittim++;
-    if (hittim>=10){
-        hittim=0;
-        hit=false;
+
+    if (hittim >= 10)
+    {
+        hittim = 0;
+        hit = false;
         r=g=b=1.0f;
     }
 }

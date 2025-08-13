@@ -243,6 +243,11 @@ void CheckKeys()
         }
 
 
+        if (Game.doRumble)
+        {
+            SDL_GameControllerRumble(gamepad, 0x8888, 0x8888, 250);
+            Game.doRumble = false;
+        }
 
         if (SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / 1000 > 0) Game.Keys[6] = 1;
         if (SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / 1000 > 0) Game.Keys[6] = 1;

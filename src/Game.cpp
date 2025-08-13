@@ -79,6 +79,7 @@ Game::Game()
     Client_GotMapData = false;
     clientMyIndex = 0;
     slimeTimer = 0;
+    doRumble = false;
 }
 //-------------------------------------
 void PlaySoundAt(SoundSystem* ss, float x, float y, int soundIndex)
@@ -2370,6 +2371,11 @@ void Game::CoreGameLogic()
     {
         if (mapas.mons[i].hit)
         {
+            if (i == mapas.enemyCount + clientIndex)
+            {
+                doRumble = true;
+            }
+
             mapas.mons[i].damageAnim();
 
             if (!mapas.mons[i].hit)
@@ -2386,6 +2392,15 @@ void Game::CoreGameLogic()
         for (unsigned i = mapas.enemyCount; i < mapas.mons.count(); ++i)
         {
             const int dmg = slimeReaction(i); // hero reaction to slime
+
+
+            /*if (dmg)
+            {
+                if (i == (unsigned)(mapas.enemyCount + clientIndex))
+                {
+                    doRumble = true;
+                }
+            }*/
 
             if (i > (unsigned)mapas.enemyCount && dmg)
             {
@@ -3567,7 +3582,7 @@ void Game::ParseMessagesClientGot()
     }
 
 
-    printf("server packets to parse %u\n", client.storedPacketCount());
+    //printf("server packets to parse %u\n", client.storedPacketCount());
 
     for (unsigned msgIdx = 0; msgIdx < client.storedPacketCount(); ++msgIdx)
     {

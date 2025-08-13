@@ -177,6 +177,8 @@ public:
     Vector3D gamepadRAxis;
     Vector3D OldGamepadRAxis;
 
+    bool doRumble;
+
     float MouseX;
     float MouseY;
 
