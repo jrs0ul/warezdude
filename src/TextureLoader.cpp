@@ -973,10 +973,10 @@ bool PicsContainer::initContainer(const char *list, AAssetManager* assman)
             }
 
 #ifdef __ANDROID__
-            LOGI(">>>Image: name:%s width:%d height:%d filter%d\n", data.name, data.twidth, data.theight, data.filter);
+//            LOGI(">>>Image: name:%s width:%d height:%d filter%d\n", data.name, data.twidth, data.theight, data.filter);
 #else
 
-            printf(">>>Image: name:%s width:%d height:%d filter%d\n", data.name, data.twidth, data.theight, data.filter);
+//            printf(">>>Image: name:%s width:%d height:%d filter%d\n", data.name, data.twidth, data.theight, data.filter);
 #endif
             PicInfo.add(data);
         }
