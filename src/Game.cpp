@@ -2220,10 +2220,10 @@ void Game::CoreGameLogic()
 
 
 
-    if (((OldGamepadLAxis.x != gamepadLAxis.x ) || (OldGamepadLAxis.y != gamepadLAxis.y )) &&
-        !((int)gamepadLAxis.x == 0 && (int)gamepadLAxis.y == 0)&& (!player->shot) && (!player->spawn))
+    if (((OldGamepadRAxis.x != gamepadRAxis.x ) || (OldGamepadRAxis.y != gamepadRAxis.y )) &&
+        !((int)gamepadRAxis.x == 0 && (int)gamepadRAxis.y == 0)&& (!player->shot) && (!player->spawn))
     {
-        Vector3D dir = gamepadLAxis;
+        Vector3D dir = gamepadRAxis;
 
         player->angle = M_PI / 2.f - atan2(dir.x, dir.y);
     }
@@ -2259,7 +2259,7 @@ void Game::CoreGameLogic()
 
         int characterCount = (netMode == NETMODE_SERVER) ? mapas.enemyCount + serveris.clientCount() + 1 :
                                                            mapas.enemyCount + otherClientCount + 1;
-        Vector3D mov = Vector3D(gamepadRAxis.x, -gamepadRAxis.y, 0);
+        Vector3D mov = Vector3D(gamepadLAxis.x, -gamepadLAxis.y, 0);
         mov.normalize();
 
         bool movedWithGamepad = false;

@@ -41,6 +41,8 @@
 SDLVideo SDL;
 SDL_Joystick *Joy = 0;
 SDL_GameControllerType controllerType = SDL_CONTROLLER_TYPE_UNKNOWN;
+SDL_GameController* gamepad  = 0;
+
 int JoyX = 0;
 int JoyY = 0;
 int MouseX, MouseY; //relative mouse coords
@@ -72,7 +74,8 @@ void RenderScreen()
     SDL.swap();
 }
 //-----------------
-void Logic(){
+void Logic()
+{
     Game.logic();
 }
 //-----------------
@@ -148,15 +151,8 @@ static void  process_events(){
 //--------------------
 void CheckKeys()
 {
-    
-    int JoyNum = 0;
-    
     const Uint8* keys = SDL_GetKeyboardState(NULL);
 
-    JoyNum = SDL_NumJoysticks();
-
-    
-    
     SDL_GetRelativeMouseState ( &MouseX, &MouseY );
     SDL_GetMouseState(&_MouseX, &_MouseY);
 
@@ -171,60 +167,98 @@ void CheckKeys()
     memcpy(Game.OldKeys, Game.Keys, Game::GameKeyCount);
     memset(Game.Keys, 0, Game::GameKeyCount);
 
-    if ( keys[SDL_SCANCODE_W] )    Game.Keys[0] = 1;
-    if ( keys[SDL_SCANCODE_S] )    Game.Keys[1] = 1;
-    if ( keys[SDL_SCANCODE_A] )    Game.Keys[3] = 1;
-    if ( keys[SDL_SCANCODE_D] )    Game.Keys[2] = 1;
-    if ( keys[SDL_SCANCODE_UP] )   Game.Keys[0] = 1;
-    if ( keys[SDL_SCANCODE_DOWN])  Game.Keys[1] = 1;
-    if ( keys[SDL_SCANCODE_LEFT])  Game.Keys[3] = 1;
-    if ( keys[SDL_SCANCODE_RIGHT]) Game.Keys[2] = 1;
-    if ( keys[SDL_SCANCODE_SPACE]) Game.Keys[4] = 1;
+    if ( keys[SDL_SCANCODE_W] )     Game.Keys[0] = 1;
+    if ( keys[SDL_SCANCODE_S] )     Game.Keys[1] = 1;
+    if ( keys[SDL_SCANCODE_A] )     Game.Keys[3] = 1;
+    if ( keys[SDL_SCANCODE_D] )     Game.Keys[2] = 1;
+
+    if ( keys[SDL_SCANCODE_UP] )    Game.Keys[0] = 1;
+    if ( keys[SDL_SCANCODE_DOWN])   Game.Keys[1] = 1;
+    if ( keys[SDL_SCANCODE_LEFT])   Game.Keys[3] = 1;
+    if ( keys[SDL_SCANCODE_RIGHT])  Game.Keys[2] = 1;
+
+    if ( keys[SDL_SCANCODE_SPACE])  Game.Keys[4] = 1;
     if ( keys[SDL_SCANCODE_RETURN]) Game.Keys[4] = 1;
     if ( keys[SDL_SCANCODE_ESCAPE]) Game.Keys[5] = 1;
-    if ( keys[SDL_SCANCODE_LCTRL]) Game.Keys[6] = 1;
-    if ( keys[SDL_SCANCODE_TAB]) Game.Keys[8] = 1;
+    if ( keys[SDL_SCANCODE_LCTRL])  Game.Keys[6] = 1;
+    if ( keys[SDL_SCANCODE_TAB])    Game.Keys[8] = 1;
 
 
-    if (JoyNum > 0) {
+    if (gamepad)
+    {
+        const int DEADZONE = 10;
 
-        SDL_JoystickOpen(0);
+        SDL_GameControllerUpdate();
 
-        //printf("controller button count %d\n", buttonNum);
+        Game.gamepadLAxis.x = SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_LEFTX) / 1000;
 
-        SDL_JoystickUpdate ();
+        if (Game.gamepadLAxis.x > 0 && Game.gamepadLAxis.x < DEADZONE)
+        {
+            Game.gamepadLAxis.x = 0;
+        }
 
-        Game.gamepadRAxis.x = SDL_JoystickGetAxis(Joy, 0) / 1000;
-        Game.gamepadRAxis.y = SDL_JoystickGetAxis(Joy, 1) / 1000;
-
-        Game.gamepadLAxis.x = SDL_JoystickGetAxis(Joy, 3) / 1000;
-        Game.gamepadLAxis.y = SDL_JoystickGetAxis(Joy, 4) / 1000;
-
-        if (SDL_JoystickGetButton (Joy, 0))
-            Game.Keys[4] = 1;
-        if (SDL_JoystickGetButton (Joy, 1))
-            Game.Keys[5] = 1;
-        if (SDL_JoystickGetButton (Joy, 5))
-            Game.Keys[6] = 1;
-        if (SDL_JoystickGetButton (Joy, 4))
-            Game.Keys[6] = 1;
-        if (SDL_JoystickGetButton (Joy, 13))
-            Game.Keys[0] = 1;
-        if (SDL_JoystickGetButton (Joy, 14))
-            Game.Keys[1] = 1;
-        if (SDL_JoystickGetButton (Joy, 15))
-            Game.Keys[2] = 1;
-        if (SDL_JoystickGetButton (Joy, 16))
-            Game.Keys[3] = 1;
-        if (SDL_JoystickGetButton (Joy, 6))
-            Game.Keys[8] = 1;
-        if (SDL_JoystickGetButton (Joy, 7))
-            Game.Keys[7] = 1;
+        if (Game.gamepadLAxis.x < 0 && Game.gamepadLAxis.x > -DEADZONE)
+        {
+            Game.gamepadLAxis.x = 0;
+        }
 
 
+        Game.gamepadLAxis.y = SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_LEFTY) / 1000;
+
+        if (Game.gamepadLAxis.y > 0 && Game.gamepadLAxis.y < DEADZONE)
+        {
+            Game.gamepadLAxis.y = 0;
+        }
+
+        if (Game.gamepadLAxis.y < 0 && Game.gamepadLAxis.y > -DEADZONE)
+        {
+            Game.gamepadLAxis.y = 0;
+        }
 
 
-        SDL_JoystickClose(0);
+        Game.gamepadRAxis.x = SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_RIGHTX) / 1000;
+
+        if (Game.gamepadRAxis.x > 0 && Game.gamepadRAxis.x < DEADZONE)
+        {
+            Game.gamepadRAxis.x = 0;
+        }
+
+        if (Game.gamepadRAxis.x < 0 && Game.gamepadRAxis.x > -DEADZONE)
+        {
+            Game.gamepadRAxis.x = 0;
+        }
+
+
+
+        Game.gamepadRAxis.y = SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_RIGHTY) / 1000;
+
+        if (Game.gamepadRAxis.y > 0 && Game.gamepadRAxis.y < DEADZONE)
+        {
+            Game.gamepadRAxis.y = 0;
+        }
+
+        if (Game.gamepadRAxis.y < 0 && Game.gamepadRAxis.y > -DEADZONE)
+        {
+            Game.gamepadRAxis.y = 0;
+        }
+
+
+
+        if (SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / 1000 > 0) Game.Keys[6] = 1;
+        if (SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / 1000 > 0) Game.Keys[6] = 1;
+
+        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_A))             Game.Keys[4] = 1;
+        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_B))             Game.Keys[5] = 1;
+
+        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_LEFTSHOULDER))  Game.Keys[7] = 1;
+        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER)) Game.Keys[7] = 1;
+
+        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_DPAD_UP))       Game.Keys[0] = 1;
+        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_DPAD_DOWN))     Game.Keys[1] = 1;
+        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_DPAD_RIGHT))    Game.Keys[2] = 1;
+        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_DPAD_LEFT))     Game.Keys[3] = 1;
+        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_START))         Game.Keys[8] = 1;
+
     }
 }
 
@@ -271,10 +305,13 @@ int main(int argc, char* argv[])
     if(SDL_NumJoysticks() > 0)
     {
         Joy = SDL_JoystickOpen(0);
+
         if (SDL_IsGameController(0))
         {
             controllerType = SDL_GameControllerTypeForIndex(0);
+            gamepad = SDL_GameControllerOpen(0);
             printf("game controller type: %s\n", GamePadTypes[controllerType]);
+            //SDL_GameControllerClose(gamepad);
         }
         else
         {
@@ -311,15 +348,11 @@ int main(int argc, char* argv[])
             tick = SDL_GetTicks() + 1000 / 61;
         }
 
-        
         Game.network();
 
         SDL_Delay(0.6);
 
         process_events();
-
-
-
 
     }
     printf("QUITING!\n");
