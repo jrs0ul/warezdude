@@ -15,6 +15,8 @@ unsigned Server::clientCount()
 void Server::shutDown()
 {
     server.shutdown();
+    receivedPackets.destroy();
+    connectedClientAddreses.destroy();
 }
 //-------------------------------------------------------------------------
 bool Server::launch(int port)

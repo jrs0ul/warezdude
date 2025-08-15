@@ -243,8 +243,9 @@ private:
     void SendClientShootImpulseToServer();
     void SendClientCoords();
     void SendClientDoorState(int doorx,int doory, unsigned char doorframe);
-    void SendResurrectMessageToClient(unsigned clientIdx);
+    void SendResurrectMessageToClient(unsigned clientIdx, unsigned playerIdx);
     void SendResurrectMessageToServer();
+    void SendGameOverMessageToClient(unsigned clientIndex);
     void AdaptMapView();
     void DrawMissionObjectives();
     void MonsterAI(int index);
@@ -280,9 +281,10 @@ private:
     void DrawSomeText();
     void ServerParseCharacterData(const unsigned char* bufer, unsigned * buferindex, int clientIndex);
     void ServerParseWeaponShot(const unsigned char* buffer, unsigned * bufferindex, int clientIndex);
-    void ServerParseClientResurrect(const unsigned char* buffer, unsigned* bufferindex, int clientIndex);
+    void ServerParseClientResurrect(unsigned* bufferindex, int clientIndex);
     void ServerSendTimerSync(unsigned clientIdx);
     void GetServerTimeMsg(const unsigned char* buffer, int * bufferindex);
+    void GetServerCoopGameOverMsg(int* bufferindex);
     void GetCharData(const unsigned char* bufer, int bufersize, int* index);
     void DrawMiniMap(int x, int y);
     void LoadMap(const char* mapname, int otherplayers);

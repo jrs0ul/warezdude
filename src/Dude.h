@@ -7,6 +7,7 @@
 
 class CBulletContainer;
 class PicsContainer;
+class CMap;
 
 class Dude
 {
@@ -83,13 +84,9 @@ public:
         }
 
 
-        //ar kolidina su kokiu nors monstru; count - kiek monstru
-        bool isColideWithOthers(DArray<Dude>& chars, int count, float newx, float newy);
         void rotate(float angle);
-        bool move(float walkSpeed,float strifeSpeed,float radius, const bool** map, int mapsizex, int mapsizey,
-                DArray<Dude>& chars, int charcount);
-        bool moveGamePad(const Vector3D& movementDir,float radius, const bool** map, int mapsizex, int mapsizey,
-                DArray<Dude>& chars, int charcount);
+        bool move(float walkSpeed, float strifeSpeed, float radius, CMap& map, bool isCoop);
+        bool moveGamePad(const Vector3D& movementDir,float radius, CMap& map, bool isCoop);
         void respawn();
         //nupaiso
         void draw(PicsContainer& pics, unsigned index, float posx, float posy, int ScreenWidth, int ScreenHeight);
@@ -124,7 +121,10 @@ private:
                       int mapsizex,
                       int mapsizey,
                       DArray<Dude>& chars,
-                      int charcount);
+                      bool coop,
+                      unsigned monsterCount);
+
+        bool isColideWithOthers(DArray<Dude>& chars, float newx, float newy, bool coop, unsigned monsterCount);
 };
 
 

@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include "Usefull.h"
+#include "map.h"
 #include "gui/Text.h"
 #include "bullet.h"
 #include "BulletContainer.h"
@@ -9,7 +10,8 @@
 
 
 //------------------------
-void Dude::heal(){
+void Dude::heal()
+{
     if (hp < 100)
     {
         if (hp > 90)
@@ -34,16 +36,32 @@ bool Dude::damage(int dmg)
     return hp <= 0;
 }
 //-------------------------------------
-bool Dude::isColideWithOthers( DArray<Dude>& chars, int count, float newx, float newy)
+bool Dude::isColideWithOthers( DArray<Dude>& chars, float newx, float newy, bool coop, unsigned monsterCount)
 {
 
-    for (int i = 0; i < count; ++i)
+    for (unsigned i = 0; i < chars.count(); ++i)
     {
-        if ((CirclesColide(newx,newy, 10.0f, chars[i].x,chars[i].y, 10.0f)) && (chars[i].id!=id))
+        if (chars[i].id == id)
         {
+            continue;
+        }
 
-            if ((!chars[i].spawn)&&(!chars[i].shot))
-                return true;
+        if (chars[i].spawn)
+        {
+            continue;
+        }
+
+        if (chars[i].shot)
+        {
+            if (!(coop && i >= monsterCount))
+            {
+                continue;
+            }
+        }
+
+        if (CirclesColide(newx, newy, 10.0f, chars[i].x, chars[i].y, 10.0f))
+        {
+            return true;
         }
     }
 
@@ -94,39 +112,34 @@ void Dude::rotate(float ang)
 bool Dude::move(float walkSpeed,
                 float strifeSpeed,
                 float radius,
-                const bool** map,
-                int mapsizex,
-                int mapsizey,
-                DArray<Dude>& chars,
-                int charcount)
+                CMap& map,
+                bool isCoop)
 {
 
     Vector3D vl = MakeVector(walkSpeed, strifeSpeed, angle);
     vl.normalize();
 
-    return movement(vl, radius, (const bool**)map, mapsizex, mapsizey, chars, charcount);
+    return movement(vl, radius, (const bool**)map._colide, map.width(), map.height(), map.mons, isCoop, map.enemyCount);
 }
 //-----------------------------------------------------
 bool Dude::moveGamePad(const Vector3D& movementDir,
                         float radius,
-                        const bool** map,
-                        int mapsizex,
-                        int mapsizey,
-                        DArray<Dude>& chars,
-                        int charcount)
+                        CMap& map,
+                        bool isCoop)
 {
-    return movement(movementDir, radius, (const bool**)map, mapsizex, mapsizey, chars, charcount);
+    return movement(movementDir, radius, (const bool**)map._colide, map.width(), map.height(), map.mons, isCoop, map.enemyCount);
 }
 
 
 //----------------------------------------------------
 bool Dude::movement(Vector3D dir,
-                      float radius,
-                      const bool** map,
-                      int mapsizex,
-                      int mapsizey,
-                      DArray<Dude>& chars,
-                      int charcount)
+                    float radius,
+                    const bool** map,
+                    int mapsizex,
+                    int mapsizey,
+                    DArray<Dude>& chars,
+                    bool coop,
+                    unsigned monsterCount)
 {
 
     float difx = dir.x;
@@ -215,7 +228,7 @@ bool Dude::movement(Vector3D dir,
         (!map[(int)p2.y][(int)p2.x]) &&
         (!map[(int)p3.y][(int)p3.x]) &&
         (!map[(int)p4.y][(int)p4.x]) && 
-        (!isColideWithOthers(chars,charcount,newposx,y)) &&
+        (!isColideWithOthers(chars, newposx, y, coop, monsterCount)) &&
         ((newposx)<=(mapsizex-1) * TILE_WIDTH) &&
         ((newposy)<((mapsizey-1) * TILE_WIDTH)) &&
         ((newposx-radius)>=-radius) &&
@@ -240,7 +253,7 @@ bool Dude::movement(Vector3D dir,
         (!map[(int)p6.y][(int)p6.x]) &&
         (!map[(int)p7.y][(int)p7.x]) &&
         (!map[(int)p8.y][(int)p8.x]) &&
-        (!isColideWithOthers(chars,charcount,x,newposy)) &&
+        (!isColideWithOthers(chars, x, newposy, coop, monsterCount)) &&
         ((newposx)<=(mapsizex-1) * TILE_WIDTH) &&
         ((newposy)<((mapsizey-1) * TILE_WIDTH))&&
         ((newposx-radius)>=-radius) &&

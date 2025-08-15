@@ -498,12 +498,7 @@ void Game::MoveDude()
         }
 
 
-        int characterCount = (netMode == NETMODE_SERVER) ? mapas.enemyCount + serveris.clientCount() + 1 :
-                                                           mapas.enemyCount + otherClientCount + 1;
-
-        player->move(walkSpeed, strifeSpeed, PLAYER_RADIUS, (const bool**)mapas._colide,
-                     mapas.width(), mapas.height(), mapas.mons,
-                     characterCount);
+        player->move(walkSpeed, strifeSpeed, PLAYER_RADIUS, mapas, (netGameState == MPMODE_COOP));
 
         AdaptMapView();
 
@@ -966,7 +961,7 @@ void Game::SendClientDoorState(int doorx,int doory, unsigned char doorframe)
     client.sendData(bufer, index);
 }
 //--------------------------------
-void Game::SendResurrectMessageToClient(unsigned clientIdx)
+void Game::SendResurrectMessageToClient(unsigned clientIdx, unsigned playerIdx)
 {
     int len = 0;
     char buffer[MAX_MESSAGE_DATA_SIZE];
@@ -975,6 +970,8 @@ void Game::SendResurrectMessageToClient(unsigned clientIdx)
     len += NET_HEADER_LEN;
     buffer[len] = NET_SERVER_MSG_COOP_RESURRECT;
     ++len;
+    memcpy(&buffer[len], &playerIdx, sizeof(unsigned));
+    len += sizeof(unsigned);
 
     serveris.sendData(clientIdx, buffer, len);
 }
@@ -991,6 +988,20 @@ void Game::SendResurrectMessageToServer()
 
     client.sendData(buffer, len);
 
+}
+
+//--------------------------------
+void Game::SendGameOverMessageToClient(unsigned clientIdx)
+{
+    int len = 0;
+    char buffer[MAX_MESSAGE_DATA_SIZE];
+
+    strcpy(buffer, NET_HEADER);
+    len += NET_HEADER_LEN;
+    buffer[len] = NET_SERVER_MSG_COOP_GAME_OVER;
+    ++len;
+
+    serveris.sendData(clientIdx, buffer, len);
 }
 
 //--------------------------------
@@ -1116,11 +1127,12 @@ void Game::HandleInteractionsWithDeadPlayers()
                         if (CirclesColide(mapas.mons[i].x, mapas.mons[i].y, 10.f, interactionCenter.x, interactionCenter.y, 10.f))
                         {
                             mapas.mons[i].shot = false;
+                            mapas.mons[i].frame = mapas.mons[i].currentWeapon * 4;
                             mapas.mons[i].heal();
 
                             if (netMode == NETMODE_SERVER)
                             {
-                                SendResurrectMessageToClient(i - mapas.enemyCount - 1);
+                                SendResurrectMessageToClient(i - mapas.enemyCount - 1, i);
                             }
                             else if (netMode == NETMODE_CLIENT)
                             {
@@ -1139,6 +1151,7 @@ void Game::HandleInteractionsWithDeadPlayers()
 //-------------------------
 void Game::goToEnding()
 {
+    gameOver = false;
     state = GAMESTATE_ENDING;
     PlayNewSong("crazy.ogg");
 }
@@ -1371,9 +1384,7 @@ void Game::MonsterAI(int index)
 
     if (!mapas.mons[index].shot && !mapas.mons[index].spawn)
     {
-        bool movedFreely = mapas.mons[index].move(1.0f, 0.0f, 8.0f, 
-                               (const bool**)mapas._colide, mapas.width(), mapas.height(),
-                               mapas.mons, mapas.enemyCount + 1 + serveris.clientCount());
+        bool movedFreely = mapas.mons[index].move(1.0f, 0.0f, 8.0f, mapas, (netGameState == MPMODE_COOP));
 
         if (!movedFreely)
         {
@@ -2274,6 +2285,11 @@ void Game::CoreGameLogic()
                     if (foundAlive == false && !gameOver)
                     {
                         gameOver = true;
+
+                        for (unsigned i = 0; i < serveris.clientCount(); ++i)
+                        {
+                            SendGameOverMessageToClient(i);
+                        }
                     }
 
                 }
@@ -2356,8 +2372,6 @@ void Game::CoreGameLogic()
             player->chageNextWeapon();
         }
 
-        int characterCount = (netMode == NETMODE_SERVER) ? mapas.enemyCount + serveris.clientCount() + 1 :
-                                                           mapas.enemyCount + otherClientCount + 1;
         Vector3D mov = Vector3D(gamepadLAxis.x, -gamepadLAxis.y, 0);
         mov.normalize();
 
@@ -2368,7 +2382,7 @@ void Game::CoreGameLogic()
             movedWithGamepad = true;
         }
 
-        player->moveGamePad(mov, PLAYER_RADIUS, (const bool**)mapas._colide, mapas.width(), mapas.height(), mapas.mons, characterCount);
+        player->moveGamePad(mov, PLAYER_RADIUS, mapas, (netGameState == MPMODE_COOP));
         AdaptMapView();
 
         if ((Keys[0] || Keys[1] || Keys[2] || Keys[3]) && !movedWithGamepad)
@@ -3151,7 +3165,14 @@ void Game::GetMapInfo(const unsigned char* bufer, int* index)
 void Game::GetServerResurrectMsg(const unsigned char* buffer, int* index)
 {
     ++(*index);
-    Dude* player = mapas.getPlayer((netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0);
+
+    int playerIdx = 0;
+    memcpy(&playerIdx, &buffer[*index], sizeof(unsigned));
+    *index += sizeof(unsigned);
+
+    printf("MUST RESURRECT monster: %d\n", playerIdx - mapas.enemyCount);
+
+    Dude* player = mapas.getPlayer(playerIdx - mapas.enemyCount);
 
     player->shot = false;
 }
@@ -3310,7 +3331,7 @@ void Game::ServerParseCharacterData(const unsigned char* bufer, unsigned * bufer
     (*buferindex)++;
 
     unsigned char stats = bufer[*buferindex];
-    mapas.mons[clientIdx].shot = (stats & 0x80) ? true : false;
+    //mapas.mons[clientIdx].shot = (stats & 0x80) ? true : false;
     mapas.mons[clientIdx].spawn = (stats & 0x40) ? true : false;
 }
 //--------------------------------------------------------------
@@ -3356,7 +3377,7 @@ void Game::ServerParseWeaponShot(const unsigned char* buffer, unsigned * bufferi
 }
 
 //--------------------------------------------------------------
-void Game::ServerParseClientResurrect(const unsigned char* buffer, unsigned* bufferindex, int clientIndex)
+void Game::ServerParseClientResurrect(unsigned* bufferindex, int clientIndex)
 {
     ++(*bufferindex);
 
@@ -3376,7 +3397,16 @@ void Game::ServerParseClientResurrect(const unsigned char* buffer, unsigned* buf
                 if (CirclesColide(mapas.mons[i].x, mapas.mons[i].y, 10.f, ic.x, ic.y, 10.f))
                 {
                     mapas.mons[i].shot = false;
+                    mapas.mons[i].frame = mapas.mons[i].currentWeapon * 4;
                     mapas.mons[i].heal();
+                    //  ok now let's send this to all clients
+                    for (unsigned a = 0; a < serveris.clientCount(); ++a)
+                    {
+                        if (a != (unsigned)clientIndex)
+                        {
+                            SendResurrectMessageToClient(a, i);
+                        }
+                    }
                 }
             }
         }
@@ -3559,7 +3589,7 @@ void Game::ParseMessagesServerGot()
 
                 case NET_CLIENT_MSG_CHARACTER_DATA: ServerParseCharacterData(msg->data, &index, clientIdx);   break;
                 case NET_CLIENT_MSG_WEAPON_SHOT:    ServerParseWeaponShot(msg->data, &index, clientIdx);      break;
-                case NET_CLIENT_MSG_COOP_RESURRECT: ServerParseClientResurrect(msg->data, &index, clientIdx); break;
+                case NET_CLIENT_MSG_COOP_RESURRECT: ServerParseClientResurrect(&index, clientIdx);            break;
                 case NET_CLIENT_MSG_ITEM:
                     {
                         ++index;
@@ -3704,6 +3734,12 @@ void Game::GetServerTimeMsg(const unsigned char* buffer, int* bufferindex)
     *bufferindex += sizeof(int);
 }
 //------------------------------
+void Game::GetServerCoopGameOverMsg(int* bufferindex)
+{
+    ++(*bufferindex);
+    gameOver = true;
+}
+//------------------------------
 void Game::ParseMessagesClientGot()
 {
     if (!client.storedPacketCount())
@@ -3768,9 +3804,10 @@ void Game::ParseMessagesClientGot()
                         return;
                     } break;
 
-                case NET_SERVER_MSG_COOP_RESURRECT: GetServerResurrectMsg(msg->data, &index); break;
-                case NET_SERVER_MSG_SERVER_INFO:    GetMapInfo(msg->data, &index); break;
-                case NET_SERVER_MSG_SYNC_TIMER:     GetServerTimeMsg(msg->data, &index); break;
+                case NET_SERVER_MSG_COOP_RESURRECT:  GetServerResurrectMsg(msg->data, &index); break;
+                case NET_SERVER_MSG_SERVER_INFO:     GetMapInfo(msg->data, &index);            break;
+                case NET_SERVER_MSG_SYNC_TIMER:      GetServerTimeMsg(msg->data, &index);      break;
+                case NET_SERVER_MSG_COOP_GAME_OVER:  GetServerCoopGameOverMsg(&index);         break;
 
                 case NET_SERVER_MSG_MAP_DATA:
                     {
