@@ -37,9 +37,9 @@ bool Dude::damage(int dmg)
 bool Dude::isColideWithOthers( DArray<Dude>& chars, int count, float newx, float newy)
 {
 
-    for (int i=0;i<count;i++)
+    for (int i = 0; i < count; ++i)
     {
-        if ((CirclesColide(newx,newy,10.0f,chars[i].x,chars[i].y,10.0f))&&(chars[i].id!=id))
+        if ((CirclesColide(newx,newy, 10.0f, chars[i].x,chars[i].y, 10.0f)) && (chars[i].id!=id))
         {
 
             if ((!chars[i].spawn)&&(!chars[i].shot))

@@ -966,6 +966,21 @@ void Game::SendClientDoorState(int doorx,int doory, unsigned char doorframe)
     client.sendData(bufer, index);
 }
 //--------------------------------
+void Game::SendResurrectMessageToClient(unsigned clientIdx)
+{
+    int len = 0;
+    char buffer[MAX_MESSAGE_DATA_SIZE];
+
+    strcpy(buffer, NET_HEADER);
+    len += NET_HEADER_LEN;
+    buffer[len] = NET_SERVER_MSG_COOP_RESURRECT;
+    ++len;
+
+    serveris.sendData(clientIdx, buffer, len);
+}
+
+
+//--------------------------------
 void Game::SendServerDoorState(unsigned int clientIndex, int doorx,int doory, unsigned char doorframe)
 {
     int index = 0;
@@ -1063,6 +1078,47 @@ void Game::DoorsInteraction()
     }
 
 }
+//-------------------------
+void Game::HandleInteractionsWithDeadPlayers()
+{
+    if (netGameState == MPMODE_COOP)
+    {
+
+        if (Keys[ACTION_OPEN])
+        {
+            const int clientIdx = (netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0;
+            Dude* player = mapas.getPlayer(clientIdx);
+            Vector3D playerDirection = MakeVector(PLAYER_RADIUS, 0.f, player->angle);
+
+            Vector3D interactionCenter(player->x + playerDirection.x, player->y + playerDirection.x, 0);
+
+            for (unsigned i = mapas.enemyCount; i < mapas.mons.count(); ++i)
+            {
+
+                if (i != (unsigned)mapas.enemyCount + clientIdx)
+                {
+                    if (mapas.mons[i].shot)
+                    {
+
+                        if (CirclesColide(mapas.mons[i].x, mapas.mons[i].y, 10.f, interactionCenter.x, interactionCenter.y, 10.f))
+                        {
+                            mapas.mons[i].shot = false;
+                            mapas.mons[i].heal();
+
+                            if (netMode == NETMODE_SERVER)
+                            {
+                                SendResurrectMessageToClient(i - mapas.enemyCount);
+                            }
+
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+}
+
 //-------------------------
 void Game::goToEnding()
 {
@@ -2177,11 +2233,36 @@ void Game::CoreGameLogic()
     if (player->shot)
     { //hero dies here
 
-        if (netMode != NETMODE_NONE && netGameState == MPMODE_DEATHMATCH)
+        if (netMode != NETMODE_NONE)
         {
-            player->disintegrationAnimation();
+            if (netGameState == MPMODE_DEATHMATCH)
+            {
+                player->disintegrationAnimation();
+            }
+            else if (netGameState == MPMODE_COOP)
+            {
+                if (netMode == NETMODE_SERVER)
+                {
+                    bool foundAlive = false;
+
+                    for (unsigned i = 0; i < serveris.clientCount(); ++i)
+                    {
+                        if (mapas.mons[mapas.enemyCount + 1 + i].shot == false)
+                        {
+                            foundAlive = true;
+                            break;
+                        }
+                    }
+
+                    if (foundAlive == false && !gameOver)
+                    {
+                        gameOver = true;
+                    }
+
+                }
+            }
         }
-        else
+        else  // singleplayer
         {
             if (!gameOver)
             {
@@ -2394,20 +2475,14 @@ void Game::CoreGameLogic()
             const int dmg = slimeReaction(i); // hero reaction to slime
 
 
-            /*if (dmg)
-            {
-                if (i == (unsigned)(mapas.enemyCount + clientIndex))
-                {
-                    doRumble = true;
-                }
-            }*/
-
             if (i > (unsigned)mapas.enemyCount && dmg)
             {
                 SendServerMeleeImpulseToClient(i - mapas.enemyCount - 1, i, mapas.mons[i].getHP(), DAMAGER_NOBODY);
             }
         }
     }
+
+    HandleInteractionsWithDeadPlayers();
 
     DoorsInteraction();  //open doors
 
@@ -3056,6 +3131,15 @@ void Game::GetMapInfo(const unsigned char* bufer, int* index)
      }
 }
 //------------------------------------
+void Game::GetServerResurrectMsg(const unsigned char* buffer, int* index)
+{
+    ++(*index);
+    Dude* player = mapas.getPlayer((netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0);
+
+    player->shot = false;
+}
+
+//------------------------------------
 void Game::populateClientDudes(int oldClientCount)
 {
 
@@ -3638,8 +3722,9 @@ void Game::ParseMessagesClientGot()
                         return;
                     } break;
 
-                case NET_SERVER_MSG_SERVER_INFO: GetMapInfo(msg->data, &index); break;
-                case NET_SERVER_MSG_SYNC_TIMER:  GetServerTimeMsg(msg->data, &index); break;
+                case NET_SERVER_MSG_COOP_RESURRECT: GetServerResurrectMsg(msg->data, &index); break;
+                case NET_SERVER_MSG_SERVER_INFO:    GetMapInfo(msg->data, &index); break;
+                case NET_SERVER_MSG_SYNC_TIMER:     GetServerTimeMsg(msg->data, &index); break;
 
                 case NET_SERVER_MSG_MAP_DATA:
                     {

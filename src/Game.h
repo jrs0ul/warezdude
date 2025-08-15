@@ -74,6 +74,7 @@ enum NetworkCommands
     NET_CLIENT_MSG_NEXT_LEVEL,
     NET_CLIENT_MSG_MELEE_ATTACK,
     NET_CLIENT_MSG_QUIT,
+    NET_CLIENT_MSG_COOP_RESURRECT,
     NET_CLIENT_MSG_PONG = 20,
 
     NET_SERVER_MSG_CHARACTER_DATA,
@@ -89,7 +90,9 @@ enum NetworkCommands
     NET_SERVER_MSG_MELEE_ATTACK,
     NET_SERVER_MSG_PING,
     NET_SERVER_MSG_SHUTTING_DOWN,
-    NET_SERVER_MSG_SYNC_TIMER
+    NET_SERVER_MSG_SYNC_TIMER,
+    NET_SERVER_MSG_COOP_GAME_OVER,
+    NET_SERVER_MSG_COOP_RESURRECT
 };
 
 
@@ -233,12 +236,14 @@ private:
     void QuitServer();
     void SendServerDoorState(unsigned int clientIndex, int doorx,int doory, unsigned char doorframe);
     void DoorsInteraction();
+    void HandleInteractionsWithDeadPlayers();
     void CheckForExit();
     int  slimeReaction(int index);
     void SendClientMeleeImpulseToServer(int victimID, int hp);
     void SendClientShootImpulseToServer();
     void SendClientCoords();
     void SendClientDoorState(int doorx,int doory, unsigned char doorframe);
+    void SendResurrectMessageToClient(unsigned clientIdx);
     void AdaptMapView();
     void DrawMissionObjectives();
     void MonsterAI(int index);
@@ -260,6 +265,7 @@ private:
     void DrawStats();
     void SendPlayerInfoToClient(int clientindex);
     void GetMapInfo(const unsigned char* bufer, int* index);
+    void GetServerResurrectMsg(const unsigned char* buffer, int* index);
     void KillPlayer(int index);
     void GetAttackImpulseFromServer(const unsigned char* buf, int* index);
     void SendItemCreation(float x, float y, int value, unsigned int clientIndex);
