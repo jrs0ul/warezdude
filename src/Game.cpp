@@ -978,7 +978,20 @@ void Game::SendResurrectMessageToClient(unsigned clientIdx)
 
     serveris.sendData(clientIdx, buffer, len);
 }
+//--------------------------------
+void Game::SendResurrectMessageToServer()
+{
+    int len = 0;
+    char buffer[MAX_MESSAGE_DATA_SIZE];
 
+    strcpy(buffer, NET_HEADER);
+    len += NET_HEADER_LEN;
+    buffer[len] = NET_CLIENT_MSG_COOP_RESURRECT;
+    ++len;
+
+    client.sendData(buffer, len);
+
+}
 
 //--------------------------------
 void Game::SendServerDoorState(unsigned int clientIndex, int doorx,int doory, unsigned char doorframe)
@@ -1107,7 +1120,11 @@ void Game::HandleInteractionsWithDeadPlayers()
 
                             if (netMode == NETMODE_SERVER)
                             {
-                                SendResurrectMessageToClient(i - mapas.enemyCount);
+                                SendResurrectMessageToClient(i - mapas.enemyCount - 1);
+                            }
+                            else if (netMode == NETMODE_CLIENT)
+                            {
+                                SendResurrectMessageToServer();
                             }
 
                         }
@@ -3339,6 +3356,34 @@ void Game::ServerParseWeaponShot(const unsigned char* buffer, unsigned * bufferi
 }
 
 //--------------------------------------------------------------
+void Game::ServerParseClientResurrect(const unsigned char* buffer, unsigned* bufferindex, int clientIndex)
+{
+    ++(*bufferindex);
+
+    Dude* thatClient = mapas.getPlayer(clientIndex + 1);
+    Vector3D dir = MakeVector(PLAYER_RADIUS, 0.f, thatClient->angle);
+
+    Vector3D ic(thatClient->x + dir.x, thatClient->y + dir.x, 0);
+
+    for (unsigned i = mapas.enemyCount; i < mapas.mons.count(); ++i)
+    {
+
+        if (i != (unsigned)mapas.enemyCount + clientIndex + 1)
+        {
+            if (mapas.mons[i].shot)
+            {
+
+                if (CirclesColide(mapas.mons[i].x, mapas.mons[i].y, 10.f, ic.x, ic.y, 10.f))
+                {
+                    mapas.mons[i].shot = false;
+                    mapas.mons[i].heal();
+                }
+            }
+        }
+    }
+
+}
+//--------------------------------------------------------------
 void Game::GetDoorInfo(const unsigned char* bufer, unsigned * index, int* dx, int* dy, unsigned char* frame)
 {
 
@@ -3512,8 +3557,9 @@ void Game::ParseMessagesServerGot()
 
                     } break;
 
-                case NET_CLIENT_MSG_CHARACTER_DATA: ServerParseCharacterData(msg->data, &index, clientIdx); break;
-                case NET_CLIENT_MSG_WEAPON_SHOT:    ServerParseWeaponShot(msg->data, &index, clientIdx); break;
+                case NET_CLIENT_MSG_CHARACTER_DATA: ServerParseCharacterData(msg->data, &index, clientIdx);   break;
+                case NET_CLIENT_MSG_WEAPON_SHOT:    ServerParseWeaponShot(msg->data, &index, clientIdx);      break;
+                case NET_CLIENT_MSG_COOP_RESURRECT: ServerParseClientResurrect(msg->data, &index, clientIdx); break;
                 case NET_CLIENT_MSG_ITEM:
                     {
                         ++index;
