@@ -797,10 +797,6 @@ void Game::ItemPickup()
                 {
                     PlaySoundAt(ss, player->x, player->y, 6);
                 }
-                else if (item == ITEM_CARTRIDGE)
-                {
-                    PlaySoundAt(ss, player->x, player->y, 7);
-                }
                 else
                 {
                     PlaySoundAt(ss, player->x, player->y, 1);
@@ -823,8 +819,9 @@ void Game::ItemPickup()
                 //------------------------
                 mapas.removeItem(i);
 
-                if ((item < ITEM_AMMO_PACK) && (item > 0))
+                if ((item > ITEM_MEDKIT) && (item > 0))
                 {
+                    printf("LOOTING ITEM %d\n", item);
                     loot.add(item);
                     mustCollectItems--;
                 }
@@ -2777,8 +2774,7 @@ void Game::DrawEndScreen()
 
         for (unsigned i = 0; i < loot.count(); ++i)
         {
-
-            pics.draw(11, itemX, itemY, (loot[i] - 1) * 4 + mapas.itmframe, false);
+            pics.draw(11, itemX, itemY, loot[i] - ITEM_GAME_NINJA_MAN, false);
 
             itemX += 32;
 
@@ -3597,7 +3593,7 @@ void Game::ParseMessagesServerGot()
                         memcpy(&itmindex, &(msg->data)[index], sizeof(int));
                         index+=sizeof(int);
 
-                        if ((mapas.items[itmindex].value < ITEM_AMMO_PACK) && (mapas.items[itmindex].value>0))
+                        if ((mapas.items[itmindex].value > ITEM_MEDKIT) && (mapas.items[itmindex].value > 0))
                         {
                             mustCollectItems--;
                         }
@@ -3880,7 +3876,7 @@ void Game::ParseMessagesClientGot()
                         memcpy(&isPlayerTaked, &(msg->data)[index], sizeof(unsigned char));
                         index++;
 
-                        if ((mapas.items[itmindex].value < ITEM_AMMO_PACK) &&
+                        if ((mapas.items[itmindex].value > ITEM_MEDKIT) &&
                                 (mapas.items[itmindex].value > 0) &&
                                 (isPlayerTaked))
                         {
@@ -3996,8 +3992,8 @@ void Game::loadConfig()
     sprintf(buf, "%s/settings.cfg", DocumentPath);
     sys.load(buf);
 
-    ScreenWidth = sys.ScreenWidth;
-    ScreenHeight = sys.ScreenHeight;
+    ScreenWidth = sys.ScreenWidth * sys.screenScaleX;
+    ScreenHeight = sys.ScreenHeight * sys.screenScaleY;
     windowed = sys.useWindowed;
 
     sys.write(buf);
@@ -4031,7 +4027,7 @@ void Game::init()
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-    MatrixOrtho(0.0, ScreenWidth, ScreenHeight, 0.0, -400, 400, OrthoMatrix);
+    MatrixOrtho(0.0, ScreenWidth / sys.screenScaleX, ScreenHeight / sys.screenScaleY, 0.0, -400, 400, OrthoMatrix);
 
     pics.load("pics/imagesToLoad.xml"); 
 

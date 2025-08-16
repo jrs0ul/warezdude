@@ -36,13 +36,14 @@ void CMap::arangeItems()
     int ix;
     int iy;
 
-    //isdelioja flopikus
-    for (int a=0; a<misionItems; a++)
+    //let's place the games
+    for (int a = 0; a < misionItems; ++a)
     {
-        ix=rand()%_width;
-        iy=rand()%_height;
+        ix = rand() % _width;
+        iy = rand() % _height;
 
-        bool found=false;
+        bool found = false;
+
         for (unsigned long i=0;i<items.count();i++)
         {
             if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y))
@@ -52,20 +53,23 @@ void CMap::arangeItems()
             }
         }
 
-        while ((_colide[iy][ix]) || (found) || (tiles[iy][ix]==35)||(tiles[iy][ix]==36))
+        while ((_colide[iy][ix]) || (found) || (tiles[iy][ix] == 35)||(tiles[iy][ix] == 36))
         {
             ix=rand() % _width;
             iy=rand() % _height;
             found=false;
-            for (unsigned long i=0;i<items.count();i++){
-                if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y)){
+
+            for (unsigned long i=0;i<items.count();i++)
+            {
+                if ((ix*1.0f == items[i].x) && (iy*1.0f == items[i].y))
+                {
                     found=true;
                     break;
                 }
             }
         }
 
-        addItem(ix*32.0f,iy*32.0f,rand()%3+1);
+        addItem(ix * TILE_WIDTH, iy * TILE_WIDTH, rand() % 15 + ITEM_GAME_NINJA_MAN);
 
     }
 
@@ -86,13 +90,17 @@ void CMap::arangeItems()
          }
         }
 
-        while ((_colide[iy][ix]) || (found)){
+        while ((_colide[iy][ix]) || (found))
+        {
             ix=rand() % _width;
             iy=rand() % _height;
 
-            found=false;
-            for (unsigned long i=0;i<items.count();i++){
-                if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y)){
+            found = false;
+
+            for (unsigned long i=0;i<items.count();i++)
+            {
+                if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y))
+                {
                     found=true;
                     break;
                 }
@@ -100,12 +108,15 @@ void CMap::arangeItems()
         }
 
         if ((rand()%2+1)==2)
-            addItem(ix*32.0f,iy*32.0f,5);
+        {
+            addItem(ix*32.0f,iy*32.0f, ITEM_MEDKIT);
+        }
         else
-            addItem(ix*32.0f,iy*32.0f,6);
+        {
+            addItem(ix*32.0f,iy*32.0f, ITEM_AMMO_PACK);
+        }
 
     }
-
 
 
 }
@@ -590,10 +601,9 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b, int ScreenWidth,
 
     for (unsigned long i = 0; i < items.count(); ++i)
     {
-
-        const int itemFrame = (items[i].value < ITEM_AMMO_PACK) ? (items[i].value-1) * 4 + itmframe :
-                                                            items[i].value - ITEM_AMMO_PACK;
-        const int itemPicture = (items[i].value < ITEM_AMMO_PACK) ? 11 : 7;
+        const int itemPicture = (items[i].value > ITEM_MEDKIT) ? 11 : 7;
+        const int itemFrame = (items[i].value > ITEM_MEDKIT) ? items[i].value - ITEM_GAME_NINJA_MAN :
+                                                               items[i].value - 1;
 
         const float itemX = items[i].x + mapPos.x;
         const float itemY = items[i].y + mapPos.y;
@@ -683,9 +693,12 @@ bool CMap::colide(unsigned x, unsigned y)
 
 void CMap::ReplaceTiles(unsigned char old, unsigned char fresh){
  for (unsigned a = 0; a < _height; a++)
-  for (unsigned i=0;i < _width;i++){
+  for (unsigned i=0;i < _width;i++)
+  {
     if (tiles[a][i]==old)
+    {
         tiles[a][i]=fresh;
+    }
   }
 }
 
@@ -696,6 +709,7 @@ void CMap::addItem(float nx, float ny, int nvalue)
     newitem.x = nx;
     newitem.y = ny;
     newitem.value = nvalue;
+    printf("ADDING ITEM %d\n", nvalue);
     items.add(newitem);
 
 }

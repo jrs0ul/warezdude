@@ -55,7 +55,7 @@ const char* GamePadTypes[] = {"Unknown", "XBOX 360", "XBOX One", "Playstation 3"
                               "Playstation 4", "Nintendo Switch PRO", "Virtual",
                               "Playstation 5", "Amazon Luna", "Google Stadia",
                               "NVIDIA Shield", "Nintendo Switch Joycon LEFT",
-                              "Nintendo Swithch Joycon RIGHT", "Nintendo Switch Joycon PAIR"};
+                              "Nintendo Switch Joycon RIGHT", "Nintendo Switch Joycon PAIR"};
 
 Game Game;
 
@@ -300,7 +300,7 @@ int main(int argc, char* argv[])
     SDL.setMetrics(Game.ScreenWidth, Game.ScreenHeight);
 
 
-    const char* title = "Warez D00ds 3";
+    const char* title = "WD40";
 
     if (!SDL.InitWindow(title, "icon1.bmp", Game.windowed)){
         Game.Works = false;
@@ -316,7 +316,6 @@ int main(int argc, char* argv[])
             controllerType = SDL_GameControllerTypeForIndex(0);
             gamepad = SDL_GameControllerOpen(0);
             printf("game controller type: %s\n", GamePadTypes[controllerType]);
-            //SDL_GameControllerClose(gamepad);
         }
         else
         {

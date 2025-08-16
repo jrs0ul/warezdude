@@ -11,6 +11,8 @@
 
         int ScreenWidth;
         int ScreenHeight;
+        int screenScaleX;
+        int screenScaleY;
         int useWindowed;
         int soundFXVolume;
 
@@ -19,6 +21,8 @@
             musicVolume = 0.2f;
 
             useWindowed = true;
+            screenScaleX = 1.f;
+            screenScaleY = 1.f;
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
             ScreenWidth = 640;
             ScreenHeight = 480;
@@ -26,7 +30,6 @@
             ScreenWidth = 640;
             ScreenHeight = 480;
 
-            useWindowed = true;
 #endif
 
         }

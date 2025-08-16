@@ -55,11 +55,26 @@
                 useWindowed = atoi(ctmp);
             }
 
+            nod = 0;
+            nod = settings->getNode(L"screenScaleX");
+            if (nod)
+            {
+                wcscpy(tmp, nod->getValue());
+                wcstombs(ctmp, tmp, 100);
+                screenScaleX = atoi(ctmp);
+            }
+
+            nod = 0;
+            nod = settings->getNode(L"screenScaleY");
+            if (nod)
+            {
+                wcscpy(tmp, nod->getValue());
+                wcstombs(ctmp, tmp, 100);
+                screenScaleY = atoi(ctmp);
+            }
 
 
 
-
-            
 
         }
 
@@ -109,6 +124,22 @@ bool SystemConfig::write(const char * config)
         _isWindowed.setName(L"isWindowed");
         _isWindowed.setValue(wbuf);
         Settings.addChild(_isWindowed);
+
+        XmlNode _screenScaleX;
+        sprintf(buf, "%d", screenScaleX);
+        mbstowcs(wbuf, buf, 255);
+        _screenScaleX.setName(L"screenScaleX");
+        _screenScaleX.setValue(wbuf);
+        Settings.addChild(_screenScaleX);
+
+        XmlNode _screenScaleY;
+        sprintf(buf, "%d", screenScaleY);
+        mbstowcs(wbuf, buf, 255);
+        _screenScaleY.setName(L"screenScaleY");
+        _screenScaleY.setValue(wbuf);
+        Settings.addChild(_screenScaleY);
+
+
 
 
        conf.root.addChild(Settings);
