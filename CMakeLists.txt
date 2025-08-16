@@ -26,6 +26,7 @@ add_executable(warezdude3
                     src/gui/Text.cpp
                     src/gui/Slider.cpp
                     src/gui/EditBox.cpp
+                    src/Collection.cpp
                     src/SysConfig.cpp
                     src/network/Socket.cpp
                     src/network/Client.cpp

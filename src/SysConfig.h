@@ -20,15 +20,15 @@
         SystemConfig(){
             musicVolume = 0.2f;
 
-            useWindowed = true;
-            screenScaleX = 1.f;
-            screenScaleY = 1.f;
+            useWindowed = false;
+            screenScaleX = 3.f;
+            screenScaleY = 3.f;
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
             ScreenWidth = 640;
-            ScreenHeight = 480;
+            ScreenHeight = 360;
 #else
             ScreenWidth = 640;
-            ScreenHeight = 480;
+            ScreenHeight = 360;
 
 #endif
 

@@ -1747,6 +1747,20 @@ void Game::ResetVolume()
 void Game::TitleMenuLogic()
 {
 
+    if (cartridgeCollection.active())
+    {
+
+        cartridgeCollection.getInput(Keys, OldKeys);
+
+        if (cartridgeCollection.isCanceled())
+        {
+            cartridgeCollection.deactivate();
+            cartridgeCollection.reset();
+            mainmenu.activate();
+        }
+    }
+
+
     if (mainmenu.active())
     {
         switch(netMode)
@@ -1778,11 +1792,17 @@ void Game::TitleMenuLogic()
                     }break;
                 case 2:
                     {
+                        cartridgeCollection.activate();
+                        mainmenu.reset();
+                        mainmenu.deactivate();
+                    } break;
+                case 3:
+                    {
                         options.activate();
                         mainmenu.reset();
                         mainmenu.deactivate();
                     }break;
-                case 3:
+                case 4:
                     {
                         Works = false;
                         mainmenu.reset();
@@ -1794,7 +1814,9 @@ void Game::TitleMenuLogic()
     if (netmenu.active())
     {
         if (!netmenu.selected)
+        {
             netmenu.getInput(Keys, OldKeys);
+        }
         else{
             switch(netmenu.state)
             {
@@ -2056,7 +2078,14 @@ void Game::EndingLogic()
     {
         state = GAMESTATE_TITLE;
         intro.reset();
+
+        for (unsigned i = 0; i < loot.count(); ++i)
+        {
+            stash.add(loot[i]);
+        }
+
         loot.destroy();
+
         mapai.current = 0;
         FirstTime = true;
         mainmenu.activate();
@@ -2577,23 +2606,26 @@ void Game::CoreGameLogic()
 //------------------------------------
 void Game::DrawHelp()
 {
-    pics.draw(13, 320, 240, 0, true);
-    WriteShadedText(130, 70, pics, 10, "Colect these:");
 
-    pics.draw(11, 150, 90, mapas.itmframe, false);
-    pics.draw(11, 200, 90, mapas.itmframe + 4, false);
-    pics.draw(11, 250, 90, mapas.itmframe + 8, false);
+    const int ICON_POS = 20;
 
-    pics.draw(7, 100,210, 0, false);
-    WriteText(140,220, pics, 10,"Ammo");
-    pics.draw(7, 100, 230, 1, false);
-    WriteText(140,240, pics, 10,"Health Up");
+    pics.draw(13, 320, 180, 0, true);
+    WriteShadedText(130, 40, pics, PICTURE_FONT, "Colect these:");
 
-    WriteShadedText(140,320, pics, 10, "Controls:");
-    WriteShadedText(140,340, pics, 10, "Aim with the mouse, and move with arrows");
-    WriteShadedText(140,355, pics, 10, "Tab: minimap");
-    WriteShadedText(140,370, pics, 10, "CTRL: fire");
-    WriteShadedText(140,385, pics, 10, "SPACE: opens door");
+    pics.draw(11, 150, 60, mapas.itmframe, false);
+    pics.draw(11, 200, 60, mapas.itmframe + 4, false);
+    pics.draw(11, 250, 60, mapas.itmframe + 8, false);
+
+    pics.draw(7, ICON_POS, 110, 0, false);
+    pics.draw(7, ICON_POS, 130, 1, false);
+    WriteShadedText(ICON_POS + 40, 120, pics, PICTURE_FONT, "Ammo");
+    WriteShadedText(ICON_POS + 40, 140, pics, PICTURE_FONT, "Health Up");
+
+    WriteShadedText(ICON_POS + 40, 220, pics, PICTURE_FONT, "Controls:");
+    WriteShadedText(ICON_POS + 40, 240, pics, PICTURE_FONT, "Aim with the mouse, and move with arrows");
+    WriteShadedText(ICON_POS + 40, 255, pics, PICTURE_FONT, "Tab: minimap");
+    WriteShadedText(ICON_POS + 40, 270, pics, PICTURE_FONT, "CTRL: fire");
+    WriteShadedText(ICON_POS + 40, 285, pics, PICTURE_FONT, "SPACE: opens door");
 
     int monframe = mapas.itmframe;
 
@@ -2602,11 +2634,11 @@ void Game::DrawHelp()
         monframe = 0;
     }
 
-    pics.draw(3, 100,270, monframe, false);
-    WriteShadedText(140,270, pics, 10, "These monsters can eat items");
-    WriteShadedText(140,290, pics, 10, "kill them to retrieve items back.");
+    pics.draw(3, ICON_POS, 170, monframe, false);
+    WriteShadedText(ICON_POS + 40, 170, pics, PICTURE_FONT, "These monsters can eat items");
+    WriteShadedText(ICON_POS + 40, 190, pics, PICTURE_FONT, "kill them to retrieve items back.");
 
-    WriteShadedText(300,460, pics, 10, "hit RETURN to play...");
+    WriteShadedText(20, sys.ScreenHeight - 20, pics, PICTURE_FONT, "hit RETURN to play...");
 
 
 }
@@ -2663,11 +2695,11 @@ void Game::render()
 
     switch(state)
     {
-        case GAMESTATE_TITLE  : DrawTitleScreen(); break;
-        case GAMESTATE_INTRO  : intro.draw(pics);  break;
-        case GAMESTATE_HELP   : DrawHelp();        break;
-        case GAMESTATE_ENDING : DrawEndScreen();   break;
-        case GAMESTATE_GAME   : DrawGameplay();    break;
+        case GAMESTATE_TITLE  : DrawTitleScreen();      break;
+        case GAMESTATE_INTRO  : intro.draw(pics, sys);  break;
+        case GAMESTATE_HELP   : DrawHelp();             break;
+        case GAMESTATE_ENDING : DrawEndScreen();        break;
+        case GAMESTATE_GAME   : DrawGameplay();         break;
     }
 
     pics.drawBatch(&colorShader, &defaultShader, 666);
@@ -2676,7 +2708,7 @@ void Game::render()
 //-------------------------------------
 void Game::DrawTitleScreen()
 {
-    pics.draw(0, 320, 240, 0, true,1.25f,1.9f);
+    pics.draw(0, 320, 180, 0, true);
     pics.draw(16, 0,0,0);
 
 
@@ -2748,6 +2780,11 @@ void Game::DrawTitleScreen()
                 pics.findByName("pics/pointer.tga"),
                 pics.findByName("pics/charai.tga")
                 );
+    }
+
+    if (cartridgeCollection.active())
+    {
+        cartridgeCollection.draw(pics);
     }
 }
 //------------------------------------
@@ -4033,12 +4070,13 @@ void Game::init()
 
 
     Smenu menu;
-    strcpy(menu.opt[0],"Single Player");
-    strcpy(menu.opt[1],"Network Game");
-    strcpy(menu.opt[2],"Options");
-    strcpy(menu.opt[3],"Exit");
-    menu.count=4;
-    mainmenu.init(0,sys.ScreenHeight-150,"",menu,0);
+    strcpy(menu.opt[0], "Single Player");
+    strcpy(menu.opt[1], "Network Game");
+    strcpy(menu.opt[2], "Collection");
+    strcpy(menu.opt[3], "Options");
+    strcpy(menu.opt[4], "Exit");
+    menu.count = 5;
+    mainmenu.init(0, sys.ScreenHeight - 150, "", menu, 0);
     mainmenu.activate();
     strcpy(menu.opt[0],"Start server");
     strcpy(menu.opt[1],"Join server");
@@ -4074,6 +4112,7 @@ void Game::init()
     InitAudio();
     ResetVolume();
 
+    cartridgeCollection.init(&stash);
 
     PlayNewSong("evil.ogg");
 

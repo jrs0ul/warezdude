@@ -1,5 +1,6 @@
 #include "Intro.h"
 #include "TextureLoader.h"
+#include "SysConfig.h"
 #include "gui/Text.h"
 
 Intro::Intro()
@@ -55,7 +56,7 @@ void Intro::load(const char* filename)
 
     if (!f)
     {
-        printf("bumer,could not open %s\n", filename);
+        printf("bummer,could not open %s\n", filename);
         return;
     }
 
@@ -88,9 +89,9 @@ void Intro::load(const char* filename)
 }
 
 
-void Intro::draw(PicsContainer& pics)
+void Intro::draw(PicsContainer& pics, const SystemConfig& sys)
 {
-    pics.draw(13, 320, 240, 0, true);
+    pics.draw(13, 320, 180, 0, true);
 
     char buf[2];
 
@@ -111,5 +112,5 @@ void Intro::draw(PicsContainer& pics)
                   );
     }
 
-    WriteShadedText(30, 450, pics, 10, "hit RETURN to skip ...");
+    WriteShadedText(30, sys.ScreenHeight - 20, pics, 10, "hit RETURN to skip ...");
 }

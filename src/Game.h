@@ -8,6 +8,7 @@
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "native-activity", __VA_ARGS__))
 #include "audio/AndroidSoundSystem.h"
 #endif
+#include "ActionKeys.h"
 #include "Vectors.h"
 #include "TouchData.h"
 #include "SysConfig.h"
@@ -19,6 +20,7 @@
 #include "network/Server.h"
 #include "network/Client.h"
 #include "BulletContainer.h"
+#include "Collection.h"
 #include "map.h"
 #include "maplist.h"
 
@@ -26,19 +28,6 @@
 
 
 
-enum Actions
-{
-    ACTION_UP,
-    ACTION_DOWN,
-    ACTION_LEFT,
-    ACTION_RIGHT,
-    ACTION_OPEN,
-    ACTION_BACK,
-    ACTION_FIRE,
-    ACTION_NEXT_WEAPON,
-    ACTION_MAP
-
-};
 
 enum GameState
 {
@@ -115,6 +104,9 @@ class Game
     Intro intro;
 
     DArray<int> loot;
+    DArray<int> stash;
+
+    Collection cartridgeCollection;
 
 
     Client client;

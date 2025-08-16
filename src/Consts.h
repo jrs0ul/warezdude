@@ -46,4 +46,7 @@ const unsigned char TILE_H_WALL           = 21;
 const unsigned char TILE_SLIME            = 35;
 const unsigned char TILE_EXIT             = 81;
 
+
+const unsigned PICTURE_FONT               = 10;
+
 const int MAP_COUNT                       = 8;
