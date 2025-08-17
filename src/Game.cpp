@@ -32,7 +32,6 @@ bool slimeswap=false;
 
 bool godmode=false;
 
-bool ShowMiniMap=false;
 bool mapkey=false;
 
 int door_tim=0;
@@ -64,7 +63,7 @@ Game::Game()
 
 
     frags = 0;
-    mustCollectItems = 0;
+    equipedGame = 0;
     timeleft=0;
     showdebugtext=false;
     FirstTime = true;
@@ -81,6 +80,7 @@ Game::Game()
     clientMyIndex = 0;
     slimeTimer = 0;
     doRumble = false;
+    showMiniMap = false;
 }
 //-------------------------------------
 void PlaySoundAt(SoundSystem* ss, float x, float y, int soundIndex)
@@ -412,7 +412,6 @@ bool Game::OnHit(Bullet& bul)
 
 
 //---------------------------
-//nupaiso kiek turi gyvybiu soviniu etc
 void Game::DrawStats()
 {
     const unsigned STAT_ICON = 9;
@@ -438,21 +437,18 @@ void Game::DrawStats()
             sys.ScreenHeight - 40,
             player->ammo);
 
-    if (mapas.misionItems && netGameState == MPMODE_COOP)
-    {
-        pics.draw(STAT_ICON,
-                  220,
-                  sys.ScreenHeight - 40,
-                  1, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
-        DrawNum(255,
-                sys.ScreenHeight - 40,
-                mustCollectItems);
-    }
-
     if (netGameState == MPMODE_DEATHMATCH)
     {
-        pics.draw(STAT_ICON, 220, 440, 3, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
-        DrawNum(255,440, frags);
+        pics.draw(STAT_ICON, 220, sys.ScreenHeight - 40, 3, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
+        DrawNum(255, sys.ScreenHeight - 40, frags);
+    }
+
+    if (equipedGame)
+    {
+        pics.draw(11, sys.ScreenWidth / 2 - 32,
+                      sys.ScreenHeight - 64, 
+                      equipedGame - ITEM_GAME_NINJA_MAN, 
+                      false, 2.f, 2.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.9f), COLOR(1.f, 1.f, 1.f, 0.9f));
     }
 
 
@@ -582,9 +578,15 @@ void Game::GoToLevel(int currentHp, int currentAmmo, int level, int otherplayer)
     fadein = true;
     objectivetim = 200;
 
-    if (ShowMiniMap)
+    if (showMiniMap)
     {
-        ShowMiniMap = false;
+        showMiniMap = false;
+    }
+
+    if (inventory.active())
+    {
+        inventory.deactivate();
+        inventory.reset();
     }
 }
 //----------------------------------
@@ -732,7 +734,8 @@ void Game::SendMapData(int clientIndex, CMap& map)
 
     assert(index < MAX_MESSAGE_DATA_SIZE);
 
-    memcpy(&bufer[index], &mustCollectItems, sizeof(int));
+    int tmp;
+    memcpy(&bufer[index], &tmp, sizeof(int));
     index += sizeof(int);
 
     memcpy(&bufer[index], &map.enemyCount, sizeof(int));
@@ -824,7 +827,6 @@ void Game::ItemPickup()
                 {
                     printf("LOOTING ITEM %d\n", item);
                     loot.add(item);
-                    mustCollectItems--;
                 }
                 else
                 {
@@ -1641,7 +1643,6 @@ void Game::GenerateTheMap(int currentHp, int currentAmmo)
     mapas.enemyCount = 2 + rand() % 10;
 
     mapas.misionItems = 4;
-    mustCollectItems = mapas.misionItems;
     mapas.goods = 10;
 
     for (int i = 0; i < mapas.enemyCount; ++i)
@@ -1702,7 +1703,6 @@ void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers, int 
         mapas.tiles[(int)mapas.exit.y][(int)mapas.exit.x] = TILE_EXIT;
     }
 
-    mustCollectItems = mapas.misionItems;
     timeleft = mapas.timeToComplete;
 
     Dude* player = mapas.getPlayer();
@@ -2238,10 +2238,42 @@ void Game::logic(){
 void Game::CoreGameLogic()
 {
 
-    if (Keys[ACTION_MAP] && !OldKeys[ACTION_MAP])
+    if (!inventory.active())
     {
-        ShowMiniMap = !ShowMiniMap;
+        if (Keys[ACTION_MAP] && !OldKeys[ACTION_MAP])
+        {
+            showMiniMap = !showMiniMap;
+        }
+    }
 
+    if (inventory.active())
+    {
+        inventory.getInput(Keys, OldKeys, loot);
+
+        if (inventory.isCanceled())
+        {
+            inventory.deactivate();
+            inventory.reset();
+        }
+
+        if (inventory.isSelected())
+        {
+            inventory.deactivate();
+            inventory.reset();
+            if (equipedGame)
+            {
+                loot.add(equipedGame);
+            }
+
+            equipedGame = loot[inventory.getSelected()];
+
+            loot.remove(inventory.getSelected());
+        }
+    }
+
+    if (Keys[ACTION_INVENTORY] && !OldKeys[ACTION_INVENTORY])
+    {
+        inventory.activate();
     }
 
     mapas.fadeDecals();
@@ -2387,7 +2419,7 @@ void Game::CoreGameLogic()
         player->angle = newAngle;
     }
 
-    if (!player->shot && !player->spawn && player->canAtack)
+    if (!player->shot && !player->spawn && player->canAtack && !inventory.active())
     {
         if (!Keys[ACTION_NEXT_WEAPON])
         {
@@ -2436,7 +2468,7 @@ void Game::CoreGameLogic()
 
     //shooting
     if ((Keys[ACTION_FIRE]) && (!player->shot) && 
-            (player->isAlive()) && (!player->spawn))
+            (player->isAlive()) && (!player->spawn) && (!inventory.active()))
     {
 
         if (player->canAtack)
@@ -2864,9 +2896,15 @@ void Game::DrawGameplay()
         DrawStats();
     }
 
+    if (inventory.active())
+    {
+        inventory.draw(pics, loot);
+    }
+
+
     pics.draw(18, MouseX, MouseY, 0, true);
 
-    if (ShowMiniMap)
+    if (showMiniMap)
     {
         DrawMiniMap(sys.ScreenWidth - mapas.width() * 4, sys.ScreenHeight - mapas.height() * 4);
     }
@@ -3271,7 +3309,6 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
     memcpy(&missionItems, &bufer[*index], sizeof(int));
     *index += sizeof(int);
     mapas.misionItems = missionItems;
-    mustCollectItems = missionItems;
 
 
     int moncount = 0;
@@ -3632,11 +3669,7 @@ void Game::ParseMessagesServerGot()
                         memcpy(&itmindex, &(msg->data)[index], sizeof(int));
                         index+=sizeof(int);
 
-                        if ((mapas.items[itmindex].value > ITEM_MEDKIT) && (mapas.items[itmindex].value > 0))
-                        {
-                            mustCollectItems--;
-                        }
-
+                        
                         mapas.removeItem(itmindex);
 
                         for (unsigned int a = 0; a < serveris.clientCount(); a++)
@@ -3914,13 +3947,6 @@ void Game::ParseMessagesClientGot()
                         unsigned char isPlayerTaked = 0;
                         memcpy(&isPlayerTaked, &(msg->data)[index], sizeof(unsigned char));
                         index++;
-
-                        if ((mapas.items[itmindex].value > ITEM_MEDKIT) &&
-                                (mapas.items[itmindex].value > 0) &&
-                                (isPlayerTaked))
-                        {
-                            mustCollectItems--;
-                        }
 
                         mapas.removeItem(itmindex);
 

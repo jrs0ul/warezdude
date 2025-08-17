@@ -69,7 +69,7 @@ void CMap::arangeItems()
             }
         }
 
-        addItem(ix * TILE_WIDTH, iy * TILE_WIDTH, rand() % 15 + ITEM_GAME_NINJA_MAN);
+        addItem(ix * TILE_WIDTH, iy * TILE_WIDTH, rand() % 16 + ITEM_GAME_NINJA_MAN);
 
     }
 

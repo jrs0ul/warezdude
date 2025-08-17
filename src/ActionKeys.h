@@ -10,7 +10,8 @@ enum Actions
     ACTION_BACK,
     ACTION_FIRE,
     ACTION_NEXT_WEAPON,
-    ACTION_MAP
+    ACTION_MAP,
+    ACTION_INVENTORY
 
 };
 

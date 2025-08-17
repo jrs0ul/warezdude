@@ -23,6 +23,7 @@ add_executable(warezdude3
                     src/maplist.cpp
                     src/gui/SelectMenu.cpp
                     src/OSTools.cpp
+                    src/Inventory.cpp
                     src/gui/Text.cpp
                     src/gui/Slider.cpp
                     src/gui/EditBox.cpp

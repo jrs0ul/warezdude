@@ -182,6 +182,7 @@ void CheckKeys()
     if ( keys[SDL_SCANCODE_ESCAPE]) Game.Keys[5] = 1;
     if ( keys[SDL_SCANCODE_LCTRL])  Game.Keys[6] = 1;
     if ( keys[SDL_SCANCODE_TAB])    Game.Keys[8] = 1;
+    if ( keys[SDL_SCANCODE_I])      Game.Keys[9] = 1;
 
 
     if (gamepad)
@@ -263,6 +264,7 @@ void CheckKeys()
         if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_DPAD_RIGHT))    Game.Keys[2] = 1;
         if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_DPAD_LEFT))     Game.Keys[3] = 1;
         if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_START))         Game.Keys[8] = 1;
+        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_X))             Game.Keys[9] = 1;
 
     }
 }

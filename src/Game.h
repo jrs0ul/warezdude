@@ -20,6 +20,7 @@
 #include "network/Server.h"
 #include "network/Client.h"
 #include "BulletContainer.h"
+#include "Inventory.h"
 #include "Collection.h"
 #include "map.h"
 #include "maplist.h"
@@ -105,6 +106,7 @@ class Game
 
     DArray<int> loot;
     DArray<int> stash;
+    Inventory inventory;
 
     Collection cartridgeCollection;
 
@@ -130,7 +132,7 @@ class Game
 
     int frags; //frags of current player
     DArray<int> fragTable;
-    int mustCollectItems;
+    int equipedGame;
     int timeleft;
     bool showdebugtext;
     bool FirstTime;
@@ -151,6 +153,7 @@ class Game
 
     int  clientMyIndex;
     bool Client_GotMapData;
+    bool showMiniMap;
 
 
 public:
