@@ -18,6 +18,7 @@
 #include "Intro.h"
 #include "Item.h"
 #include "Consts.h"
+#include "SaveGame.h"
 #ifndef _WIN32
 #include <arpa/inet.h>
 #endif
@@ -4112,6 +4113,7 @@ void Game::init()
     InitAudio();
     ResetVolume();
 
+    SaveGame::load(DocumentPath, &stash);
     cartridgeCollection.init(&stash);
 
     PlayNewSong("evil.ogg");
@@ -4123,7 +4125,6 @@ void Game::init()
 //--------------------------------
 void Game::destroy()
 {
-
     switch(netMode)
     {
         case NETMODE_NONE: break;
@@ -4131,7 +4132,7 @@ void Game::destroy()
         case NETMODE_CLIENT: QuitServer(); break;
     }
 
-
+    SaveGame::save(DocumentPath, &stash);
     music.release();
     SoundSystem::getInstance()->exit();
 
