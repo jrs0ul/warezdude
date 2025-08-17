@@ -23,6 +23,11 @@ void Collection::draw(PicsContainer& pics)
     for (int i = ITEM_GAME_NINJA_MAN; i < ITEM_GAME_TARGET_REBEL + 1; ++i)
     {
 
+        const int posX = (i - ITEM_GAME_NINJA_MAN) * 34 + 20;
+
+        pics.draw(-1, posX, 150, 0, false, 32, 32, 0, COLOR(1,1,1,0.5), COLOR(1,1,1,0.5));
+
+
         bool found = false;
 
         for (unsigned a = 0; a < loot->count(); ++a)
@@ -36,7 +41,7 @@ void Collection::draw(PicsContainer& pics)
 
         if (found)
         {
-            pics.draw(11, (i - ITEM_GAME_NINJA_MAN) * 32, 150, i - ITEM_GAME_NINJA_MAN, false);
+            pics.draw(11, posX, 150, i - ITEM_GAME_NINJA_MAN, false);
         }
     }
 }

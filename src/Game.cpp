@@ -564,7 +564,7 @@ void Game::AdaptMapView()
 
 
 //----------------------------
-void Game::GoToLevel(int level, int otherplayer, int currentHp)
+void Game::GoToLevel(int currentHp, int currentAmmo, int level, int otherplayer)
 {
 
     if (netGameState == MPMODE_DEATHMATCH)
@@ -576,7 +576,7 @@ void Game::GoToLevel(int level, int otherplayer, int currentHp)
     }
     else
     {
-        GenerateTheMap(currentHp);
+        GenerateTheMap(currentHp, currentAmmo);
     }
 
     fadein = true;
@@ -1183,7 +1183,7 @@ void Game::CheckForExit()
         }
         else
         {
-            GoToLevel(mapai.current, otherPlayers, player->getHP()); //server, offline
+            GoToLevel(player->getHP(), player->ammo, mapai.current, otherPlayers); //server, offline
         }
 
 
@@ -1604,7 +1604,7 @@ void Game::AnimateSlime()
     }
 }
 //-------------------------------------------------------
-void Game::GenerateTheMap(int currentHp)
+void Game::GenerateTheMap(int currentHp, int currentAmmo)
 {
     bulbox.destroy();
     mapas.destroy();
@@ -1662,6 +1662,7 @@ void Game::GenerateTheMap(int currentHp)
     player->id = mapas.enemyCount;
     player->shot = false;
     player->setHP(currentHp);
+    player->ammo = currentAmmo;
     player->weaponCount = 3;
     player->currentWeapon = 1;
     player->frame = (player->currentWeapon + 1) * 4 - 2;
@@ -1725,7 +1726,7 @@ void Game::LoadFirstMap()
 {
     if (netMode != NETMODE_CLIENT) //offline & server
     {
-        GenerateTheMap(ENTITY_INITIAL_HP);
+        GenerateTheMap(ENTITY_INITIAL_HP, ENTITY_INITIAL_AMMO);
     }
 }
 
@@ -1932,7 +1933,7 @@ void Game::TitleMenuLogic()
                 mapmenu.reset();
                 mapmenu.deactivate();
                 InitServer();
-                GoToLevel(mapai.current, serveris.clientCount(), ENTITY_INITIAL_HP);
+                GoToLevel(ENTITY_INITIAL_HP, ENTITY_INITIAL_AMMO, mapai.current, serveris.clientCount());
             }
         }
 
@@ -3671,7 +3672,7 @@ void Game::ParseMessagesServerGot()
                         const int otherPlayerCount = serveris.clientCount();
 
                         Dude* player = mapas.getPlayer();
-                        GoToLevel(mapai.current, otherPlayerCount, player->getHP());
+                        GoToLevel(player->getHP(), player->ammo, mapai.current, otherPlayerCount);
 
                         for (int a = 0; a < (int)serveris.clientCount(); ++a)
                         {

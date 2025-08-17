@@ -216,7 +216,7 @@ private:
     void ItemPickup();
     void SendItemCRemove(int itemIndex);
     void goToEnding();
-    void GoToLevel(int currentHp, int level, int otherplayer);
+    void GoToLevel(int currentHp, int currentAmmo, int level, int otherplayer);
     void SendItemSRemove(int ItemIndex, int clientIndex, bool playerTaked);
     //mapo pavadinimas, klientu skaicius
     void SendMapInfo(int clientIndex, CMap& map);
@@ -244,7 +244,7 @@ private:
     void BeatEnemy(int aID, int damage);
     void SendServerMeleeImpulseToClient(unsigned int clientIndex, int victim, int hp, int attacker);
     void SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine);
-    void GenerateTheMap(int currentHp);
+    void GenerateTheMap(int currentHp, int currentAmmo);
     void LoadTheMap(const char* name, bool createItems, int otherPlayers, int currentHp);
     void LoadFirstMap();
     void TitleMenuLogic();
