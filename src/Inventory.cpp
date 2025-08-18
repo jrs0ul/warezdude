@@ -3,12 +3,13 @@
 #include "TextureLoader.h"
 #include "Item.h"
 #include "Consts.h"
+#include "GameData.h"
 #include "gui/Text.h"
 
-void Inventory::draw(PicsContainer& pics, DArray<int>& loot)
+void Inventory::draw(PicsContainer& pics, DArray<int>& loot, GameData& gd)
 {
 
-    pics.draw(-1, 20, 80, false, 0, 500, 200, 0, COLOR(1,1,1,0.5f), COLOR(1,1,1,0.5f));
+    pics.draw(-1, 20, 80, false, 0, 600, 200, 0, COLOR(1,1,1,0.5f), COLOR(1,1,1,0.5f));
     WriteShadedText( 30, 90, pics, PICTURE_FONT, "Loot:");
 
 
@@ -34,6 +35,19 @@ void Inventory::draw(PicsContainer& pics, DArray<int>& loot)
             counter = 0;
         }
     }
+
+
+    if (loot.count())
+    {
+        GameDescription* game = gd.getGame(loot[state] - ITEM_GAME_NINJA_MAN);
+        pics.draw(11, 240, 100, loot[state] - ITEM_GAME_NINJA_MAN, false, 2, 2);
+        WriteShadedText(350, 100, pics, PICTURE_FONT, game->name, 0.8f, 0.8f);
+        WriteShadedText(310, 150, pics, PICTURE_FONT, game->description, 0.5f, 0.5f);
+        WriteShadedText(310, 170, pics, PICTURE_FONT, game->description1, 0.5f, 0.5f);
+        WriteShadedText(310, 220, pics, PICTURE_FONT, game->effect, 0.5f, 0.5f);
+        WriteShadedText(310, 240, pics, PICTURE_FONT, game->effect1, 0.5f, 0.5f);
+    }
+
 }
 
 void Inventory::getInput(const unsigned char* keys, const unsigned char* oldKeys, DArray<int>& loot)

@@ -1,0 +1,111 @@
+<xml>
+    <games>
+        <game>
+            <name>Ninja Man</name>
+            <description>A ninja tries to avenge the death of his father.</description>
+            <effect>Replaces your knife with a DRAGON SWORD!</effect>
+        </game>
+
+        <game>
+            <name>Duke Atomic 3D</name>
+            <description>Help Duke Atomic to defend the Earth</description>
+            <description1>from an alien invasion.</description1>
+            <effect>Gives you the SHRINKER GUN!</effect>
+        </game>
+
+        <game>
+            <name>Warez Dude</name>
+            <description>A software pirate battles monsters and steal games.</description>
+            <effect>Gives you the SHOTGUN!</effect>
+        </game>
+
+        <game>
+            <name>The Slimer</name>
+            <description>You've been turned in to a slime monster</description>
+            <description1>and must punish evil scientists.</description1>
+            <effect>Lets you fling SLIME!</effect>
+        </game>
+
+        <game>
+            <name>Kung Fu Guy</name>
+            <description>Fight hordes of ninjas and sumo wrestlers</description>
+            <description1>to prove you're the best.</description1>
+            <effect>Replaces your knife with the FLYING KICK</effect>
+        </game>
+
+        <game>
+            <name>Space Alien Trilogy</name>
+            <description>Can you survive amidst the swarm of</description>
+            <description1>bloodthirsty aliens from outer space?</description1>
+            <effect>Your blood is ACID now, enemies will</effect>
+            <effect1>get damage during melee attacks!</effect1>
+        </game>
+
+        <game>
+            <name>The Spanker</name>
+            <description>Help the vigilante Frank Tower to</description>
+            <description1>spank some bad guys and clean the streets.</description1>
+            <effect>gives you the MACHINE GUN!</effect>
+        </game>
+
+        <game>
+            <name>Two Gay Dudes</name>
+            <description>Two muscular dudes battle a mutant</description>
+            <description1>gang in a post-apocalyptic New York.</description1>
+            <effect>Removes the knife, but lets you grab and THROW ENEMIES!</effect>
+        </game>
+
+        <game>
+            <name>Chaos Soldiers</name>
+            <description>A two player run-and-gun game where you</description>
+            <description1>can chose from six bad-ass characters.</description1>
+            <effect>Gives you a HOMING ROCKET LAUNCHER!</effect>
+        </game>
+
+        <game>
+            <name>Contrabandists</name>
+            <description>Help two buff contrabandist to smuggle</description>
+            <description1>drugs to South America.</description1>
+            <effect>Gives you the SPREAD SHOT !</effect>
+        </game>
+
+        <game>
+            <name>Midgets in my pocket</name>
+            <description>Help tiny folk to defeath the evil Sorcerer</description>
+            <effect>Gives you couple of fierce TINY COMPANIONS!</effect>
+        </game>
+
+        <game>
+            <name>Speedball The Hedgehog</name>
+            <description>Help Speedball do defeath the evil doctor Roberto</description>
+            <effect>Makes you go FAST!</effect>
+        </game>
+
+        <game>
+            <name>Fart Night</name>
+            <description>Join the battle royale madness where 99</description>
+            <description1>players compete in a farting tournament.</description1>
+            <effect>Creates a TOXIC CLOUD around you!</effect>
+        </game>
+
+        <game>
+            <name>Minecrap</name>
+            <description>A game where you play with brown bricks.</description>
+            <effect>Lets you to destroy environment and </effect>
+            <effect1>replace it with BROWN BRICKS!</effect1>
+        </game>
+
+        <game>
+            <name>Unabomber Guy</name>
+            <description>A game where you blow some stuff.</description>
+            <effect>Gives you the MINES!</effect>
+        </game>
+
+        <game>
+            <name>Mighty Blazer</name>
+            <description>You are powerful android who's on a mission</description>
+            <description1>to rescue the city.</description1>
+            <effect>Gives you the BOOMERANG!</effect>
+        </game>
+    </games>
+

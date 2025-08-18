@@ -4,6 +4,7 @@
 #include "DArray.h"
 
 class PicsContainer;
+class GameData;
 
 class Inventory : public BasicControl
 {
@@ -12,7 +13,7 @@ class Inventory : public BasicControl
     bool canceled;
 public:
     Inventory(){state = 0; canceled = false; selected = false;}
-    void draw(PicsContainer& pics, DArray<int>& loot);
+    void draw(PicsContainer& pics, DArray<int>& loot, GameData& gd);
     void getInput(const unsigned char* keys, const unsigned char* oldKeys, DArray<int>& loot);
     void reset(){canceled = false; selected = false;}
     unsigned getSelected(){return state;}

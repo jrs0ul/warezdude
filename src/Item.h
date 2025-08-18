@@ -23,10 +23,10 @@ enum Items
     ITEM_GAME_CHAOS_SOLDIERS       = 11,
     ITEM_GAME_CONTRABANDISTS       = 12,
     ITEM_GAME_MIDGETS_IN_MY_POCKET = 13,
-    ITEM_GAME_DESERT_II            = 14,
+    ITEM_GAME_SPEEDBALL            = 14,
     ITEM_GAME_FART_NIGHT           = 15,
     ITEM_GAME_MINECRAP             = 16,
     ITEM_GAME_UNABOMBER_GUY        = 17,
-    ITEM_GAME_TARGET_REBEL         = 18
+    ITEM_GAME_MIGHTY_BLAZER        = 18
 };
 

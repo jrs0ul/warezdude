@@ -577,6 +577,7 @@ void Game::GoToLevel(int currentHp, int currentAmmo, int level, int otherplayer)
 
     fadein = true;
     objectivetim = 200;
+    equipedGame = 0;
 
     if (showMiniMap)
     {
@@ -2271,7 +2272,7 @@ void Game::CoreGameLogic()
         }
     }
 
-    if (Keys[ACTION_INVENTORY] && !OldKeys[ACTION_INVENTORY])
+    if (Keys[ACTION_INVENTORY] && !OldKeys[ACTION_INVENTORY] && !gameOver)
     {
         inventory.activate();
     }
@@ -2898,7 +2899,7 @@ void Game::DrawGameplay()
 
     if (inventory.active())
     {
-        inventory.draw(pics, loot);
+        inventory.draw(pics, loot, gameData);
     }
 
 
@@ -4135,10 +4136,12 @@ void Game::init()
     MusicVolumeC.init(20, sys.ScreenHeight-100, "Music Volume:", (long)(sys.musicVolume * 1000), 1000, 10);
 
 
-    intro.load("intro.itf");
+    intro.load("data/intro.itf");
 
     InitAudio();
     ResetVolume();
+
+    gameData.load("data/gameData.xml");
 
     SaveGame::load(DocumentPath, &stash);
     cartridgeCollection.init(&stash);

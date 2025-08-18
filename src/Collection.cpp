@@ -20,12 +20,16 @@ void Collection::getInput(const unsigned char* keys, const unsigned char* oldKey
 
 void Collection::draw(PicsContainer& pics)
 {
-    for (int i = ITEM_GAME_NINJA_MAN; i < ITEM_GAME_TARGET_REBEL + 1; ++i)
+    int posY = 150;
+
+    int idx = 0;
+
+    for (int i = ITEM_GAME_NINJA_MAN; i < ITEM_GAME_MIGHTY_BLAZER + 1; ++i)
     {
 
-        const int posX = (i - ITEM_GAME_NINJA_MAN) * 34 + 20;
+        const int posX = idx * 34 + 20;
 
-        pics.draw(-1, posX, 150, 0, false, 32, 32, 0, COLOR(1,1,1,0.5), COLOR(1,1,1,0.5));
+        pics.draw(-1, posX, posY, 0, false, 32, 32, 0, COLOR(1,1,1,0.5), COLOR(1,1,1,0.5));
 
 
         bool found = false;
@@ -41,7 +45,15 @@ void Collection::draw(PicsContainer& pics)
 
         if (found)
         {
-            pics.draw(11, posX, 150, i - ITEM_GAME_NINJA_MAN, false);
+            pics.draw(11, posX, posY, i - ITEM_GAME_NINJA_MAN, false);
+        }
+
+        ++idx;
+
+        if (idx > 7)
+        {
+            idx =  0;
+            posY += 34;
         }
     }
 }

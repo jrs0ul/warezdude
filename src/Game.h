@@ -22,6 +22,7 @@
 #include "BulletContainer.h"
 #include "Inventory.h"
 #include "Collection.h"
+#include "GameData.h"
 #include "map.h"
 #include "maplist.h"
 
@@ -110,6 +111,7 @@ class Game
 
     Collection cartridgeCollection;
 
+    GameData gameData;
 
     Client client;
     Server serveris;
