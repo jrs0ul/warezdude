@@ -9,10 +9,22 @@ class CBulletContainer;
 class PicsContainer;
 class CMap;
 
+
+enum WeaponTypes
+{
+    WEAPONTYPE_REGULAR,
+    WEAPONTYPE_MINES,
+    WEAPONTYPE_SPREAD
+};
+
+
+
 class Dude
 {
         int hp;
-        bool alive;
+        int weaponCount;
+        int skinCount;
+        int currentWeapon;
 public:
         float x;
         float y;
@@ -38,10 +50,13 @@ public:
 
         int hittim;
 
-        int weaponCount; //kiek gali tureti ginklu
-        int currentWeapon; //koks dabar ginklas naudojamas
+        int equipedGame;
+
 
         int lastDamagedBy;
+
+        unsigned char activeSkin[2];  //what frames to use for each weapon
+
         unsigned char colid;
         unsigned char frame;
         bool enemyseen;
@@ -62,7 +77,6 @@ public:
             frame=0; tim=0; // dir=0;
             stim=0;
             ammo = ENTITY_INITIAL_AMMO;
-            alive=true;
             canAtack=true;
             reloadtime=0;
             r = g = b = 1.0f;
@@ -76,11 +90,15 @@ public:
             enemyseen=false;
             item=0;
             delay = rand()%2+1;
-            alive=true;
+
+            equipedGame = 0;
 
             spawn=false;
             weaponCount=1;
-            currentWeapon=0;
+            skinCount = 1;
+            currentWeapon = 0;
+            activeSkin[0] = 0;
+            activeSkin[1] = 1;
         }
 
 
@@ -92,11 +110,10 @@ public:
         void draw(PicsContainer& pics, unsigned index, float posx, float posy, int ScreenWidth, int ScreenHeight);
 
         /* shoots or deploys a mine if the entity has some ammo */
-        bool shoot(bool useBullets, bool isMine, CBulletContainer* bulcon);
+        bool shoot(bool useBullets, WeaponTypes weaponType, CBulletContainer* bulcon);
         //atakuoja, jei kolidina tai true jei ne false
         int hitIt(Dude& enemy, float vectorx, float vetory, int damage);
 
-        bool isAlive(){return alive;}
         //gydosi
         void heal();
 
@@ -113,6 +130,10 @@ public:
         void setHP(int newHP){hp = newHP;}
         //true if hp <= 0
         bool damage(int dmg);
+
+        void setWeaponCount(int newCount){weaponCount = newCount; currentWeapon = 1;}
+        void setSkinCount(int cnt){skinCount = cnt;}
+        int getCurrentWeapon(){return currentWeapon;}
 
 private:
         bool movement(Vector3D dir,

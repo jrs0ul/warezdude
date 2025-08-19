@@ -13,6 +13,8 @@ bool GameData::load(const char* path)
 
     XmlNode* main = datafile.root.getNode(L"games");
 
+    char buf[256];
+
     if (main)
     {
         for (unsigned i = 0; i < main->childrenCount(); ++i)
@@ -80,6 +82,17 @@ bool GameData::load(const char* path)
                             sprintf(gd.effect1, "%ls", val);
                         }
                     }
+                    else if (wcscmp(node->getName(), L"skins") == 0)
+                    {
+
+                        for (unsigned j = 0; j < node->childrenCount(); ++j)
+                        {
+                            XmlNode* skin = node->getNode(j);
+                            sprintf(buf, "%ls", skin->getValue());
+                            gd.skins[j] = atoi(buf);
+                        }
+                    }
+
 
                 }
 

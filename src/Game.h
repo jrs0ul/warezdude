@@ -134,7 +134,6 @@ class Game
 
     int frags; //frags of current player
     DArray<int> fragTable;
-    int equipedGame;
     int timeleft;
     bool showdebugtext;
     bool FirstTime;
@@ -248,7 +247,7 @@ private:
     void MonsterAI(int index);
     void BeatEnemy(int aID, int damage);
     void SendServerMeleeImpulseToClient(unsigned int clientIndex, int victim, int hp, int attacker);
-    void SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine);
+    void SendBulletImpulse(int monsterindex, int ammo, int clientIndex, unsigned char weaponType);
     void GenerateTheMap(int currentHp, int currentAmmo);
     void LoadTheMap(const char* name, bool createItems, int otherPlayers, int currentHp);
     void LoadFirstMap();
@@ -296,7 +295,7 @@ private:
     void SendFragsToClient(int clientIdx, int frags);
 
     void DeleteAudio();
-
+    void HandlePlayerAttacks(Dude* player, int clientIndex);
     void CoreGameLogic();
     void DrawNum(int x, int y, int num);
     void DrawHelp();

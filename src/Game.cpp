@@ -61,14 +61,13 @@ Game::Game()
     otherClientCount = 0;
     maxwavs=0;
 
+    noAmmo = false;
 
     frags = 0;
-    equipedGame = 0;
     timeleft=0;
     showdebugtext=false;
     FirstTime = true;
     gameOver = false;
-    noAmmo = false;
     ms=0;
 
     mapas.itmframe = 0;
@@ -192,10 +191,7 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 
     for (int i = 0; i < PlayerCount(); ++i)
     {
-        if (mapas.mons[mapas.enemyCount + i].isAlive())
-        {
-            mapas.mons[mapas.enemyCount + i].draw(pics, 5, mapas.getPos().x, mapas.getPos().y, sys.ScreenWidth, sys.ScreenHeight);
-        }
+        mapas.mons[mapas.enemyCount + i].draw(pics, 5, mapas.getPos().x, mapas.getPos().y, sys.ScreenWidth, sys.ScreenHeight);
     }
 
     mapas.drawEntities(pics, sys.ScreenWidth, sys.ScreenHeight);
@@ -300,7 +296,7 @@ void Game::KillPlayer(int index)
     Dude* player = &mapas.mons[index];
 
     player->shot = true;
-    player->frame = player->weaponCount * 4;
+    player->frame = 12;
     AdaptSoundPos(2, player->x, player->y);
     SoundSystem::getInstance()->playsound(2);
 
@@ -443,11 +439,11 @@ void Game::DrawStats()
         DrawNum(255, sys.ScreenHeight - 40, frags);
     }
 
-    if (equipedGame)
+    if (player->equipedGame)
     {
         pics.draw(11, sys.ScreenWidth / 2 - 32,
                       sys.ScreenHeight - 64, 
-                      equipedGame - ITEM_GAME_NINJA_MAN, 
+                      player->equipedGame - ITEM_GAME_NINJA_MAN, 
                       false, 2.f, 2.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.9f), COLOR(1.f, 1.f, 1.f, 0.9f));
     }
 
@@ -577,7 +573,6 @@ void Game::GoToLevel(int currentHp, int currentAmmo, int level, int otherplayer)
 
     fadein = true;
     objectivetim = 200;
-    equipedGame = 0;
 
     if (showMiniMap)
     {
@@ -1128,7 +1123,7 @@ void Game::HandleInteractionsWithDeadPlayers()
                         if (CirclesColide(mapas.mons[i].x, mapas.mons[i].y, 10.f, interactionCenter.x, interactionCenter.y, 10.f))
                         {
                             mapas.mons[i].shot = false;
-                            mapas.mons[i].frame = mapas.mons[i].currentWeapon * 4;
+                            mapas.mons[i].frame = mapas.mons[i].activeSkin[mapas.mons[i].getCurrentWeapon()] * 4;
                             mapas.mons[i].heal();
 
                             if (netMode == NETMODE_SERVER)
@@ -1226,7 +1221,7 @@ int Game::slimeReaction(int index)
     return 0;
 }
 //-----------------------------
-void Game::SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool isMine)
+void Game::SendBulletImpulse(int monsterindex, int ammo, int clientIndex, unsigned char weaponType)
 {
     int index = 0;
     char buf[MAX_MESSAGE_DATA_SIZE];
@@ -1239,7 +1234,7 @@ void Game::SendBulletImpulse(int monsterindex, int ammo, int clientIndex, bool i
     index += sizeof(int);
     memcpy(&buf[index], &ammo, sizeof(int));
     index += sizeof(int);
-    memcpy(&buf[index], &isMine, sizeof(unsigned char));
+    memcpy(&buf[index], &weaponType, sizeof(unsigned char));
     index += sizeof(unsigned char);
 
     serveris.sendData(clientIndex, buf, index);
@@ -1278,11 +1273,6 @@ void Game::SendClientShootImpulseToServer()
     pos += sizeof(int);
     unsigned char isMine = 0;
 
-    if (player->currentWeapon == 2)
-    {
-        isMine = 1;
-    }
-
     memcpy(&buf[pos], &isMine, sizeof(unsigned char));
     pos += sizeof(unsigned char);
     client.sendData(buf, pos);
@@ -1312,7 +1302,7 @@ void Game::BeatEnemy(int aID, int damage)
 {
     if (mapas.mons[aID].canAtack)
     {
-        mapas.mons[aID].shoot(false, false, &bulbox);
+        mapas.mons[aID].shoot(false, WEAPONTYPE_REGULAR, &bulbox);
         Vector3D vec = MakeVector(16.0f, 0, mapas.mons[aID].angle);
 
         for (unsigned long i = 0; i < mapas.mons.count(); ++i)
@@ -1462,7 +1452,7 @@ void Game::MonsterAI(int index)
 
                 if (mapas.mons[index].canAtack)
                 {
-                    mapas.mons[index].shoot(true,false,&bulbox);
+                    mapas.mons[index].shoot(true, WEAPONTYPE_REGULAR, &bulbox);
                     mapas.mons[index].ammo++;
                     mapas.mons[index].reloadtime=0;
 
@@ -1665,9 +1655,9 @@ void Game::GenerateTheMap(int currentHp, int currentAmmo)
     player->shot = false;
     player->setHP(currentHp);
     player->ammo = currentAmmo;
-    player->weaponCount = 3;
-    player->currentWeapon = 1;
-    player->frame = (player->currentWeapon + 1) * 4 - 2;
+    player->setWeaponCount(2);
+    player->setSkinCount(3);
+    player->frame = (player->activeSkin[player->getCurrentWeapon()] + 1) * 4 - 2;
 
 
     for (int i = 0; i < PlayerCount() - 1; ++i)
@@ -2234,10 +2224,116 @@ void Game::logic(){
     OldGamepadRAxis = gamepadRAxis;
 
 }
+//------------------------------------
+void Game::HandlePlayerAttacks(Dude* player, int clientIndex)
+{
+    if (!player->canAtack)
+    {
+        return;
+    }
+
+    SoundSystem* ss = SoundSystem::getInstance();
+
+    bool stillHaveAmmo = false;
+
+    const int currentWeapon = player->getCurrentWeapon();
+
+
+    WeaponTypes weaponType = WEAPONTYPE_REGULAR;
+
+    switch(currentWeapon)
+    {
+        case 1:
+            {
+
+                if (player->equipedGame == ITEM_GAME_UNABOMBER_GUY)
+                {
+                    weaponType = WEAPONTYPE_MINES;
+
+                    stillHaveAmmo = player->shoot(true, WEAPONTYPE_MINES, &bulbox);
+
+                    if (stillHaveAmmo)
+                    {
+                        PlaySoundAt(ss, player->x, player->y, 12);
+                    }
+
+                }
+                else if (player->equipedGame == ITEM_GAME_CONTRABANDISTS)
+                {
+                    weaponType = WEAPONTYPE_SPREAD;
+                    stillHaveAmmo = player->shoot(true, weaponType, &bulbox);
+
+                    if (stillHaveAmmo)
+                    {
+                        PlaySoundAt(ss, player->x, player->y, 0);
+                    }
+
+                }
+                else
+                {
+
+                    weaponType = WEAPONTYPE_REGULAR;
+
+                    stillHaveAmmo = player->shoot(true, WEAPONTYPE_REGULAR, &bulbox);
+
+                    if (stillHaveAmmo)
+                    {
+                        PlaySoundAt(ss, player->x, player->y, 0);
+                    }
+                }
+            } break;
+
+
+        case 0: BeatEnemy(mapas.enemyCount + clientIndex, PLAYER_MELEE_DAMAGE); break;
+    }
+
+    if (currentWeapon > 0)
+    {
+        if (stillHaveAmmo)
+        {
+            if (netMode == NETMODE_CLIENT)
+            {
+                SendClientShootImpulseToServer();
+            }
+
+
+            if (netMode == NETMODE_SERVER)
+            {
+                for (unsigned i = 0; i < serveris.clientCount(); i++)
+                {
+                    SendBulletImpulse(mapas.enemyCount + clientIndex, player->ammo, i, weaponType);
+                }
+            }
+        }
+        else
+        {
+            if (noAmmo)
+            {
+                player->chageNextWeapon();
+                noAmmo = false;
+            }
+            else
+            {
+                PlaySoundAt(ss, player->x, player->y, 4);
+
+                if (!noAmmo)
+                {
+                    noAmmo = true;
+                }
+            }
+        }
+    }
+
+}
+
 
 //------------------------------------
 void Game::CoreGameLogic()
 {
+
+    int clientIndex = (netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0;
+    Dude* player = mapas.getPlayer(clientIndex);
+
 
     if (!inventory.active())
     {
@@ -2261,13 +2357,20 @@ void Game::CoreGameLogic()
         {
             inventory.deactivate();
             inventory.reset();
-            if (equipedGame)
+            if (player->equipedGame)
             {
-                loot.add(equipedGame);
+                loot.add(player->equipedGame);
             }
 
-            equipedGame = loot[inventory.getSelected()];
+            player->equipedGame = loot[inventory.getSelected()];
 
+            for (int i = 0; i < 2; ++i)
+            {
+                player->activeSkin[i] = gameData.getGame(player->equipedGame - ITEM_GAME_NINJA_MAN)->skins[i];
+            }
+
+
+            player->frame = player->activeSkin[player->getCurrentWeapon()] * 4;
             loot.remove(inventory.getSelected());
         }
     }
@@ -2316,9 +2419,7 @@ void Game::CoreGameLogic()
     AnimateSlime();
 
     //hero movement
-    int clientIndex = (netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0;
-    Dude* player = mapas.getPlayer(clientIndex);
-
+   
     if (player->shot)
     { //hero dies here
 
@@ -2468,70 +2569,9 @@ void Game::CoreGameLogic()
 
 
     //shooting
-    if ((Keys[ACTION_FIRE]) && (!player->shot) && 
-            (player->isAlive()) && (!player->spawn) && (!inventory.active()))
+    if ((Keys[ACTION_FIRE]) && (!player->shot) && (!player->spawn) && (!inventory.active()))
     {
-
-        if (player->canAtack)
-        {
-            bool stillHaveAmmo = false;
-
-            switch(player->currentWeapon)
-            {
-                case 1: stillHaveAmmo = player->shoot(true, false, &bulbox); break;
-                case 2: stillHaveAmmo = player->shoot(true, true, &bulbox); break;
-                case 0: BeatEnemy(mapas.enemyCount + clientIndex, PLAYER_MELEE_DAMAGE); break;
-            }
-
-            if (player->currentWeapon > 0 && stillHaveAmmo)
-            {
-                if (player->currentWeapon == 1)
-                {
-                    AdaptSoundPos(0, player->x, player->y); 
-                    SoundSystem::getInstance()->playsound(0); 
-
-                }
-                if (player->currentWeapon == 2)
-                {
-                    AdaptSoundPos(12, player->x, player->y);
-                    SoundSystem::getInstance()->playsound(12);
-                }
-
-                if (netMode == NETMODE_CLIENT)
-                {
-                   SendClientShootImpulseToServer();
-                }
-
-                const bool isMine = (player->currentWeapon == 2) ? true : false;
-
-                if (netMode == NETMODE_SERVER)
-                {
-                    for (unsigned i = 0; i < serveris.clientCount(); i++)
-                    {
-                        SendBulletImpulse(mapas.enemyCount + clientIndex, player->ammo, i, isMine);
-                    }
-                }
-
-            }
-            else if (player->currentWeapon > 0)
-            {
-                if (noAmmo)
-                {
-                    player->chageNextWeapon();
-                    noAmmo = false;
-                }
-                else
-                {
-                    AdaptSoundPos(4, player->x, player->y);
-                    SoundSystem::getInstance()->playsound(4);
-
-                    if (!noAmmo)
-                    {
-                        noAmmo = true;
-                    }
-                }
-            }
-        }
+        HandlePlayerAttacks(player, clientIndex);
     }
     //--
     if (!player->canAtack)
@@ -3331,17 +3371,17 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
 
         Dude d;
         d.id = mapas.enemyCount;
-        d.weaponCount = 3;
-        d.currentWeapon = 1;
+        d.setWeaponCount(2);
+        d.setSkinCount(3);
         mapas.addMonster(d);
         mapas.mons[mapas.mons.count()-1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
 
         for (int i = 0; i < otherClientCount; i++)
         {
             Dude n;
-            n.weaponCount = 3;
-            n.currentWeapon = 1;
-            n.frame = (n.currentWeapon + 1) * 4 - 2;
+            n.setWeaponCount(2);
+            n.setSkinCount(3);
+            n.frame = (n.activeSkin[n.getCurrentWeapon()] + 1) * 4 - 2;
 
             n.id = clientIds[i];
             mapas.mons.add(n);
@@ -3411,7 +3451,7 @@ void Game::ServerParseCharacterData(const unsigned char* bufer, unsigned * bufer
 void Game::ServerParseWeaponShot(const unsigned char* buffer, unsigned * bufferindex, int clientIndex)
 {
     ++(*bufferindex);
-    unsigned char cisMine = 0;
+    unsigned char weaponType = 0;
 
 
     if (clientIndex != -1) //only if client exists
@@ -3421,28 +3461,22 @@ void Game::ServerParseWeaponShot(const unsigned char* buffer, unsigned * bufferi
 
     *bufferindex += sizeof(int);
 
-    memcpy(&cisMine, &buffer[*bufferindex], sizeof(unsigned char));
+    memcpy(&weaponType, &buffer[*bufferindex], sizeof(unsigned char));
 
     *bufferindex += sizeof(unsigned char);
 
-    bool isMine = false;
-
-    if (cisMine)
-    {
-        isMine = true;
-    }
 
     if (clientIndex != -1) // only if client exists
     {
 
-        mapas.mons[mapas.enemyCount + 1 + clientIndex].shoot(true, isMine, &bulbox);
+        mapas.mons[mapas.enemyCount + 1 + clientIndex].shoot(true, (WeaponTypes)weaponType, &bulbox);
 
 
         for (unsigned int a = 0; a < serveris.clientCount(); a++)
         {
             if (a != (unsigned)clientIndex)
             {
-                SendBulletImpulse(mapas.enemyCount + 1 + clientIndex, mapas.mons[mapas.enemyCount + 1 + clientIndex].ammo, a, isMine);
+                SendBulletImpulse(mapas.enemyCount + 1 + clientIndex, mapas.mons[mapas.enemyCount + 1 + clientIndex].ammo, a, weaponType);
             }
         }
     }
@@ -3470,7 +3504,7 @@ void Game::ServerParseClientResurrect(unsigned* bufferindex, int clientIndex)
                 if (CirclesColide(mapas.mons[i].x, mapas.mons[i].y, 10.f, ic.x, ic.y, 10.f))
                 {
                     mapas.mons[i].shot = false;
-                    mapas.mons[i].frame = mapas.mons[i].currentWeapon * 4;
+                    mapas.mons[i].frame = mapas.mons[i].activeSkin[mapas.mons[i].getCurrentWeapon()] * 4;
                     mapas.mons[i].heal();
                     //  ok now let's send this to all clients
                     for (unsigned a = 0; a < serveris.clientCount(); ++a)
@@ -3926,17 +3960,11 @@ void Game::ParseMessagesClientGot()
 
                         memcpy(&mapas.mons[ind].ammo, &(msg->data)[index],sizeof(int));
                         index+=sizeof(int);
-                        unsigned char cisMine=0;
-                        memcpy(&cisMine, &(msg->data)[index], sizeof(unsigned char));
+                        unsigned char weaponType = 0;
+                        memcpy(&weaponType, &(msg->data)[index], sizeof(unsigned char));
                         index += sizeof(unsigned char);
-                        bool isMine=false;
 
-                        if (cisMine)
-                        {
-                            isMine=true;
-                        }
-
-                        mapas.mons[ind].shoot(true, isMine, &bulbox);
+                        mapas.mons[ind].shoot(true, (WeaponTypes)weaponType, &bulbox);
                     } break;
 
                 case NET_SERVER_MSG_ITEM:

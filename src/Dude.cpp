@@ -5,6 +5,7 @@
 #include "map.h"
 #include "gui/Text.h"
 #include "bullet.h"
+#include "Item.h"
 #include "BulletContainer.h"
 //
 
@@ -73,24 +74,23 @@ void Dude::respawn()
 
     stim++;
 
-    if (stim%5==0)
+    if (stim % 5==0)
     {
-        if (frame==weaponCount*4+2) 
+        if (frame == skinCount * 4 + 2) 
         {
-            frame=weaponCount*4+3;
+            frame = skinCount * 4 + 3;
         }
         else 
         {
-            frame=weaponCount*4+2;
+            frame = skinCount * 4 + 2;
         }
     }
 
-    if (stim>=80) 
+    if (stim >= 80) 
     {
-        spawn=false;
-        stim=0;
-        frame=(currentWeapon+1)*4-2;
-        alive = true;
+        spawn = false;
+        stim = 0;
+        frame = (activeSkin[currentWeapon] + 1) * 4 - 2;
     }
 }
 //--------------------------------------------------
@@ -281,7 +281,7 @@ bool Dude::movement(Vector3D dir,
             tim = 0;
         }
 
-        frame = tim / 10 + currentWeapon * 4;
+        frame = tim / 10 + activeSkin[currentWeapon] * 4;
     }
 
     if ((diry == 0) || (dirx == 0))
@@ -326,7 +326,7 @@ void Dude::draw(PicsContainer& pics, unsigned index, float posx, float posy, int
 
 }
 //----------------------------------------------------------
-bool Dude::shoot(bool useBullets, bool isMine, CBulletContainer* bulcon)
+bool Dude::shoot(bool useBullets, WeaponTypes weaponType, CBulletContainer* bulcon)
 {
 
     if ((useBullets) && (ammo<=0))
@@ -336,7 +336,7 @@ bool Dude::shoot(bool useBullets, bool isMine, CBulletContainer* bulcon)
 
 
     canAtack = false;
-    frame = (currentWeapon+1)*4-1;
+    frame = (activeSkin[currentWeapon] + 1) * 4 - 1;
 
     if (useBullets)
     {
@@ -346,23 +346,52 @@ bool Dude::shoot(bool useBullets, bool isMine, CBulletContainer* bulcon)
         }
 
 
-        Bullet newbul;
+        switch(weaponType)
+        {
+            case WEAPONTYPE_REGULAR:
+                {
+                    Bullet newbul;
 
-        newbul.x          = x+(cos(-angle) * 8.0f);
-        newbul.y          = y+(sin(angle) * 10.0f);
-        newbul.parentID   = id;
-        newbul.tim        = 0;
-        newbul.angle      = angle;
-        newbul.frame      = isMine;
-        newbul.exists     = true;
-        newbul.explode    = false;
-        newbul.explodetim = 0; 
-        newbul.isMine     = isMine;
+                    newbul.x          = x+(cos(-angle) * 8.0f);
+                    newbul.y          = y+(sin(angle) * 10.0f);
+                    newbul.parentID   = id;
+                    newbul.angle      = angle;
+                    ammo--;
+
+                    bulcon->add(newbul);
+                } break;
+            case WEAPONTYPE_MINES:
+                {
+                    Bullet newbul;
+
+                    newbul.x          = x+(cos(-angle) * 8.0f);
+                    newbul.y          = y+(sin(angle) * 10.0f);
+                    newbul.parentID   = id;
+                    newbul.angle      = angle;
+                    newbul.frame      = 1;
+                    newbul.isMine     = true;
+                    ammo--;
+
+                    bulcon->add(newbul);
+
+                } break;
+            case WEAPONTYPE_SPREAD:
+                {
+                    for (int i = -2; i < 3; ++i)
+                    {
+                        Bullet newbul;
+                        newbul.parentID = id;
+                        newbul.x          = x+(cos(-angle) * 8.0f);
+                        newbul.y          = y+(sin(angle) * 10.0f);
+                        newbul.angle      = angle + ((0.8f / 5) * i);
+                        bulcon->add(newbul);
+                    }
+
+                    ammo--;
+                }
+        }
 
 
-        ammo--;
-
-        bulcon->add(newbul);
     }
 
     return true;
@@ -388,17 +417,17 @@ void Dude::disintegrationAnimation()
 {
 
     stim++;
-    frame = weaponCount*4;
+    frame = skinCount * 4;
     if (stim > 30)
     {
-        frame = weaponCount * 4 + 1;
+        frame = skinCount * 4 + 1;
 
         if (stim > 50)
         {
             hp = ENTITY_INITIAL_HP;
-            shot=false;
-            stim=0;
-            spawn=true; 
+            shot = false;
+            stim = 0;
+            spawn = true; 
         }
     }
 }
@@ -437,7 +466,7 @@ void Dude::reload(int time)
     reloadtime++;
     if (reloadtime > time / 2)
     {
-        frame = (currentWeapon+1)*4-2;
+        frame = (activeSkin[currentWeapon] + 1) * 4 - 2;
     }
 
     if (reloadtime == time)
@@ -450,8 +479,11 @@ void Dude::reload(int time)
 //-------------------------------
 void Dude::chageNextWeapon(){
     currentWeapon++;
-    if (currentWeapon>=weaponCount)
-        currentWeapon=0;
-    frame=(currentWeapon+1)*4-2;
-    
+    if (currentWeapon >= weaponCount)
+    {
+        currentWeapon = 0;
+    }
+
+    frame = (activeSkin[currentWeapon] + 1) * 4 - 2;
+
 }

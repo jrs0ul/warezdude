@@ -69,7 +69,7 @@ void CMap::arangeItems()
             }
         }
 
-        addItem(ix * TILE_WIDTH, iy * TILE_WIDTH, rand() % 16 + ITEM_GAME_NINJA_MAN);
+        addItem(ix * TILE_WIDTH, iy * TILE_WIDTH, (rand() % 3 == 1) ? ITEM_GAME_UNABOMBER_GUY : ITEM_GAME_CONTRABANDISTS);//rand() % 16 + ITEM_GAME_NINJA_MAN);
 
     }
 
@@ -407,12 +407,12 @@ bool CMap::load(const char* path, bool createItems, int otherplayers){
 
         Dude playeris;
         playeris.id = enemyCount;
-        playeris.weaponCount = 3;
-        playeris.currentWeapon = 1;
-        playeris.frame = (playeris.currentWeapon+1)*4-2;
+        playeris.setWeaponCount(2);
+        playeris.setSkinCount(3);
+        playeris.frame = (playeris.activeSkin[playeris.getCurrentWeapon()] + 1) * 4 - 2;
         mons.add(playeris);
 
-        for (int i=0;i<otherplayers;i++)
+        for (int i = 0; i < otherplayers; ++i)
         {
             playeris.id++;
             playeris.appearInRandomPlace(_colide, width(), height());

@@ -67,6 +67,10 @@
             <description>Help two buff contrabandist to smuggle</description>
             <description1>drugs to South America.</description1>
             <effect>Gives you the SPREAD SHOT !</effect>
+            <skins>
+                <skin>0</skin>
+                <skin>1</skin>
+            </skins>
         </game>
 
         <game>
@@ -99,6 +103,10 @@
             <name>Unabomber Guy</name>
             <description>A game where you blow some stuff.</description>
             <effect>Gives you the MINES!</effect>
+            <skins>
+                <skin>0</skin>
+                <skin>2</skin>
+            </skins>
         </game>
 
         <game>

@@ -10,6 +10,17 @@ struct GameDescription
     char description1[256];
     char effect[256];
     char effect1[256];
+    int skins[2];
+
+    GameDescription() 
+    : name("")
+    , description("")
+    , description1("")
+    , effect("")
+    , effect1("")
+    , skins{0, 1}
+    {
+    }
 };
 
 class GameData
