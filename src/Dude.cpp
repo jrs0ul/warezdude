@@ -94,6 +94,11 @@ void Dude::respawn()
     }
 }
 //--------------------------------------------------
+void Dude::update()
+{
+    ps.updateSystem();
+}
+//--------------------------------------------------
 void Dude::rotate(float ang)
 {
     angle += ang;
@@ -316,6 +321,8 @@ void Dude::draw(PicsContainer& pics, unsigned index, float posx, float posy, int
               COLOR(r,g,b, 1.f),
               COLOR(r,g,b, 1.f));
 
+    ps.drawParticles(pics, 15, Vector3D(dudex, 0, dudey));
+
     /*char buf[10];
     sprintf(buf, "%d", id);
     WriteText(round(x)-((pskx-scrx) * TILE_WIDTH) + posx,
@@ -486,4 +493,15 @@ void Dude::chageNextWeapon(){
 
     frame = (activeSkin[currentWeapon] + 1) * 4 - 2;
 
+}
+
+//------------------------
+void Dude::setupToxicParticles()
+{
+    ps.setParticleLifetime(100);
+    ps.setColors(COLOR(0, 1, 0, 0.3), COLOR(0, 1, 0, 0.3));
+    ps.setSystemLifetime(-1);
+    ps.setDirIntervals(Vector3D(0.5, 0 , 0), 90);
+    ps.setSizes(2, 2);
+    ps.revive();
 }

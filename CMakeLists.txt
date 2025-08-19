@@ -24,6 +24,7 @@ add_executable(warezdude3
                     src/gui/SelectMenu.cpp
                     src/OSTools.cpp
                     src/Inventory.cpp
+                    src/Particles2D.cpp
                     src/gui/Text.cpp
                     src/gui/Slider.cpp
                     src/gui/EditBox.cpp

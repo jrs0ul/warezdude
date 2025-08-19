@@ -4,6 +4,7 @@
 #include "DArray.h"
 #include "Vectors.h"
 #include "Consts.h"
+#include "Particles2D.h"
 
 class CBulletContainer;
 class PicsContainer;
@@ -26,6 +27,7 @@ class Dude
         int skinCount;
         int currentWeapon;
 public:
+        Particle2DSystem ps;
         float x;
         float y;
         float angle;
@@ -101,13 +103,15 @@ public:
             activeSkin[1] = 1;
         }
 
+        void update();
 
         void rotate(float angle);
         bool move(float walkSpeed, float strifeSpeed, float radius, CMap& map, bool isCoop);
         bool moveGamePad(const Vector3D& movementDir,float radius, CMap& map, bool isCoop);
         void respawn();
-        //nupaiso
+
         void draw(PicsContainer& pics, unsigned index, float posx, float posy, int ScreenWidth, int ScreenHeight);
+        void drawParticles(PicsContainer& pics);
 
         /* shoots or deploys a mine if the entity has some ammo */
         bool shoot(bool useBullets, WeaponTypes weaponType, CBulletContainer* bulcon);
@@ -132,6 +136,7 @@ public:
         bool damage(int dmg);
 
         void setWeaponCount(int newCount){weaponCount = newCount; currentWeapon = 1;}
+        void setupToxicParticles();
         void setSkinCount(int cnt){skinCount = cnt;}
         int getCurrentWeapon(){return currentWeapon;}
 

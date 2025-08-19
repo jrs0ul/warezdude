@@ -90,6 +90,10 @@
             <description>Join the battle royale madness where 99</description>
             <description1>players compete in a farting tournament.</description1>
             <effect>Creates a TOXIC CLOUD around you!</effect>
+            <skins>
+                <skin>0</skin>
+                <skin>1</skin>
+            </skins>
         </game>
 
         <game>

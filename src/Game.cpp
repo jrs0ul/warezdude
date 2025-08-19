@@ -1659,6 +1659,8 @@ void Game::GenerateTheMap(int currentHp, int currentAmmo)
     player->setSkinCount(3);
     player->frame = (player->activeSkin[player->getCurrentWeapon()] + 1) * 4 - 2;
 
+    player->setupToxicParticles();
+
 
     for (int i = 0; i < PlayerCount() - 1; ++i)
     {
@@ -2635,6 +2637,8 @@ void Game::CoreGameLogic()
 
         for (unsigned i = 0; i < mapas.mons.count(); ++i)
         {
+            mapas.mons[i].update();
+
             if ((mapas.mons[i].getHP() <= 0) && (!mapas.mons[i].shot))
             {
                 KillEnemy(i);
