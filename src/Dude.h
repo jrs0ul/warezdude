@@ -111,7 +111,7 @@ public:
         void respawn();
 
         void draw(PicsContainer& pics, unsigned index, float posx, float posy, int ScreenWidth, int ScreenHeight);
-        void drawParticles(PicsContainer& pics);
+        void drawParticles(PicsContainer& pics, float posx, float posy, int ScreenWidth, int ScreenHeight);
 
         /* shoots or deploys a mine if the entity has some ammo */
         bool shoot(bool useBullets, WeaponTypes weaponType, CBulletContainer* bulcon);

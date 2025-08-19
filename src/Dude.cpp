@@ -321,17 +321,28 @@ void Dude::draw(PicsContainer& pics, unsigned index, float posx, float posy, int
               COLOR(r,g,b, 1.f),
               COLOR(r,g,b, 1.f));
 
-    ps.drawParticles(pics, 15, Vector3D(dudex, 0, dudey));
-
-    /*char buf[10];
-    sprintf(buf, "%d", id);
-    WriteText(round(x)-((pskx-scrx) * TILE_WIDTH) + posx,
-              round(y)-((psky-scry) * TILE_WIDTH) + posy,
-              pics,
-              10,
-              buf);*/
 
 }
+//---------------------------------------------
+void Dude::drawParticles(PicsContainer& pics, float posx, float posy, int ScreenWidth, int ScreenHeight)
+{
+    const float dudex = x + posx;
+    const float dudey = y + posy;
+
+    if (dudex + HALF_TILE_WIDTH < 0 || dudex - HALF_TILE_WIDTH > ScreenWidth ||
+        dudey + HALF_TILE_WIDTH < 0 || dudey - HALF_TILE_WIDTH > ScreenHeight)
+    {
+        return;
+    }
+
+    if (ps.isDead())
+    {
+        return;
+    }
+
+    ps.drawParticles(pics, 15, Vector3D(dudex, 0, dudey));
+}
+
 //----------------------------------------------------------
 bool Dude::shoot(bool useBullets, WeaponTypes weaponType, CBulletContainer* bulcon)
 {
@@ -502,6 +513,7 @@ void Dude::setupToxicParticles()
     ps.setColors(COLOR(0, 1, 0, 0.3), COLOR(0, 1, 0, 0.3));
     ps.setSystemLifetime(-1);
     ps.setDirIntervals(Vector3D(0.5, 0 , 0), 90);
-    ps.setSizes(2, 2);
+    ps.setSizes(2, 1);
+    ps.setPos(0, 0, 0);
     ps.revive();
 }

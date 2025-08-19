@@ -196,6 +196,11 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 
     mapas.drawEntities(pics, sys.ScreenWidth, sys.ScreenHeight);
 
+    for (unsigned i = 0; i < mapas.mons.count(); ++i)
+    {
+        mapas.mons[i].drawParticles(pics, mapas.getPos().x, mapas.getPos().y, sys.ScreenWidth, sys.ScreenHeight);
+    }
+
 
 }
 
@@ -1659,7 +1664,6 @@ void Game::GenerateTheMap(int currentHp, int currentAmmo)
     player->setSkinCount(3);
     player->frame = (player->activeSkin[player->getCurrentWeapon()] + 1) * 4 - 2;
 
-    player->setupToxicParticles();
 
 
     for (int i = 0; i < PlayerCount() - 1; ++i)
@@ -2365,6 +2369,11 @@ void Game::CoreGameLogic()
             }
 
             player->equipedGame = loot[inventory.getSelected()];
+
+            if (player->equipedGame == ITEM_GAME_FART_NIGHT)
+            {
+                player->setupToxicParticles();
+            }
 
             for (int i = 0; i < 2; ++i)
             {

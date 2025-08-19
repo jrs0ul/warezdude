@@ -47,29 +47,32 @@ void Particle2DSystem::setDirIntervals(Vector3D vel, int hangle){
 }
 
 //----------------------------------------------
-void Particle2DSystem::updateSystem(){
+void Particle2DSystem::updateSystem()
+{
 
-    
-    for (unsigned long i = 0; i < particles.count(); i++){
+    for (unsigned long i = 0; i < particles.count(); i++)
+    {
         Particle* p=0;
         p = &particles[i];
     
-        if (p){
-            if (!p->isdead){
+        if (p)
+        {
+            if (!p->isdead)
+            {
                 p->age++;
                 p->pos = Vector3D(p->pos.x + p->velocity.x,
                                   p->pos.y + p->velocity.y,
                                   p->pos.z + p->velocity.z );
 
                 float colorchange = 1.0f / particleLifetime;
-            
+
                 float sizeChange = (fabs(endSize - startSize))/particleLifetime;
 
                 if (p->size < endSize)
                     p->size += sizeChange;
                 if (p->size > endSize)
                     p->size -= sizeChange;
-            
+
                 if (end.c[3] < p->c.c[3])
                     p->c.c[3] -= colorchange;
                 else
@@ -94,6 +97,17 @@ void Particle2DSystem::updateSystem(){
                     p->isdead=true;
             }
         }
+    }
+
+    if (particles.count())
+    {
+    for (long i = particles.count(); i >= 0; --i)
+    {
+        if (particles[i].isdead)
+        {
+            particles.remove(i);
+        }
+    }
     }
 
 
