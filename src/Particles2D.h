@@ -39,11 +39,11 @@ class Particle2DSystem{
     Vector3D begin;
     //float velmat[16];
 
-    COLOR start;
-    COLOR end;
+    COLOR startColor;
+    COLOR endColor;
     float startSize;
     float endSize;
-    
+
     int maxSystemLifetime;
     int defSystemLifetime;
     bool _isDead;
@@ -67,7 +67,8 @@ public:
                        int picIndex, Vector3D shift = Vector3D(0,0,0));
     void destroy();
     bool isDead(){return _isDead;}
-    void revive(){_isDead = false;}
+    void start(){_isDead = false;}
+    void stop(){_isDead = true;}
 
 };
 

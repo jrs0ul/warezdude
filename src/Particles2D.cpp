@@ -4,42 +4,52 @@
 #include <cstdlib>
 
 void Particle2DSystem::drawParticles(PicsContainer& pics,
-                                     int picIndex, Vector3D shift){
-   
-    for (unsigned long i = 0; i < particles.count(); i++){
-     
-        Particle* p=0;
+                                     int picIndex, Vector3D shift)
+{
+
+    for (unsigned long i = 0; i < particles.count(); i++)
+    {
+        Particle* p = 0;
         p = &particles[i];
-               
-        if (!p->isdead){
+
+        if (!p->isdead)
+        {
             float _x = p->pos.x + shift.x;
             float _y = p->pos.z + shift.z;
-            //if ((_x > -32) && (_x < 480) && (_y > -32) && (_y < 320))
-                pics.draw(picIndex,
-                          _x,
-                          _y, 0, true, p->size, p->size, 0, 
-                          p->c, p->c);
+
+            pics.draw(picIndex,
+                       _x,
+                       _y,
+                       0,
+                       true,
+                       p->size,
+                       p->size,
+                       0,
+                       p->c,
+                       p->c);
         }
     }
 
 }
 //----------------------------------------------
 
-void Particle2DSystem::setParticleLifetime(int lifetime){
+void Particle2DSystem::setParticleLifetime(int lifetime)
+{
     particleLifetime = lifetime;
 }
 
 //----------------------------------------------
-void Particle2DSystem::setPos(float x, float y, float z){
+void Particle2DSystem::setPos(float x, float y, float z)
+{
     centerx=x;
     centery=y;
     centerz=z;
 }
 //----------------------------------------------
-void Particle2DSystem::setDirIntervals(Vector3D vel, int hangle){
+void Particle2DSystem::setDirIntervals(Vector3D vel, int hangle)
+{
     mainVelocity = vel;
     halfangle = hangle;
-    //MatrixRotationY(0.0175f, velmat);
     Matrix mat;
     MatrixRotationY(-(hangle/2.0f)*0.0175f, mat);
     begin = vel;
@@ -73,22 +83,22 @@ void Particle2DSystem::updateSystem()
                 if (p->size > endSize)
                     p->size -= sizeChange;
 
-                if (end.c[3] < p->c.c[3])
+                if (endColor.c[3] < p->c.c[3])
                     p->c.c[3] -= colorchange;
                 else
                     p->c.c[3] += colorchange;
 
-                if (end.c[0] < p->c.c[0])
+                if (endColor.c[0] < p->c.c[0])
                     p->c.c[0] -= colorchange;
                 else
                     p->c.c[0] += colorchange;
 
-                if (end.c[1] < p->c.c[1])
+                if (endColor.c[1] < p->c.c[1])
                     p->c.c[1] -= colorchange;
                 else
                     p->c.c[1] += colorchange;
 
-                if (end.c[2] < p->c.c[2])
+                if (endColor.c[2] < p->c.c[2])
                     p->c.c[2] -= colorchange;
                 else
                     p->c.c[2] += colorchange;
@@ -125,7 +135,7 @@ void Particle2DSystem::updateSystem()
     {
         Particle np;
         np.pos = Vector3D(centerx, centery, centerz);
-        np.c = start;
+        np.c = startColor;
         np.size = startSize;
         int ang = rand() % halfangle + 1;
 
@@ -151,8 +161,8 @@ void Particle2DSystem::destroy(){
 //---------------------------------------
 void Particle2DSystem::setColors(COLOR _start,
                                  COLOR _end){
-    start = _start;
-    end = _end;
+    startColor = _start;
+    endColor = _end;
 }
 //-----------------------------
 void Particle2DSystem::setSizes(float _start, float _end){

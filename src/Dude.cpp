@@ -335,11 +335,6 @@ void Dude::drawParticles(PicsContainer& pics, float posx, float posy, int Screen
         return;
     }
 
-    if (ps.isDead())
-    {
-        return;
-    }
-
     ps.drawParticles(pics, 15, Vector3D(dudex, 0, dudey));
 }
 
@@ -466,16 +461,17 @@ void Dude::appearInRandomPlace(bool** map, int mapwidth, int mapheight){
 
 }
 //----------------------------------------
-void Dude::damageAnim(){
-    g=b=0;
-    r=1.0f;
+void Dude::damageAnim()
+{
+    g = b = 0.f;
+    r = 1.0f;
     hittim++;
 
     if (hittim >= 10)
     {
         hittim = 0;
         hit = false;
-        r=g=b=1.0f;
+        r = g = b = 1.f;
     }
 }
 //------------------------------
@@ -515,5 +511,26 @@ void Dude::setupToxicParticles()
     ps.setDirIntervals(Vector3D(0.5, 0 , 0), 90);
     ps.setSizes(2, 1);
     ps.setPos(0, 0, 0);
-    ps.revive();
+    ps.start();
+}
+//-----------------------------
+void Dude::damageOthersIfToxic(DArray<Dude>& others, unsigned yourIndex)
+{
+    if (equipedGame != ITEM_GAME_FART_NIGHT)
+    {
+        return;
+    }
+
+    for (unsigned i = 0; i < others.count(); ++i)
+    {
+        if (i != yourIndex && !others[i].shot && !others[i].spawn && !others[i].hit)
+        {
+            if (CirclesColide(x, y, 50, others[i].x, others[i].y, 10))
+            {
+                others[i].damage(5);
+                others[i].lastDamagedBy = id;
+                others[i].hit = true;
+            }
+        }
+    }
 }

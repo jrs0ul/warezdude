@@ -139,6 +139,7 @@ public:
         void setupToxicParticles();
         void setSkinCount(int cnt){skinCount = cnt;}
         int getCurrentWeapon(){return currentWeapon;}
+        void damageOthersIfToxic(DArray<Dude>& dudes, unsigned yourIndex);
 
 private:
         bool movement(Vector3D dir,

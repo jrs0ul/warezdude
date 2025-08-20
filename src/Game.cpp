@@ -2374,6 +2374,10 @@ void Game::CoreGameLogic()
             {
                 player->setupToxicParticles();
             }
+            else
+            {
+                player->ps.stop();
+            }
 
             for (int i = 0; i < 2; ++i)
             {
@@ -2593,6 +2597,9 @@ void Game::CoreGameLogic()
 
     for (int i = mapas.enemyCount; i < mapas.enemyCount + PlayerCount(); ++i)
     {
+
+        mapas.mons[i].update();
+
         if (mapas.mons[i].hit)
         {
             if (i == mapas.enemyCount + clientIndex)
@@ -2646,7 +2653,8 @@ void Game::CoreGameLogic()
 
         for (unsigned i = 0; i < mapas.mons.count(); ++i)
         {
-            mapas.mons[i].update();
+
+            mapas.mons[i].damageOthersIfToxic(mapas.mons, i);
 
             if ((mapas.mons[i].getHP() <= 0) && (!mapas.mons[i].shot))
             {
