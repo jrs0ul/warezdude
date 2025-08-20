@@ -96,6 +96,15 @@ void Dude::respawn()
 //--------------------------------------------------
 void Dude::update()
 {
+    Vector3D old = Vector3D(x, y, angle);
+
+    for (int i = 1; i < ENTITY_POSITION_HISTORY_LEN; ++i)
+    {
+        oldPos[i - 1] = oldPos[i];
+    }
+
+    oldPos[ENTITY_POSITION_HISTORY_LEN - 1] = old;
+
     ps.updateSystem();
 }
 //--------------------------------------------------
@@ -122,8 +131,6 @@ bool Dude::move(float walkSpeed,
 {
 
     Vector3D vl = MakeVector(walkSpeed, strifeSpeed, angle);
-    vl.normalize();
-
     return movement(vl, radius, (const bool**)map._colide, map.width(), map.height(), map.mons, isCoop, map.enemyCount);
 }
 //-----------------------------------------------------
@@ -279,6 +286,7 @@ bool Dude::movement(Vector3D dir,
 
     if ((diry > 0) || (dirx > 0))
     {
+
         tim++;
 
         if (tim >= 30)
@@ -301,6 +309,45 @@ bool Dude::movement(Vector3D dir,
 //--------------------------------------------------------------
 void Dude::draw(PicsContainer& pics, unsigned index, float posx, float posy, int ScreenWidth, int ScreenHeight)
 {
+
+
+    if (equipedGame == ITEM_GAME_SPEEDBALL)
+    {
+        for (int i = 0; i < ENTITY_POSITION_HISTORY_LEN; ++i)
+        {
+            if (i % 2 == 0)
+            {
+                continue;
+            }
+
+            const float olddudex = oldPos[i].x + posx;
+            const float olddudey = oldPos[i].y + posy;
+            const float oldAngle = oldPos[i].z;
+
+            if (olddudex + HALF_TILE_WIDTH < 0 || olddudex - HALF_TILE_WIDTH > ScreenWidth ||
+                    olddudey + HALF_TILE_WIDTH < 0 || olddudey - HALF_TILE_WIDTH > ScreenHeight)
+            {
+                continue;
+            }
+
+            const float alpha = (i * (0.5f / ENTITY_POSITION_HISTORY_LEN)) + 0.1f;
+
+            pics.draw(index,
+                    olddudex,
+                    olddudey,
+                    frame,
+                    true,
+                    1.0f,
+                    1.0f,
+                    (oldAngle + M_PI / 2.f) * (180 / M_PI),
+                    COLOR(0.5f, 0.5f, 1.f, alpha),
+                    COLOR(0.5f, 0.5f, 1.f, alpha));
+
+        }
+    }
+
+
+
     const float dudex = x + posx;
     const float dudey = y + posy;
 

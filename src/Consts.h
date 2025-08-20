@@ -33,6 +33,9 @@ const int AMMO_PICKUP_VALUE               = 20;
 const int MONSTER_MAX_RACE                = 3;
 const int MONSTER_BASE_HP                 = 30;
 
+const int ENTITY_POSITION_HISTORY_LEN     = 24;
+const float ENTITY_SPEEDBALL_SPEED        = 4.f;
+
 
 const int SLIME_DAMAGE                    = 2;
 

@@ -73,7 +73,8 @@ void CMap::arangeItems()
         int dice = rand() % 1000;
 
 
-        const Items game = (dice > 700 ) ? ITEM_GAME_UNABOMBER_GUY : ( dice < 300 ? ITEM_GAME_FART_NIGHT : ITEM_GAME_CONTRABANDISTS);
+        const Items game = (dice > 700 ) ? (dice > 850 ? ITEM_GAME_SPEEDBALL : ITEM_GAME_UNABOMBER_GUY) :
+                                          ( dice < 300 ? ITEM_GAME_FART_NIGHT : ITEM_GAME_CONTRABANDISTS);
 
         addItem(ix * TILE_WIDTH, iy * TILE_WIDTH, game);
         //rand() % 16 + ITEM_GAME_NINJA_MAN);

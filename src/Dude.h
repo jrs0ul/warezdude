@@ -28,6 +28,7 @@ class Dude
         int currentWeapon;
 public:
         Particle2DSystem ps;
+        Vector3D oldPos[ENTITY_POSITION_HISTORY_LEN];
         float x;
         float y;
         float angle;
@@ -101,6 +102,11 @@ public:
             currentWeapon = 0;
             activeSkin[0] = 0;
             activeSkin[1] = 1;
+
+            for (int i = 0; i < ENTITY_POSITION_HISTORY_LEN; ++i)
+            {
+                oldPos[i] = Vector3D(dx, dy, 0);
+            }
         }
 
         void update();

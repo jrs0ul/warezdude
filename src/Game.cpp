@@ -470,6 +470,9 @@ void Game::MoveDude()
 {
     Dude* player = mapas.getPlayer((netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0);
 
+
+    const float SPEED = (player->equipedGame == ITEM_GAME_SPEEDBALL) ? ENTITY_SPEEDBALL_SPEED : 1.f;
+
     if ((Keys[0]) || (Keys[1]) || (Keys[2]) || (Keys[3]))
     {
         float walkSpeed = 0.f;
@@ -477,22 +480,22 @@ void Game::MoveDude()
 
         if (Keys[1])
         {
-            walkSpeed = -1.0f;
+            walkSpeed = -SPEED;
         }
 
         if (Keys[0])
         {
-            walkSpeed = 1.0f;
+            walkSpeed = SPEED;
         }
 
         if (Keys[2])
         {
-            strifeSpeed = -1.0f;
+            strifeSpeed = -SPEED;
         }
 
         if (Keys[3])
         {
-            strifeSpeed = 1.0f;
+            strifeSpeed = SPEED;
         }
 
 
@@ -2557,6 +2560,12 @@ void Game::CoreGameLogic()
         if (fabs(mov.x) > 0.5f || fabs(mov.y) > 0.5f)
         {
             movedWithGamepad = true;
+        }
+
+        if (player->equipedGame == ITEM_GAME_SPEEDBALL)
+        {
+            mov.x = mov.x * ENTITY_SPEEDBALL_SPEED;
+            mov.y = mov.y * ENTITY_SPEEDBALL_SPEED;
         }
 
         player->moveGamePad(mov, PLAYER_RADIUS, mapas, (netGameState == MPMODE_COOP));
