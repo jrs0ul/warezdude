@@ -1,0 +1,7 @@
+
+#vim swap files
+*.swp
+src/*.swp
+src/data/*.swp
+
+editor/obj/*.obj
