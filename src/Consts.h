@@ -19,6 +19,7 @@ const float ITEM_RADIUS                   = 8.f;
 const float PLAYER_RADIUS                 = 8.f;
 const int PLAYER_MELEE_DAMAGE             = 15;
 
+const float PROJECTILE_BULLET_SPEED       = 2.2f;
 const int PROJECTILE_BULLET_DAMAGE        = 3;
 const int PROJECTILE_MINE_DAMAGE          = 6;
 
@@ -29,6 +30,8 @@ const int ENTITY_INITIAL_HP               = 100;
 
 const int AMMO_PICKUP_VALUE               = 20;
 
+const int PLAYER_SIMULTANEOUS_WEAPONS     = 2;
+const int PLAYER_MAX_SKIN_COUNT           = 4;  // all the sprite combinations with different weapons
 
 const int MONSTER_MAX_RACE                = 3;
 const int MONSTER_BASE_HP                 = 30;

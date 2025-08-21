@@ -11,3 +11,4 @@ doorstop.ogg
 pain.ogg
 mpain.ogg
 mine_deploy.ogg
+shrinker.ogg

@@ -2,6 +2,10 @@
 #define BULLET_H
 
 
+#include "DArray.h"
+
+class Dude;
+
 class Bullet
 {
 public:
@@ -33,7 +37,9 @@ public:
     , isMine(false)
     {
     }
-    void ai(bool** map, int width, int height);
+
+    void update(const bool** map, int width, int height);
+    bool onHit(DArray<Dude>& dudes);
 };
 
 

@@ -72,9 +72,28 @@ void CMap::arangeItems()
 
         int dice = rand() % 1000;
 
+        Items game = ITEM_GAME_DUKE_ATOMIC;
 
-        const Items game = (dice > 700 ) ? (dice > 850 ? ITEM_GAME_SPEEDBALL : ITEM_GAME_UNABOMBER_GUY) :
-                                          ( dice < 300 ? ITEM_GAME_FART_NIGHT : ITEM_GAME_CONTRABANDISTS);
+        if (dice < 800)
+        {
+            game = ITEM_GAME_CONTRABANDISTS;
+
+            if (dice < 600)
+            {
+                game = ITEM_GAME_FART_NIGHT;
+
+                if (dice < 400)
+                {
+                    game = ITEM_GAME_UNABOMBER_GUY;
+
+                    if (dice < 200)
+                    {
+                        game = ITEM_GAME_SPEEDBALL;
+                    }
+                }
+            }
+
+        }
 
         addItem(ix * TILE_WIDTH, iy * TILE_WIDTH, game);
         //rand() % 16 + ITEM_GAME_NINJA_MAN);
@@ -407,17 +426,17 @@ bool CMap::load(const char* path, bool createItems, int otherplayers){
 
     printf("map width %d, height %d\n", _width, _height);
 
-    start.x = start.x * 32;
-    start.y = start.y * 32;
+    start.x = start.x * TILE_WIDTH;
+    start.y = start.y * TILE_WIDTH;
 
     if ((enemyCount + 1 + otherplayers) != 0)
     {
 
         Dude playeris;
         playeris.id = enemyCount;
-        playeris.setWeaponCount(2);
-        playeris.setSkinCount(3);
-        playeris.frame = (playeris.activeSkin[playeris.getCurrentWeapon()] + 1) * 4 - 2;
+        playeris.setWeaponCount(PLAYER_SIMULTANEOUS_WEAPONS);
+        playeris.setSkinCount(PLAYER_MAX_SKIN_COUNT);
+        playeris.setFrame((playeris.activeSkin[playeris.getCurrentWeapon()] + 1) * 4 - 2);
         mons.add(playeris);
 
         for (int i = 0; i < otherplayers; ++i)

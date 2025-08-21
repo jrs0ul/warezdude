@@ -15,7 +15,8 @@ enum WeaponTypes
 {
     WEAPONTYPE_REGULAR,
     WEAPONTYPE_MINES,
-    WEAPONTYPE_SPREAD
+    WEAPONTYPE_SPREAD,
+    WEAPONTYPE_SHRINKER
 };
 
 
@@ -26,6 +27,7 @@ class Dude
         int weaponCount;
         int skinCount;
         int currentWeapon;
+        unsigned char frame;
 public:
         Particle2DSystem ps;
         Vector3D oldPos[ENTITY_POSITION_HISTORY_LEN];
@@ -61,7 +63,6 @@ public:
         unsigned char activeSkin[2];  //what frames to use for each weapon
 
         unsigned char colid;
-        unsigned char frame;
         bool enemyseen;
         bool hit;
         bool canAtack;
@@ -144,6 +145,8 @@ public:
         void setWeaponCount(int newCount){weaponCount = newCount; currentWeapon = 1;}
         void setupToxicParticles();
         void setSkinCount(int cnt){skinCount = cnt;}
+        void setFrame(unsigned char newFrame){frame = newFrame;}
+        unsigned char getFrame(){return frame;}
         int getCurrentWeapon(){return currentWeapon;}
         void damageOthersIfToxic(DArray<Dude>& dudes, unsigned yourIndex);
 

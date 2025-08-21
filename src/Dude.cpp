@@ -435,6 +435,20 @@ bool Dude::shoot(bool useBullets, WeaponTypes weaponType, CBulletContainer* bulc
                     bulcon->add(newbul);
 
                 } break;
+            case WEAPONTYPE_SHRINKER:
+                {
+                    Bullet newbul;
+
+                    newbul.x          = x+(cos(-angle) * 8.0f);
+                    newbul.y          = y+(sin(angle) * 10.0f);
+                    newbul.parentID   = id;
+                    newbul.angle      = angle;
+                    newbul.frame      = 3;
+                    newbul.isMine     = false;
+                    ammo--;
+
+                    bulcon->add(newbul);
+                } break;
             case WEAPONTYPE_SPREAD:
                 {
                     for (int i = -2; i < 3; ++i)

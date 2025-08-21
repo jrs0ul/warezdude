@@ -301,12 +301,11 @@ void Game::KillPlayer(int index)
     Dude* player = &mapas.mons[index];
 
     player->shot = true;
-    player->frame = 12;
+    player->setFrame(PLAYER_MAX_SKIN_COUNT * 4);
     AdaptSoundPos(2, player->x, player->y);
     SoundSystem::getInstance()->playsound(2);
 
     mapas.mons[index].stim = 0;
-    //timeleft = mapas.timeToComplete;
     mapas.mons[index].setHP(100);
 
     Decal decalas;
@@ -364,53 +363,6 @@ void Game::KillEnemy(unsigned ID)
 
 
 }
-
-
-
-//--------------------
-//jei kulka pataike i kazka
-bool Game::OnHit(Bullet& bul)
-{
-
-    int dmg = PROJECTILE_BULLET_DAMAGE;
-
-    if (bul.isMine)
-    {
-        dmg = PROJECTILE_MINE_DAMAGE;
-    }
-
-    bool hit = false;
-    int tmpID=0;
-
-    int players = PlayerCount();
-
-    for (int i=0; i < mapas.enemyCount + players; i++)
-    {
-        if (CirclesColide(mapas.mons[i].x, mapas.mons[i].y, 8, bul.x, bul.y, 8))
-        {
-
-            tmpID = mapas.mons[i].id;
-
-            if ((bul.parentID != tmpID) && //bullet should not hit the shooter
-                (!mapas.mons[i].shot) &&
-                (!mapas.mons[i].spawn))
-            {
-                if (!hit)
-                {
-                    hit = true;
-                }
-
-                mapas.mons[i].hit = true;
-                mapas.mons[i].damage(dmg);
-                mapas.mons[i].lastDamagedBy = bul.parentID;
-
-            }
-        }
-    }
-
-    return hit;
-}
-
 
 //---------------------------
 void Game::DrawStats()
@@ -1131,7 +1083,7 @@ void Game::HandleInteractionsWithDeadPlayers()
                         if (CirclesColide(mapas.mons[i].x, mapas.mons[i].y, 10.f, interactionCenter.x, interactionCenter.y, 10.f))
                         {
                             mapas.mons[i].shot = false;
-                            mapas.mons[i].frame = mapas.mons[i].activeSkin[mapas.mons[i].getCurrentWeapon()] * 4;
+                            mapas.mons[i].setFrame(mapas.mons[i].activeSkin[mapas.mons[i].getCurrentWeapon()] * 4);
                             mapas.mons[i].heal();
 
                             if (netMode == NETMODE_SERVER)
@@ -1559,27 +1511,6 @@ void Game::MonsterAI(int index)
     }
 
 }
-//--------------------------------
-//kulku valdymas
-void Game::HandleBullets()
-{
-
-    for (int i=0;i<bulbox.count();i++)
-    {
-        bulbox.buls[i].ai(mapas._colide, mapas.width(), mapas.height());
-
-        if (OnHit(bulbox.buls[i]))
-        {
-            if (!bulbox.buls[i].explode)
-            {
-                bulbox.buls[i].explode = true;
-                bulbox.buls[i].frame=2;
-            }
-        }
-
-        bulbox.removeDead(); //pasaliname neaktyvias kulkas
-    }   
-}
 //-------------------------------
 void Game::AnimateSlime()
 {
@@ -1663,9 +1594,9 @@ void Game::GenerateTheMap(int currentHp, int currentAmmo)
     player->shot = false;
     player->setHP(currentHp);
     player->ammo = currentAmmo;
-    player->setWeaponCount(2);
-    player->setSkinCount(3);
-    player->frame = (player->activeSkin[player->getCurrentWeapon()] + 1) * 4 - 2;
+    player->setWeaponCount(PLAYER_SIMULTANEOUS_WEAPONS);
+    player->setSkinCount(PLAYER_MAX_SKIN_COUNT);
+    player->setFrame((player->activeSkin[player->getCurrentWeapon()] + 1) * 4 - 2);
 
 
 
@@ -2267,6 +2198,18 @@ void Game::HandlePlayerAttacks(Dude* player, int clientIndex)
                     }
 
                 }
+                if (player->equipedGame == ITEM_GAME_DUKE_ATOMIC)
+                {
+                    weaponType = WEAPONTYPE_SHRINKER;
+                    stillHaveAmmo = player->shoot(true, WEAPONTYPE_SHRINKER, &bulbox);
+
+                    if (stillHaveAmmo)
+                    {
+                        PlaySoundAt(ss, player->x, player->y, 13);
+                    }
+
+
+                }
                 else if (player->equipedGame == ITEM_GAME_CONTRABANDISTS)
                 {
                     weaponType = WEAPONTYPE_SPREAD;
@@ -2388,7 +2331,7 @@ void Game::CoreGameLogic()
             }
 
 
-            player->frame = player->activeSkin[player->getCurrentWeapon()] * 4;
+            player->setFrame(player->activeSkin[player->getCurrentWeapon()] * 4);
             loot.remove(inventory.getSelected());
         }
     }
@@ -2647,7 +2590,7 @@ void Game::CoreGameLogic()
 
     CheckForExit();
 
-    HandleBullets();  //bullet ai
+    bulbox.update((const bool**)mapas._colide, mapas.mons, mapas.width(), mapas.height());
 
 
     if (netMode != NETMODE_CLIENT) // offline & server
@@ -3109,7 +3052,8 @@ void Game::SendClientCoords()
     cnt += sizeof(float);
     memcpy(&coords[cnt], &(player->angle), sizeof(float));
     cnt += sizeof(float);
-    memcpy(&coords[cnt], &(player->frame), sizeof(unsigned char));
+    unsigned char theFrame = player->getFrame();
+    memcpy(&coords[cnt], &theFrame, sizeof(unsigned char));
     cnt += sizeof(unsigned char);
     unsigned char stats=0x0;
 
@@ -3139,16 +3083,6 @@ void Game::SendPlayerInfoToClient(int clientindex)
     {
         if (i - mapas.enemyCount - 1 != clientindex)
         {
-
-            /*if ((i >= mapas.enemyCount) && ((i - mapas.enemyCount - 1) < clientindex))
-            {
-                z = (unsigned char)(i+1);
-            }
-            else
-            {
-                z = (unsigned char)i;
-            }*/
-
             z = i;
 
             memcpy(&coords[cnt], NET_HEADER, NET_HEADER_LEN);
@@ -3164,7 +3098,8 @@ void Game::SendPlayerInfoToClient(int clientindex)
             cnt += sizeof(float);
             memcpy(&coords[cnt],&mapas.mons[i].angle, sizeof(float));
             cnt += sizeof(float);
-            memcpy(&coords[cnt],&mapas.mons[i].frame, sizeof(unsigned char));
+            unsigned char theFrame = mapas.mons[i].getFrame();
+            memcpy(&coords[cnt],&theFrame, sizeof(unsigned char));
             cnt += sizeof(unsigned char);
             unsigned char stats = 0x0;
 
@@ -3208,7 +3143,9 @@ void Game::GetCharData(const unsigned char* bufer, int bufersize, int* index )
         *index+=sizeof(float);
         memcpy(&mapas.mons[monum].angle,&bufer[*index],sizeof(float));
         *index+=sizeof(float);
-        memcpy(&mapas.mons[monum].frame,&bufer[*index],sizeof(unsigned char));
+        unsigned char theFrame = 0;
+        memcpy(&theFrame, &bufer[*index], sizeof(unsigned char));
+        mapas.mons[monum].setFrame(theFrame);
         *index+=sizeof(unsigned char);
         unsigned char stats=bufer[*index];
         if (stats & 0x80)
@@ -3401,21 +3338,21 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
 
         Dude d;
         d.id = mapas.enemyCount;
-        d.setWeaponCount(2);
-        d.setSkinCount(3);
+        d.setWeaponCount(PLAYER_SIMULTANEOUS_WEAPONS);
+        d.setSkinCount(PLAYER_MAX_SKIN_COUNT);
         mapas.addMonster(d);
         mapas.mons[mapas.mons.count()-1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
 
         for (int i = 0; i < otherClientCount; i++)
         {
             Dude n;
-            n.setWeaponCount(2);
-            n.setSkinCount(3);
-            n.frame = (n.activeSkin[n.getCurrentWeapon()] + 1) * 4 - 2;
+            n.setWeaponCount(PLAYER_SIMULTANEOUS_WEAPONS);
+            n.setSkinCount(PLAYER_MAX_SKIN_COUNT);
+            n.setFrame((n.activeSkin[n.getCurrentWeapon()] + 1) * 4 - 2);
 
             n.id = clientIds[i];
             mapas.mons.add(n);
-            mapas.mons[mapas.mons.count()-1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+            mapas.mons[mapas.mons.count() - 1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
         }
 
         AdaptMapView();
@@ -3470,7 +3407,9 @@ void Game::ServerParseCharacterData(const unsigned char* bufer, unsigned * bufer
     *buferindex += sizeof(float);
     memcpy(&mapas.mons[clientIdx].angle, &bufer[*buferindex], sizeof(float));
     *buferindex += sizeof(float);
-    memcpy(&mapas.mons[clientIdx].frame, &bufer[*buferindex], sizeof(unsigned char));
+    unsigned char theFrame = 0;
+    memcpy(&theFrame, &bufer[*buferindex], sizeof(unsigned char));
+    mapas.mons[clientIdx].setFrame(theFrame);
     (*buferindex)++;
 
     unsigned char stats = bufer[*buferindex];
@@ -3534,7 +3473,7 @@ void Game::ServerParseClientResurrect(unsigned* bufferindex, int clientIndex)
                 if (CirclesColide(mapas.mons[i].x, mapas.mons[i].y, 10.f, ic.x, ic.y, 10.f))
                 {
                     mapas.mons[i].shot = false;
-                    mapas.mons[i].frame = mapas.mons[i].activeSkin[mapas.mons[i].getCurrentWeapon()] * 4;
+                    mapas.mons[i].setFrame(mapas.mons[i].activeSkin[mapas.mons[i].getCurrentWeapon()] * 4);
                     mapas.mons[i].heal();
                     //  ok now let's send this to all clients
                     for (unsigned a = 0; a < serveris.clientCount(); ++a)

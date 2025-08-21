@@ -6,83 +6,30 @@
 
 void CBulletContainer::add(Bullet& newbulet)
 {
-
-    Bullet* tmp=0;
-    if (buls){
-        
-        tmp=new Bullet[_count];
-        
-        memcpy(tmp,buls,sizeof(Bullet)*_count);
-        delete []buls;
-    }
-
-
-        _count++;
-        buls = new Bullet[_count];
-
-    if (buls){
-        memcpy(buls,tmp,sizeof(Bullet)*(_count-1));
-        delete []tmp;
-    }
-    
-    buls[_count-1]=newbulet;
-
-    
-
+    buls.add(newbulet);
 }
 //---------------------------
- void CBulletContainer::removeDead(){
-     if (buls){
-      int inactive=0;
-     
-      for (int i=0;i<_count;i++){
-      
-       if (!buls[i].exists)
-        inactive++;
-      }
-    
-      
-      if (inactive){
-      // fprintf(fil,"destroying inactive...\n");
-       int index;
-       for (int i=0;i<inactive;i++){
-        index=0;
-        while ((buls[index].exists)&&(index<_count))
-         index++;
-        for (int i=index;i<_count-1;i++)
-         buls[i]=buls[i+1];
+void CBulletContainer::removeDead()
+{
+    if (!buls.count())
+    {
+        return;
+    }
 
-       }//for
-      
-       Bullet* tmp;
-       _count-=inactive;
-       if (_count>0){
+    for (int i = buls.count() - 1; i >= 0; --i)
+    {
 
-        
-        tmp=new Bullet[_count];
-        memcpy(tmp,buls,sizeof(Bullet)*_count);
-        delete []buls;
-        buls = new Bullet[_count];
-        memcpy(buls,tmp,sizeof(Bullet)*_count);
-        delete []tmp;
-
-     
-       }
-       else{
-        delete []buls;
-        buls=0;
-       }
-      }
-      
-      
-     }
-     
- }
+        if (!buls[i].exists)
+        {
+            buls.remove(i);
+        }
+    }
+}
 //---------------------------
 
 void CBulletContainer::draw(PicsContainer& pics, float posx, float posy, int ScreenWidth, int ScreenHeight)
 {
-    for (int z = 0; z < _count; z++)
+    for (unsigned z = 0; z < buls.count(); z++)
     {
         const float bulletX = buls[z].x + posx;
         const float bulletY = buls[z].y + posy;
@@ -106,15 +53,29 @@ void CBulletContainer::draw(PicsContainer& pics, float posx, float posy, int Scr
     }
 
 }
+//---------------------------
+void CBulletContainer::update(const bool** colisionGrid, DArray<Dude>& dudes, int mapWidth, int mapHeight)
+{
+    for (unsigned i = 0; i < buls.count(); i++)
+    {
+        buls[i].update(colisionGrid, mapWidth, mapHeight);
 
+        if (buls[i].onHit(dudes))
+        {
+            if (!buls[i].explode)
+            {
+                buls[i].explode = true;
+                buls[i].frame = 2;
+            }
+        }
+
+        removeDead();
+    }
+}
 
 //---------------------------
 
- void CBulletContainer::destroy(){
-     if (buls){
-      delete []buls;
-      buls=0;
-     }
-     _count=0; 
-     
- }
+void CBulletContainer::destroy()
+{
+    buls.destroy();
+}
