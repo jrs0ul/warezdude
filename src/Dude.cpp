@@ -60,6 +60,11 @@ bool Dude::isColideWithOthers( DArray<Dude>& chars, float newx, float newy, bool
             }
         }
 
+        if (!shrinked && chars[i].shrinked)
+        {
+            continue;
+        }
+
         if (CirclesColide(newx, newy, 10.0f, chars[i].x, chars[i].y, 10.0f))
         {
             return true;
@@ -130,7 +135,7 @@ bool Dude::move(float walkSpeed,
                 bool isCoop)
 {
 
-    Vector3D vl = MakeVector(walkSpeed, strifeSpeed, angle);
+    Vector3D vl = MakeVector((shrinked ? walkSpeed * 0.3f : walkSpeed), (shrinked ? strifeSpeed * 0.3f : strifeSpeed), angle);
     return movement(vl, radius, (const bool**)map._colide, map.width(), map.height(), map.mons, isCoop, map.enemyCount);
 }
 //-----------------------------------------------------
@@ -169,8 +174,9 @@ bool Dude::movement(Vector3D dir,
     Vector3D p5; 
     Vector3D p6;
     Vector3D p7;
-    Vector3D p8; 
+    Vector3D p8;
 
+    radius *= (shrinked) ? 0.3f : 1.f;
 
     p1.x = round((newposx - radius) / 32.0f);
 
@@ -310,6 +316,7 @@ bool Dude::movement(Vector3D dir,
 void Dude::draw(PicsContainer& pics, unsigned index, float posx, float posy, int ScreenWidth, int ScreenHeight)
 {
 
+    const float scale = (shrinked) ? 0.3f : 1.f;
 
     if (equipedGame == ITEM_GAME_SPEEDBALL)
     {
@@ -337,8 +344,8 @@ void Dude::draw(PicsContainer& pics, unsigned index, float posx, float posy, int
                     olddudey,
                     frame,
                     true,
-                    1.0f,
-                    1.0f,
+                    scale,
+                    scale,
                     (oldAngle + M_PI / 2.f) * (180 / M_PI),
                     COLOR(0.5f, 0.5f, 1.f, alpha),
                     COLOR(0.5f, 0.5f, 1.f, alpha));
@@ -362,8 +369,8 @@ void Dude::draw(PicsContainer& pics, unsigned index, float posx, float posy, int
               dudey,
               frame,
               true,
-              1.0f,
-              1.0f,
+              scale,
+              scale,
               (angle + M_PI / 2.f) * (180 / M_PI),
               COLOR(r,g,b, 1.f),
               COLOR(r,g,b, 1.f));
@@ -424,12 +431,12 @@ bool Dude::shoot(bool useBullets, WeaponTypes weaponType, CBulletContainer* bulc
                 {
                     Bullet newbul;
 
-                    newbul.x          = x+(cos(-angle) * 8.0f);
-                    newbul.y          = y+(sin(angle) * 10.0f);
+                    newbul.x          = x + (cos(-angle) * 8.0f);
+                    newbul.y          = y + (sin(angle) * 10.0f);
                     newbul.parentID   = id;
                     newbul.angle      = angle;
                     newbul.frame      = 1;
-                    newbul.isMine     = true;
+                    newbul.type       = WEAPONTYPE_MINES;
                     ammo--;
 
                     bulcon->add(newbul);
@@ -439,12 +446,12 @@ bool Dude::shoot(bool useBullets, WeaponTypes weaponType, CBulletContainer* bulc
                 {
                     Bullet newbul;
 
-                    newbul.x          = x+(cos(-angle) * 8.0f);
-                    newbul.y          = y+(sin(angle) * 10.0f);
+                    newbul.x          = x + (cos(-angle) * 8.0f);
+                    newbul.y          = y + (sin(angle) * 10.0f);
                     newbul.parentID   = id;
                     newbul.angle      = angle;
                     newbul.frame      = 3;
-                    newbul.isMine     = false;
+                    newbul.type       = WEAPONTYPE_SHRINKER;
                     ammo--;
 
                     bulcon->add(newbul);
@@ -474,10 +481,10 @@ bool Dude::shoot(bool useBullets, WeaponTypes weaponType, CBulletContainer* bulc
 int Dude::hitIt(Dude& enemy, float vectorx, float vectory, int damage)
 {
 
-    if ((CirclesColide(x+vectorx, y-vectory, 4.0f, enemy.x,enemy.y, 8.0f))
+    if ((CirclesColide(x+vectorx, y-vectory, 4.0f, enemy.x, enemy.y, 8.0f))
             &&(enemy.id!=id))
     {
-        enemy.hp -= damage;
+        enemy.hp -= ((shrinked) ? damage * 0.3f : damage);
         enemy.hit = true;
         enemy.lastDamagedBy = id;
         return enemy.id;
@@ -489,7 +496,6 @@ int Dude::hitIt(Dude& enemy, float vectorx, float vectory, int damage)
 //-------------------------------
 void Dude::disintegrationAnimation()
 {
-
     stim++;
     frame = skinCount * 4;
     if (stim > 30)
@@ -500,6 +506,7 @@ void Dude::disintegrationAnimation()
         {
             hp = ENTITY_INITIAL_HP;
             shot = false;
+            shrinked = false;
             stim = 0;
             spawn = true; 
         }
@@ -591,6 +598,27 @@ void Dude::damageOthersIfToxic(DArray<Dude>& others, unsigned yourIndex)
                 others[i].damage(5);
                 others[i].lastDamagedBy = id;
                 others[i].hit = true;
+            }
+        }
+    }
+}
+//---------------------------------
+void Dude::killShrinked(DArray<Dude>& dudes, unsigned yourIndex)
+{
+
+    if (shrinked)
+    {
+        return;
+    }
+
+    for (unsigned i = 0; i < dudes.count(); ++i)
+    {
+        if (i != yourIndex && !dudes[i].shot && !dudes[i].spawn && dudes[i].shrinked)
+        {
+
+            if (CirclesColide(x, y, 10, dudes[i].x, dudes[i].y, 3))
+            {
+                dudes[i].damage(100);
             }
         }
     }

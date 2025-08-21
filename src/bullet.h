@@ -3,25 +3,24 @@
 
 
 #include "DArray.h"
+#include "WeaponTypes.h"
 
 class Dude;
 
 class Bullet
 {
 public:
-    float x;
-    float y;
-    float angle;
-    float radius;
-    int   tim;
-    int   explodetim;
-    int   parentID;
-    int   frame;
-    bool  explode;
-    bool  exists;
-    bool  isMine;
-
-
+    float       x;
+    float       y;
+    float       angle;
+    float       radius;
+    int         tim;
+    int         explodetim;
+    int         parentID;
+    int         frame;
+    WeaponTypes type;
+    bool        explode;
+    bool        exists;
 
     Bullet()
     : x(0.f)
@@ -32,9 +31,9 @@ public:
     , explodetim(0)
     , parentID(0)
     , frame(0)
+    , type(WEAPONTYPE_REGULAR)
     , explode(false)
     , exists(true)
-    , isMine(false)
     {
     }
 

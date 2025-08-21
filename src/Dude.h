@@ -5,20 +5,11 @@
 #include "Vectors.h"
 #include "Consts.h"
 #include "Particles2D.h"
+#include "WeaponTypes.h"
 
 class CBulletContainer;
 class PicsContainer;
 class CMap;
-
-
-enum WeaponTypes
-{
-    WEAPONTYPE_REGULAR,
-    WEAPONTYPE_MINES,
-    WEAPONTYPE_SPREAD,
-    WEAPONTYPE_SHRINKER
-};
-
 
 
 class Dude
@@ -34,7 +25,9 @@ public:
         float x;
         float y;
         float angle;
-        float r,g,b;
+        float r;
+        float g;
+        float b;
 
         int item;
         int atim;
@@ -68,17 +61,23 @@ public:
         bool canAtack;
         bool spawn;
         bool shot;
+        bool shrinked;
 
 
 
-        Dude(float dx = 0, float dy = 0) :
-            hp(ENTITY_INITIAL_HP),
-            x(dx),
-            y(dy),
-            angle(0.f),
-            shot(false)
+        Dude(float dx = 0, float dy = 0)
+        : hp(ENTITY_INITIAL_HP)
+        , weaponCount(1)
+        , skinCount(1)
+        , currentWeapon(0)
+        , frame(0)
+        , x(dx)
+        , y(dy)
+        , angle(0.f)
+        , shot(false)
+        , shrinked(false)
         {
-            frame=0; tim=0; // dir=0;
+            tim=0;
             stim=0;
             ammo = ENTITY_INITIAL_AMMO;
             canAtack=true;
@@ -98,9 +97,6 @@ public:
             equipedGame = 0;
 
             spawn=false;
-            weaponCount=1;
-            skinCount = 1;
-            currentWeapon = 0;
             activeSkin[0] = 0;
             activeSkin[1] = 1;
 
@@ -149,6 +145,7 @@ public:
         unsigned char getFrame(){return frame;}
         int getCurrentWeapon(){return currentWeapon;}
         void damageOthersIfToxic(DArray<Dude>& dudes, unsigned yourIndex);
+        void killShrinked(DArray<Dude>& dudes, unsigned yourIndex);
 
 private:
         bool movement(Vector3D dir,

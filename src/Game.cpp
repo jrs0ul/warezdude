@@ -189,11 +189,6 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 
     bulbox.draw(pics, mapas.getPos().x, mapas.getPos().y, sys.ScreenWidth, sys.ScreenHeight);
 
-    for (int i = 0; i < PlayerCount(); ++i)
-    {
-        mapas.mons[mapas.enemyCount + i].draw(pics, 5, mapas.getPos().x, mapas.getPos().y, sys.ScreenWidth, sys.ScreenHeight);
-    }
-
     mapas.drawEntities(pics, sys.ScreenWidth, sys.ScreenHeight);
 
     for (unsigned i = 0; i < mapas.mons.count(); ++i)
@@ -323,7 +318,7 @@ void Game::KillEnemy(unsigned ID)
     if (ID < (unsigned)mapas.enemyCount)
     {
         printf("MONSTER KILLED BY %d\n", mapas.mons[ID].lastDamagedBy);
-        mapas.mons[ID].shot=true;
+        mapas.mons[ID].shot = true;
 
         AdaptSoundPos(3,mapas.mons[ID].x,mapas.mons[ID].y);
         SoundSystem::getInstance()->playsound(3);
@@ -1300,14 +1295,13 @@ void Game::MonsterAI(int index)
 {
     SoundSystem * ss = SoundSystem::getInstance();
 
-    int linijosIlgis=0;
+    int linijosIlgis = 0;
 
     int tmpcnt = bulbox.count();
 
     if (mapas.mons[index].spawn)
     {
         mapas.mons[index].respawn();
-
 
         //kill entity if you spawn on it
         if (!mapas.mons[index].spawn)
@@ -1316,7 +1310,7 @@ void Game::MonsterAI(int index)
             {
                 if (i != (unsigned)index)
                 {
-                    if (CirclesColide(mapas.mons[index].x,mapas.mons[index].y,10.0f,mapas.mons[i].x,mapas.mons[i].y,8.0f))
+                    if (CirclesColide(mapas.mons[index].x, mapas.mons[index].y, 10.0f, mapas.mons[i].x, mapas.mons[i].y, 8.0f))
                     {
                         if (i < (unsigned)mapas.enemyCount)
                         {
@@ -1406,7 +1400,7 @@ void Game::MonsterAI(int index)
 
         if ((mapas.mons[index].enemyseen))
         {
-            if (mapas.mons[index].race == 3)
+            if (mapas.mons[index].race == 3 && !mapas.mons[index].shrinked)
             {//jei mentas, tai pasaudom
                 mapas.mons[index].enemyseen = false;
 
@@ -1414,7 +1408,7 @@ void Game::MonsterAI(int index)
                 {
                     mapas.mons[index].shoot(true, WEAPONTYPE_REGULAR, &bulbox);
                     mapas.mons[index].ammo++;
-                    mapas.mons[index].reloadtime=0;
+                    mapas.mons[index].reloadtime = 0;
 
                     if (netMode == NETMODE_SERVER)
                     {
@@ -1429,20 +1423,19 @@ void Game::MonsterAI(int index)
                     mapas.mons[index].reload(50);
                 }
             }
-            else
-            {//baigiam saudima ;)
-                if ((linijosIlgis<2) && (linijosIlgis))
+            else if ((linijosIlgis < 2) && (linijosIlgis))
+            {
+                BeatEnemy(index, MONSTER_MELEE_DAMAGE);
+                mapas.mons[index].enemyseen = false;
+
+                if (!mapas.mons[index].canAtack)
                 {
-                    BeatEnemy(index,10);
-                    mapas.mons[index].enemyseen=false;
-                    if (!mapas.mons[index].canAtack)
-                    {
-                        mapas.mons[index].reload(25);
-                    }
+                    mapas.mons[index].reload(25);
                 }
             }
+
         }
-       
+
 
     }
 
@@ -1457,7 +1450,6 @@ void Game::MonsterAI(int index)
         }
     }
 
-//visa sita slamasta reiks sukrauti i virsu kur tikrinama ar ne shot
 
     if ((!mapas.mons[index].shot)&&(!mapas.mons[index].spawn))
     {
@@ -1564,8 +1556,8 @@ void Game::GenerateTheMap(int currentHp, int currentAmmo)
         mapas.start.y = rand() % mapas.height();
     }
 
-    mapas.start.x *= 32;
-    mapas.start.y *= 32;
+    mapas.start.x *= TILE_WIDTH;
+    mapas.start.y *= TILE_WIDTH;
 
 
     mapas.tiles[(int)mapas.exit.y][(int)mapas.exit.x] = TILE_EXIT;
@@ -1593,6 +1585,7 @@ void Game::GenerateTheMap(int currentHp, int currentAmmo)
     player->id = mapas.enemyCount;
     player->shot = false;
     player->setHP(currentHp);
+    player->race = 4;
     player->ammo = currentAmmo;
     player->setWeaponCount(PLAYER_SIMULTANEOUS_WEAPONS);
     player->setSkinCount(PLAYER_MAX_SKIN_COUNT);
@@ -1603,6 +1596,7 @@ void Game::GenerateTheMap(int currentHp, int currentAmmo)
     for (int i = 0; i < PlayerCount() - 1; ++i)
     {
         Dude p;
+        p.race = 4;
         p.appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
         p.id = mapas.mons[mapas.mons.count() - 1].id + 1;
         mapas.mons.add(p);
@@ -2605,6 +2599,7 @@ void Game::CoreGameLogic()
 
         for (unsigned i = 0; i < mapas.mons.count(); ++i)
         {
+            mapas.mons[i].killShrinked(mapas.mons, i);
 
             mapas.mons[i].damageOthersIfToxic(mapas.mons, i);
 
@@ -3262,10 +3257,10 @@ void Game::GetServerResurrectMsg(const unsigned char* buffer, int* index)
 void Game::populateClientDudes(int oldClientCount)
 {
 
-
     for (int i = 0; i < otherClientCount - oldClientCount; i++)
     {
         Dude n;
+        n.race = 4;
         mapas.mons.add(n);
         mapas.mons[mapas.mons.count()-1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
     }
@@ -3351,6 +3346,7 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
             n.setFrame((n.activeSkin[n.getCurrentWeapon()] + 1) * 4 - 2);
 
             n.id = clientIds[i];
+            n.race = 4;
             mapas.mons.add(n);
             mapas.mons[mapas.mons.count() - 1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
         }
@@ -4090,7 +4086,7 @@ void Game::init()
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-    MatrixOrtho(0.0, ScreenWidth / sys.screenScaleX, ScreenHeight / sys.screenScaleY, 0.0, -400, 400, OrthoMatrix);
+    MatrixOrtho(0.0, ScreenWidth / (float)sys.screenScaleX, ScreenHeight / (float)sys.screenScaleY, 0.0, -400, 400, OrthoMatrix);
 
     pics.load("pics/imagesToLoad.xml"); 
 

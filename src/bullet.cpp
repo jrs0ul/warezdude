@@ -11,7 +11,7 @@ void Bullet::update(const bool** map, int width, int height)
     if (!explode)
     {
 
-        if (!isMine)
+        if (type != WEAPONTYPE_MINES)
         {
             Vector3D vl = MakeVector(PROJECTILE_BULLET_SPEED, 0, angle);
             float difx = vl.x;
@@ -81,7 +81,7 @@ bool Bullet::onHit(DArray<Dude>& dudes)
 {
     int dmg = PROJECTILE_BULLET_DAMAGE;
 
-    if (isMine)
+    if (type == WEAPONTYPE_MINES)
     {
         dmg = PROJECTILE_MINE_DAMAGE;
     }
@@ -101,15 +101,26 @@ bool Bullet::onHit(DArray<Dude>& dudes)
                 (!dudes[i].shot) &&
                 (!dudes[i].spawn))
             {
-                if (!hit)
+
+                if (type == WEAPONTYPE_SHRINKER)
                 {
-                    hit = true;
+                    if (!dudes[i].shrinked)
+                    {
+                        dudes[i].shrinked = true;
+                        hit = true;
+                    }
                 }
+                else
+                {
+                    if (!hit)
+                    {
+                        hit = true;
+                    }
 
-                dudes[i].hit = true;
-                dudes[i].damage(dmg);
-                dudes[i].lastDamagedBy = parentID;
-
+                    dudes[i].hit = true;
+                    dudes[i].damage(dmg);
+                    dudes[i].lastDamagedBy = parentID;
+                }
             }
         }
     }

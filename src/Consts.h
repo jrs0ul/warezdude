@@ -19,6 +19,8 @@ const float ITEM_RADIUS                   = 8.f;
 const float PLAYER_RADIUS                 = 8.f;
 const int PLAYER_MELEE_DAMAGE             = 15;
 
+const int MONSTER_MELEE_DAMAGE            = 10;
+
 const float PROJECTILE_BULLET_SPEED       = 2.2f;
 const int PROJECTILE_BULLET_DAMAGE        = 3;
 const int PROJECTILE_MINE_DAMAGE          = 6;

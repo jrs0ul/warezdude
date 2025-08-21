@@ -434,6 +434,7 @@ bool CMap::load(const char* path, bool createItems, int otherplayers){
 
         Dude playeris;
         playeris.id = enemyCount;
+        playeris.race = 4;
         playeris.setWeaponCount(PLAYER_SIMULTANEOUS_WEAPONS);
         playeris.setSkinCount(PLAYER_MAX_SKIN_COUNT);
         playeris.setFrame((playeris.activeSkin[playeris.getCurrentWeapon()] + 1) * 4 - 2);
@@ -660,13 +661,22 @@ void CMap::draw(PicsContainer& pics, float r, float g, float b, int ScreenWidth,
 void CMap::drawEntities(PicsContainer& pics, int ScreenWidth, int ScreenHeight)
 {
 
-    for (int i = 0; i < enemyCount; i++)
+    for (unsigned i = 0; i < mons.count(); i++)
     {
-
-        mons[i].draw(pics, mons[i].race + 1, mapPos.x, mapPos.y, ScreenWidth, ScreenHeight);
-
+        if (mons[i].shrinked)
+        {
+            mons[i].draw(pics, mons[i].race + 1, mapPos.x, mapPos.y, ScreenWidth, ScreenHeight);
+        }
     }
 
+
+    for (unsigned i = 0; i < mons.count(); i++)
+    {
+        if (!mons[i].shrinked)
+        {
+            mons[i].draw(pics, mons[i].race + 1, mapPos.x, mapPos.y, ScreenWidth, ScreenHeight);
+        }
+    }
 }
 
 //--------------------------------------

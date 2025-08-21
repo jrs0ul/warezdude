@@ -1,0 +1,10 @@
+#pragma once
+
+enum WeaponTypes
+{
+    WEAPONTYPE_REGULAR,
+    WEAPONTYPE_MINES,
+    WEAPONTYPE_SPREAD,
+    WEAPONTYPE_SHRINKER
+};
+
