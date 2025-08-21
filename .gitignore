@@ -4,4 +4,11 @@
 src/*.swp
 src/data/*.swp
 
-editor/obj/*.obj
+
+editor/obj/.gitignore
+editor/*.dblite
+
+*.dblite
+
+build/*
+obj/*
