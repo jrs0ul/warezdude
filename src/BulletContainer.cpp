@@ -65,7 +65,7 @@ void CBulletContainer::update(const bool** colisionGrid, DArray<Dude>& dudes, in
             if (!buls[i].explode)
             {
                 buls[i].explode = true;
-                buls[i].frame = 2;
+                buls[i].frame = (buls[i].type == WEAPONTYPE_SHRINKER) ? BF_DUKE_SHRINKER_EXPLODE : BF_YELLOW_PEW_EXPLODE;
             }
         }
 

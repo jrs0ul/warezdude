@@ -24,6 +24,7 @@ const int MONSTER_MELEE_DAMAGE            = 10;
 const float PROJECTILE_BULLET_SPEED       = 2.2f;
 const int PROJECTILE_BULLET_DAMAGE        = 3;
 const int PROJECTILE_MINE_DAMAGE          = 6;
+const int PROJECTILE_MAX_LIFETIME         = 256;
 
 const int PROJECTILE_EXPLOSION_DURATION   = 5;
 

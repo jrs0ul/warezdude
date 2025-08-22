@@ -7,30 +7,40 @@
 
 class Dude;
 
+
+enum BulletFrames
+{
+    BF_YELLOW_PEW,
+    BF_MINE,
+    BF_YELLOW_PEW_EXPLODE,
+    BF_DUKE_SHRINKER,
+    BF_DUKE_SHRINKER_EXPLODE
+};
+
 class Bullet
 {
 public:
-    float       x;
-    float       y;
-    float       angle;
-    float       radius;
-    int         tim;
-    int         explodetim;
-    int         parentID;
-    int         frame;
-    WeaponTypes type;
-    bool        explode;
-    bool        exists;
+    float        x;
+    float        y;
+    float        angle;
+    float        radius;
+    int          lifeTime;
+    int          explodetim;
+    int          parentID;
+    BulletFrames frame;
+    WeaponTypes  type;
+    bool         explode;
+    bool         exists;
 
     Bullet()
     : x(0.f)
     , y(0.f)
     , angle(0.f)
     , radius(4.f)
-    , tim(0)
+    , lifeTime(0)
     , explodetim(0)
     , parentID(0)
-    , frame(0)
+    , frame(BF_YELLOW_PEW)
     , type(WEAPONTYPE_REGULAR)
     , explode(false)
     , exists(true)

@@ -435,7 +435,7 @@ bool Dude::shoot(bool useBullets, WeaponTypes weaponType, CBulletContainer* bulc
                     newbul.y          = y + (sin(angle) * 10.0f);
                     newbul.parentID   = id;
                     newbul.angle      = angle;
-                    newbul.frame      = 1;
+                    newbul.frame      = BF_MINE;
                     newbul.type       = WEAPONTYPE_MINES;
                     ammo--;
 
@@ -450,7 +450,7 @@ bool Dude::shoot(bool useBullets, WeaponTypes weaponType, CBulletContainer* bulc
                     newbul.y          = y + (sin(angle) * 10.0f);
                     newbul.parentID   = id;
                     newbul.angle      = angle;
-                    newbul.frame      = 3;
+                    newbul.frame      = BF_DUKE_SHRINKER;
                     newbul.type       = WEAPONTYPE_SHRINKER;
                     ammo--;
 
@@ -462,8 +462,8 @@ bool Dude::shoot(bool useBullets, WeaponTypes weaponType, CBulletContainer* bulc
                     {
                         Bullet newbul;
                         newbul.parentID = id;
-                        newbul.x          = x+(cos(-angle) * 8.0f);
-                        newbul.y          = y+(sin(angle) * 10.0f);
+                        newbul.x          = x + (cos(-angle) * 8.0f);
+                        newbul.y          = y + (sin(angle) * 10.0f);
                         newbul.angle      = angle + ((0.8f / 5) * i);
                         bulcon->add(newbul);
                     }

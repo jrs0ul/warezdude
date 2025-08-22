@@ -17,50 +17,52 @@ void Bullet::update(const bool** map, int width, int height)
             float difx = vl.x;
             float dify = vl.y;
 
+            const BulletFrames explosionFrame = (type == WEAPONTYPE_SHRINKER) ? BF_DUKE_SHRINKER_EXPLODE : BF_YELLOW_PEW_EXPLODE;
+
             if ((y + radius - dify < height * TILE_WIDTH) && (x + radius - dify < width * TILE_WIDTH) && 
                     (x -radius + difx > -16.f) && (y - radius - difx > -16.f))
             {
 
-                if (tim < 256)
+                if (lifeTime < PROJECTILE_MAX_LIFETIME)
                 {
 
                     int yidx = (int)round((y - (dify * 1.5f)) / TILE_WIDTH);
                     int xidx = (int)round((x + (difx * 1.5f)) / TILE_WIDTH);
 
-                    if ((yidx >= height) || (xidx >= width))
+                    if ((yidx >= height) || (xidx >= width)) // collide with the edge of the map
                     {
-                        frame = 2;
+                        frame = explosionFrame;
                         explode = true;
                         return;
                     }
 
                     if (!map[yidx][xidx])
                     {
-                        tim += 2;
+                        lifeTime += 2;
 
-                        x +=difx;
+                        x += difx;
                         y -= dify;
                     }
-                    else
+                    else  //  bump into obstacle
                     {
-                        frame = 2;
+                        frame = explosionFrame;
                         explode = true;
 
                     }
                 }
-                else
+                else  //  end of lifetime
                 {
-                    frame = 2;
+                    frame = explosionFrame;
                     explode = true;
                 }
             }
             else
             {
 
-                frame = 2;
+                frame = explosionFrame;
                 explode = true;
             }
-        }
+        }  //  not mines
     }
     else
     {
@@ -69,10 +71,10 @@ void Bullet::update(const bool** map, int width, int height)
         if (explodetim >= PROJECTILE_EXPLOSION_DURATION)
         {
             explodetim = 0;
-            tim = 0;
+            lifeTime = 0;
             exists = false;
             explode = false;
-            frame = 0;
+            frame = BF_YELLOW_PEW;
         }
     }
 }
