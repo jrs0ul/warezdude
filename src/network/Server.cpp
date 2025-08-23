@@ -5,6 +5,14 @@
 #endif
 
 
+Server::~Server()
+{
+    if (isRunning())
+    {
+        shutDown();
+    }
+}
+
 //--------------------------------------------------------------
 unsigned Server::clientCount()
 {

@@ -20,6 +20,7 @@
 #include "network/Server.h"
 #include "network/Client.h"
 #include "BulletContainer.h"
+#include "NetworkCommands.h"
 #include "Inventory.h"
 #include "Collection.h"
 #include "GameData.h"
@@ -53,39 +54,11 @@ enum NetworkingModes
     NETMODE_CLIENT
 };
 
-enum NetworkCommands
+
+struct ClientLoot
 {
-    NET_NOP = 0,
-
-    NET_CLIENT_MSG_CONNECT = 1,
-    NET_CLIENT_MSG_CHARACTER_DATA,
-    NET_CLIENT_MSG_WEAPON_SHOT,
-    NET_CLIENT_MSG_ITEM,
-    NET_CLIENT_MSG_DOOR,
-    NET_CLIENT_MSG_NEXT_LEVEL,
-    NET_CLIENT_MSG_MELEE_ATTACK,
-    NET_CLIENT_MSG_QUIT,
-    NET_CLIENT_MSG_COOP_RESURRECT,
-    NET_CLIENT_MSG_PONG = 20,
-
-    NET_SERVER_MSG_CHARACTER_DATA,
-    NET_SERVER_MSG_REMOVE_CHARACTER,
-    NET_SERVER_MSG_SERVER_INFO,
-    NET_SERVER_MSG_MAP_DATA,
-    NET_SERVER_MSG_KILL_CHARACTER,
-    NET_SERVER_MSG_FRAG,
-    NET_SERVER_MSG_WEAPON_SHOT,
-    NET_SERVER_MSG_ITEM,
-    NET_SERVER_MSG_DOOR,
-    NET_SERVER_MSG_NEW_ITEM,
-    NET_SERVER_MSG_MELEE_ATTACK,
-    NET_SERVER_MSG_PING,
-    NET_SERVER_MSG_SHUTTING_DOWN,
-    NET_SERVER_MSG_SYNC_TIMER,
-    NET_SERVER_MSG_COOP_GAME_OVER,
-    NET_SERVER_MSG_COOP_RESURRECT
+    DArray<int> cartridges;
 };
-
 
 class Game
 {
@@ -106,6 +79,9 @@ class Game
     Intro intro;
 
     DArray<int> loot;
+
+    DArray<ClientLoot> clientLoot; // for server
+
     DArray<int> stash;
     Inventory inventory;
 
@@ -165,7 +141,7 @@ public:
     MultiplayerModes netGameState;
 
     char EditText[255];
-    DArray<int> clientIds; // how it is in server
+    DArray<int> clientIds; // how it is in server, info for the new client
 
     TouchData   touches;
 
@@ -235,8 +211,10 @@ private:
     void HandleInteractionsWithDeadPlayers();
     void CheckForExit();
     int  slimeReaction(int index);
+    void SendServerEquipedCartridgeToAllClients(unsigned dudeIdx, int equipedGame);
+    void SendClientEquipedCartridgeIdxToServer(unsigned index);
     void SendClientMeleeImpulseToServer(int victimID, int hp);
-    void SendClientShootImpulseToServer();
+    void SendClientShootImpulseToServer(WeaponTypes weaponType);
     void SendClientCoords();
     void SendClientDoorState(int doorx,int doory, unsigned char doorframe);
     void SendResurrectMessageToClient(unsigned clientIdx, unsigned playerIdx);
@@ -275,13 +253,19 @@ private:
     void KillEnemy(unsigned ID);
     int FPS();
     void DrawSomeText();
+    void ServerParseClientGameEquip(const unsigned char* buffer, unsigned* bufferindex, int clientIndex);
     void ServerParseCharacterData(const unsigned char* bufer, unsigned * buferindex, int clientIndex);
     void ServerParseWeaponShot(const unsigned char* buffer, unsigned * bufferindex, int clientIndex);
     void ServerParseClientResurrect(unsigned* bufferindex, int clientIndex);
     void ServerSendTimerSync(unsigned clientIdx);
     void GetServerTimeMsg(const unsigned char* buffer, int * bufferindex);
     void GetServerCoopGameOverMsg(int* bufferindex);
+    void GetServerEquipedGame(const unsigned char* buffer, int * bufferindex);
+
     void GetCharData(const unsigned char* bufer, int bufersize, int* index);
+
+    void equipCartridge(Dude* dude, int game);
+
     void DrawMiniMap(int x, int y);
     void LoadMap(const char* mapname, int otherplayers);
     void HelpScreenLogic();

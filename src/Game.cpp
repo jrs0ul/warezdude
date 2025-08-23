@@ -1195,6 +1195,51 @@ void Game::SendBulletImpulse(int monsterindex, int ammo, int clientIndex, unsign
     serveris.sendData(clientIndex, buf, index);
 }
 //------------------------------------------
+void Game::SendServerEquipedCartridgeToAllClients(unsigned dudeIdx, int equipedGame)
+{
+
+    for (unsigned i = 0; i < serveris.clientCount(); ++i)
+    {
+        if (dudeIdx - mapas.enemyCount == i + 1)
+        {
+            continue;
+        }
+
+        int len = 0;
+        char buffer[MAX_MESSAGE_DATA_SIZE];
+        strcpy(buffer, NET_HEADER);
+        len += NET_HEADER_LEN;
+        buffer[len] = NET_SERVER_MSG_GAME_EQUIPED;
+        ++len;
+        memcpy(&buffer[len], &dudeIdx, sizeof(unsigned));
+        len += sizeof(unsigned);
+        memcpy(&buffer[len], &equipedGame, sizeof(int));
+        len += sizeof(int);
+
+        serveris.sendData(i, buffer, len);
+
+    }
+}
+
+
+//------------------------------------------
+void Game::SendClientEquipedCartridgeIdxToServer(unsigned index)
+{
+
+    int len = 0;
+    char buffer[MAX_MESSAGE_DATA_SIZE];
+    strcpy(buffer, NET_HEADER);
+    len += NET_HEADER_LEN;
+
+    buffer[len] = NET_CLIENT_MSG_GAME_EQUIPED;
+    ++len;
+    memcpy(&buffer[len], &index, sizeof(unsigned));
+    len += sizeof(unsigned);
+
+    client.sendData(buffer, len);
+}
+
+//------------------------------------------
 void Game::SendClientMeleeImpulseToServer(int victimID, int hp)
 {
     char buferis[MAX_MESSAGE_DATA_SIZE];
@@ -1210,7 +1255,7 @@ void Game::SendClientMeleeImpulseToServer(int victimID, int hp)
     client.sendData(buferis, index);
 }
 //----------------------------------------
-void Game::SendClientShootImpulseToServer()
+void Game::SendClientShootImpulseToServer(WeaponTypes weaponType)
 {
 
     int clientIndex = (netMode == NETMODE_CLIENT)? (clientMyIndex + 1) : 0;
@@ -1226,9 +1271,10 @@ void Game::SendClientShootImpulseToServer()
     ++pos;
     memcpy(&buf[pos], &(player->ammo), sizeof(int));
     pos += sizeof(int);
-    unsigned char isMine = 0;
 
-    memcpy(&buf[pos], &isMine, sizeof(unsigned char));
+    unsigned char type = (unsigned char)weaponType;
+
+    memcpy(&buf[pos], &type, sizeof(unsigned char));
     pos += sizeof(unsigned char);
     client.sendData(buf, pos);
 }
@@ -2192,7 +2238,7 @@ void Game::HandlePlayerAttacks(Dude* player, int clientIndex)
                     }
 
                 }
-                if (player->equipedGame == ITEM_GAME_DUKE_ATOMIC)
+                else if (player->equipedGame == ITEM_GAME_DUKE_ATOMIC)
                 {
                     weaponType = WEAPONTYPE_SHRINKER;
                     stillHaveAmmo = player->shoot(true, WEAPONTYPE_SHRINKER, &bulbox);
@@ -2239,7 +2285,7 @@ void Game::HandlePlayerAttacks(Dude* player, int clientIndex)
         {
             if (netMode == NETMODE_CLIENT)
             {
-                SendClientShootImpulseToServer();
+                SendClientShootImpulseToServer(weaponType);
             }
 
 
@@ -2308,24 +2354,18 @@ void Game::CoreGameLogic()
                 loot.add(player->equipedGame);
             }
 
-            player->equipedGame = loot[inventory.getSelected()];
 
-            if (player->equipedGame == ITEM_GAME_FART_NIGHT)
+            if (netMode == NETMODE_SERVER)
             {
-                player->setupToxicParticles();
+                SendServerEquipedCartridgeToAllClients(mapas.enemyCount, loot[inventory.getSelected()]);
             }
-            else
+            else if (netMode == NETMODE_CLIENT)
             {
-                player->ps.stop();
-            }
-
-            for (int i = 0; i < 2; ++i)
-            {
-                player->activeSkin[i] = gameData.getGame(player->equipedGame - ITEM_GAME_NINJA_MAN)->skins[i];
+                SendClientEquipedCartridgeIdxToServer(inventory.getSelected());
             }
 
+            equipCartridge(player, loot[inventory.getSelected()]);
 
-            player->setFrame(player->activeSkin[player->getCurrentWeapon()] * 4);
             loot.remove(inventory.getSelected());
         }
     }
@@ -3333,6 +3373,7 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
 
         Dude d;
         d.id = mapas.enemyCount;
+        d.race = MONSTER_RACE_PLAYER;
         d.setWeaponCount(PLAYER_SIMULTANEOUS_WEAPONS);
         d.setSkinCount(PLAYER_MAX_SKIN_COUNT);
         mapas.addMonster(d);
@@ -3378,6 +3419,38 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
         memcpy(&itm.value, &bufer[*index], sizeof(int));
         *index += sizeof(int);
         mapas.addItem(itm.x, itm.y, itm.value);
+    }
+
+}
+//------------------------------------
+void Game::ServerParseClientGameEquip(const unsigned char* buffer, unsigned* bufferindex, int clientIndex)
+{
+    ++(*bufferindex);
+
+    if (clientIndex == -1)
+    {
+        *bufferindex += sizeof(unsigned);
+        return;
+    }
+
+    unsigned cartIdx = 0;
+    memcpy(&cartIdx, &buffer[*bufferindex], sizeof(unsigned));
+    *bufferindex += sizeof(unsigned);
+
+    int backup = 0;
+    if (mapas.mons[clientIndex].equipedGame)
+    {
+        backup = mapas.mons[clientIndex].equipedGame;
+    }
+
+    int game = clientLoot[clientIndex].cartridges[cartIdx];
+
+    equipCartridge(&mapas.mons[clientIndex], game);
+    clientLoot[clientIndex].cartridges.remove(cartIdx);
+
+    if (backup)
+    {
+        clientLoot[clientIndex].cartridges.add(backup);
     }
 
 }
@@ -3643,6 +3716,9 @@ void Game::ParseMessagesServerGot()
                         int zeroFrags = 0;
                         fragTable.add(zeroFrags);
 
+                        ClientLoot lt;
+                        clientLoot.add(lt);
+
 
                         ClientFootprint fp;
                         fp.address = msg->senderAddress;
@@ -3660,17 +3736,22 @@ void Game::ParseMessagesServerGot()
 
                     } break;
 
-                case NET_CLIENT_MSG_CHARACTER_DATA: ServerParseCharacterData(msg->data, &index, clientIdx);   break;
-                case NET_CLIENT_MSG_WEAPON_SHOT:    ServerParseWeaponShot(msg->data, &index, clientIdx);      break;
-                case NET_CLIENT_MSG_COOP_RESURRECT: ServerParseClientResurrect(&index, clientIdx);            break;
-                case NET_CLIENT_MSG_ITEM:
+                case NET_CLIENT_MSG_GAME_EQUIPED   : ServerParseClientGameEquip(msg->data, &index, clientIdx); break;
+                case NET_CLIENT_MSG_CHARACTER_DATA : ServerParseCharacterData(msg->data, &index, clientIdx);   break;
+                case NET_CLIENT_MSG_WEAPON_SHOT    : ServerParseWeaponShot(msg->data, &index, clientIdx);      break;
+                case NET_CLIENT_MSG_COOP_RESURRECT : ServerParseClientResurrect(&index, clientIdx);            break;
+                case NET_CLIENT_MSG_ITEM           :
                     {
                         ++index;
                         int itmindex = 0;
                         memcpy(&itmindex, &(msg->data)[index], sizeof(int));
                         index+=sizeof(int);
 
-                        
+                        if (mapas.items[itmindex].value > ITEM_MEDKIT)
+                        {
+                            clientLoot[clientIdx].cartridges.add(mapas.items[itmindex].value);
+                        }
+
                         mapas.removeItem(itmindex);
 
                         for (unsigned int a = 0; a < serveris.clientCount(); a++)
@@ -3749,6 +3830,7 @@ void Game::ParseMessagesServerGot()
                         }
 
                         serveris.removeClient(clientIdx);
+                        clientLoot.remove(clientIdx);
                         mapas.mons.remove(mapas.enemyCount + clientIdx + 1);
                     } break;
 
@@ -3807,6 +3889,46 @@ void Game::GetServerCoopGameOverMsg(int* bufferindex)
 {
     ++(*bufferindex);
     gameOver = true;
+}
+//-----------------------------
+void Game::equipCartridge(Dude* dude, int game)
+{
+    dude->equipedGame = game;
+
+    if (dude->equipedGame == ITEM_GAME_FART_NIGHT)
+    {
+        dude->setupToxicParticles();
+    }
+    else
+    {
+        dude->ps.stop();
+    }
+
+    for (int i = 0; i < 2; ++i)
+    {
+        dude->activeSkin[i] = gameData.getGame(dude->equipedGame - ITEM_GAME_NINJA_MAN)->skins[i];
+    }
+
+
+    dude->setFrame(dude->activeSkin[dude->getCurrentWeapon()] * 4);
+}
+
+
+//------------------------------
+void Game::GetServerEquipedGame(const unsigned char* buffer, int * bufferindex)
+{
+    ++(*bufferindex);
+    unsigned idx = 0;
+    memcpy(&idx, &buffer[*bufferindex], sizeof(unsigned));
+    *bufferindex += sizeof(unsigned);
+    int game = 0;
+    memcpy(&game, &buffer[*bufferindex], sizeof(int));
+    *bufferindex += sizeof(int);
+
+    assert(idx < mapas.mons.count());
+
+    Dude* dude = &mapas.mons[idx];
+    equipCartridge(dude, game);
 }
 //------------------------------
 void Game::ParseMessagesClientGot()
@@ -3873,9 +3995,10 @@ void Game::ParseMessagesClientGot()
                         return;
                     } break;
 
+                case NET_SERVER_MSG_GAME_EQUIPED  :  GetServerEquipedGame(msg->data, &index);  break;
                 case NET_SERVER_MSG_COOP_RESURRECT:  GetServerResurrectMsg(msg->data, &index); break;
-                case NET_SERVER_MSG_SERVER_INFO:     GetMapInfo(msg->data, &index);            break;
-                case NET_SERVER_MSG_SYNC_TIMER:      GetServerTimeMsg(msg->data, &index);      break;
+                case NET_SERVER_MSG_SERVER_INFO   :  GetMapInfo(msg->data, &index);            break;
+                case NET_SERVER_MSG_SYNC_TIMER    :  GetServerTimeMsg(msg->data, &index);      break;
                 case NET_SERVER_MSG_COOP_GAME_OVER:  GetServerCoopGameOverMsg(&index);         break;
 
                 case NET_SERVER_MSG_MAP_DATA:

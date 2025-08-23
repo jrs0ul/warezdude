@@ -34,6 +34,7 @@ class Server
 
 public:
 
+    ~Server();
 
     unsigned clientCount();
 
