@@ -12,6 +12,14 @@ class PicsContainer;
 class CMap;
 
 
+enum MonsterRaces
+{
+    MONSTER_RACE_BULL = 1,
+    MONSTER_RACE_GOBBLER,
+    MONSTER_RACE_COP,
+    MONSTER_RACE_PLAYER
+};
+
 class Dude
 {
         int hp;

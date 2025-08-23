@@ -1400,8 +1400,8 @@ void Game::MonsterAI(int index)
 
         if ((mapas.mons[index].enemyseen))
         {
-            if (mapas.mons[index].race == 3 && !mapas.mons[index].shrinked)
-            {//jei mentas, tai pasaudom
+            if (mapas.mons[index].race == MONSTER_RACE_COP && !mapas.mons[index].shrinked)
+            {
                 mapas.mons[index].enemyseen = false;
 
                 if (mapas.mons[index].canAtack)
@@ -1466,7 +1466,7 @@ void Game::MonsterAI(int index)
 
         //eats items
 
-        if (mapas.mons[index].race == 2)
+        if (mapas.mons[index].race == MONSTER_RACE_GOBBLER)
         {
             for (unsigned i=0; i < mapas.items.count(); i++)
             {
@@ -1585,7 +1585,7 @@ void Game::GenerateTheMap(int currentHp, int currentAmmo)
     player->id = mapas.enemyCount;
     player->shot = false;
     player->setHP(currentHp);
-    player->race = 4;
+    player->race = MONSTER_RACE_PLAYER;
     player->ammo = currentAmmo;
     player->setWeaponCount(PLAYER_SIMULTANEOUS_WEAPONS);
     player->setSkinCount(PLAYER_MAX_SKIN_COUNT);
@@ -3260,7 +3260,7 @@ void Game::populateClientDudes(int oldClientCount)
     for (int i = 0; i < otherClientCount - oldClientCount; i++)
     {
         Dude n;
-        n.race = 4;
+        n.race = MONSTER_RACE_PLAYER;
         mapas.mons.add(n);
         mapas.mons[mapas.mons.count()-1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
     }
@@ -3346,7 +3346,7 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
             n.setFrame((n.activeSkin[n.getCurrentWeapon()] + 1) * 4 - 2);
 
             n.id = clientIds[i];
-            n.race = 4;
+            n.race = MONSTER_RACE_PLAYER;
             mapas.mons.add(n);
             mapas.mons[mapas.mons.count() - 1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
         }
@@ -3636,8 +3636,9 @@ void Game::ParseMessagesServerGot()
                         printf("CLIENT CONNECTED!\n");
                         ++index;
 
-                        Dude naujas;
-                        mapas.mons.add(naujas);
+                        Dude newclient;
+                        newclient.race = MONSTER_RACE_PLAYER;
+                        mapas.mons.add(newclient);
                         mapas.mons[mapas.mons.count() - 1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
                         int zeroFrags = 0;
                         fragTable.add(zeroFrags);
