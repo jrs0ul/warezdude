@@ -2807,9 +2807,9 @@ void Game::DrawTitleScreen()
     char buf[80];   
 
     sprintf(buf,"Jrs%dul",0);
-    WriteText(540,10, pics, 10, buf);
-    sprintf(buf,"%d",2007);
-    WriteText(550,30, pics, 10, buf);
+    WriteText(sys.ScreenWidth - 50, 10, pics, 10, buf, 0.5f, 0.5f);
+    sprintf(buf,"%d",2025);
+    WriteText(sys.ScreenWidth - 40, 25, pics, 10, buf, 0.5f, 0.5f);
 
     if (mainmenu.active())
     {
@@ -2881,20 +2881,20 @@ void Game::DrawTitleScreen()
 //------------------------------------
 void Game::DrawEndScreen()
 {
-    pics.draw(14, 320, 240, 0, true,  1.25f,1.9f);
+    pics.draw(14, 320, 180, 0, true);
     char levelstr[255];
 
     if (netGameState == MPMODE_DEATHMATCH)
     {
         sprintf(levelstr, "your frags: %d", frags);
-        WriteText(20, 40, pics, 10, levelstr);
+        WriteShadedText(20, 40, pics, 10, levelstr);
 
     }
     else
     {
         sprintf(levelstr, "Levels completed: %d", mapai.current);
-        WriteText(20, 40, pics, 10, levelstr);
-        WriteText(20, 80, pics, 10, "Your loot:");
+        WriteShadedText(20, 40, pics, 10, levelstr);
+        WriteShadedText(20, 80, pics, 10, "Your loot:");
 
 
         int itemY = 100;
@@ -2915,7 +2915,7 @@ void Game::DrawEndScreen()
         }
     }
 
-    WriteText(260, sys.ScreenHeight - 50, pics, 10, "Press SPACE to continue...");
+    WriteShadedText(260, sys.ScreenHeight - 30, pics, 10, "Press SPACE to continue...");
 }
 //------------------------------------
 void Game::DrawGameplay()
@@ -3464,6 +3464,7 @@ void Game::ServerParseClientGameEquip(const unsigned char* buffer, unsigned* buf
         clientLoot[clientIndex].cartridges.add(backup);
     }
 
+    SendServerEquipedCartridgeToAllClients(entityIdx, game);
 }
 //----------------------------------
 void Game::ServerParseCharacterData(const unsigned char* bufer, unsigned * buferindex, int clientIndex)
