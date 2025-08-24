@@ -22,14 +22,15 @@ enum MonsterRaces
 
 class Dude
 {
+        Vector3D oldPos[ENTITY_POSITION_HISTORY_LEN];
+        Particle2DSystem ps;
         int hp;
         int weaponCount;
         int skinCount;
         int currentWeapon;
+        int shrinkTimer;
         unsigned char frame;
 public:
-        Particle2DSystem ps;
-        Vector3D oldPos[ENTITY_POSITION_HISTORY_LEN];
         float x;
         float y;
         float angle;
@@ -78,6 +79,7 @@ public:
         , weaponCount(1)
         , skinCount(1)
         , currentWeapon(0)
+        , shrinkTimer(0)
         , frame(0)
         , x(dx)
         , y(dy)
@@ -152,8 +154,9 @@ public:
         void setFrame(unsigned char newFrame){frame = newFrame;}
         unsigned char getFrame(){return frame;}
         int getCurrentWeapon(){return currentWeapon;}
-        void damageOthersIfToxic(DArray<Dude>& dudes, unsigned yourIndex);
         void killShrinked(DArray<Dude>& dudes, unsigned yourIndex);
+        void stopParticles(){ps.stop();}
+        bool shrink();
 
 private:
         bool movement(Vector3D dir,

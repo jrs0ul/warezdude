@@ -106,9 +106,8 @@ bool Bullet::onHit(DArray<Dude>& dudes)
 
                 if (type == WEAPONTYPE_SHRINKER)
                 {
-                    if (!dudes[i].shrinked)
+                    if (dudes[i].shrink())
                     {
-                        dudes[i].shrinked = true;
                         hit = true;
                     }
                 }

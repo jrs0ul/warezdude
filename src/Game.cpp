@@ -2554,8 +2554,8 @@ void Game::CoreGameLogic()
         }
     }
 
-    SoundSystem::getInstance()->setupListener(Vector3D(player->x, 0, player->y).v,
-                                              Vector3D(player->x, 0, player->y).v);
+    SoundSystem* ss = SoundSystem::getInstance();
+    ss->setupListener(Vector3D(player->x, 0, player->y).v, Vector3D(player->x, 0, player->y).v);
 
     ItemPickup();
 
@@ -2597,8 +2597,7 @@ void Game::CoreGameLogic()
 
             if (!mapas.mons[i].hit)
             {
-                AdaptSoundPos(10, mapas.mons[i].x, mapas.mons[i].y);
-                SoundSystem::getInstance()->playsound(10);
+                PlaySoundAt(ss, mapas.mons[i].x, mapas.mons[i].y, 10);
             }
         }
     }
@@ -2641,7 +2640,29 @@ void Game::CoreGameLogic()
         {
             mapas.mons[i].killShrinked(mapas.mons, i);
 
-            mapas.mons[i].damageOthersIfToxic(mapas.mons, i);
+            if (mapas.mons[i].equipedGame == ITEM_GAME_FART_NIGHT)
+            {
+
+                for (unsigned a = 0; a < mapas.mons.count(); ++a)
+                {
+                    if (i != a && !mapas.mons[a].shot && !mapas.mons[a].spawn && !mapas.mons[a].hit)
+                    {
+                        if (CirclesColide(mapas.mons[i].x, mapas.mons[i].y, FARTNIGHT_RADIUS, 
+                                          mapas.mons[a].x, mapas.mons[a].y, 10))
+                        {
+                            mapas.mons[a].damage(FARTNIGHT_DAMAGE);
+                            mapas.mons[a].lastDamagedBy = mapas.mons[i].id;
+                            mapas.mons[a].hit = true;
+
+                            if ( a > (unsigned)mapas.enemyCount)
+                            {
+                                SendServerMeleeImpulseToClient(a - mapas.enemyCount - 1, a, mapas.mons[a].getHP(), mapas.mons[i].id);
+                            }
+                        }
+                    }
+                }
+            }
+
 
             if ((mapas.mons[i].getHP() <= 0) && (!mapas.mons[i].shot))
             {
@@ -2730,29 +2751,16 @@ void Game::DrawHelp()
 void Game::DrawMissionObjectives()
 {
     char buf[50];
-    if (mapas.misionItems)
-    {
-        sprintf(buf, "%d collectibles here",mapas.misionItems);
-        WriteText(sys.ScreenWidth / 2 - 100,
-                  sys.ScreenHeight / 2 + 10,
-                  pics,
-                  10,
-                  buf,
-                  1.0f,1.0f,
-                  COLOR(1.0f,0.0,0.0, 1.f),
-                  COLOR(1.0f,0.0,0.0, 1.f)
-                  );
-    }
-
-    sprintf(buf,"Time remaining:%d:%d",mapas.timeToComplete/60,mapas.timeToComplete-60*(mapas.timeToComplete/60));
-    WriteText(sys.ScreenWidth/2 - 100, 
-              sys.ScreenHeight/2 + 50,
+   
+    sprintf(buf, "Time remaining:%d:%d", mapas.timeToComplete / 60, mapas.timeToComplete - 60 * (mapas.timeToComplete / 60));
+    WriteText(sys.ScreenWidth / 2 - 100, 
+              sys.ScreenHeight / 2 + 50,
               pics,
               10,
               buf,
-              1.0f,1.0,
-              COLOR(1.0,0.0,0.0, 1.f),
-              COLOR(1.0,0.0,0.0, 1.f)
+              1.f, 1.f,
+              COLOR(1.f, 0.f, 0.f, 1.f),
+              COLOR(1.f, 0.f, 0.f, 1.f)
               );
 
 
@@ -3437,15 +3445,18 @@ void Game::ServerParseClientGameEquip(const unsigned char* buffer, unsigned* buf
     memcpy(&cartIdx, &buffer[*bufferindex], sizeof(unsigned));
     *bufferindex += sizeof(unsigned);
 
+
+    const int entityIdx = mapas.enemyCount + 1 + clientIndex;
+
     int backup = 0;
-    if (mapas.mons[clientIndex].equipedGame)
+    if (mapas.mons[entityIdx].equipedGame)
     {
-        backup = mapas.mons[clientIndex].equipedGame;
+        backup = mapas.mons[entityIdx].equipedGame;
     }
 
-    int game = clientLoot[clientIndex].cartridges[cartIdx];
+    const int game = clientLoot[clientIndex].cartridges[cartIdx];
 
-    equipCartridge(&mapas.mons[clientIndex], game);
+    equipCartridge(&mapas.mons[entityIdx], game);
     clientLoot[clientIndex].cartridges.remove(cartIdx);
 
     if (backup)
@@ -3901,7 +3912,7 @@ void Game::equipCartridge(Dude* dude, int game)
     }
     else
     {
-        dude->ps.stop();
+        dude->stopParticles();
     }
 
     for (int i = 0; i < 2; ++i)

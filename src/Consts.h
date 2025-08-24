@@ -28,6 +28,12 @@ const int PROJECTILE_MAX_LIFETIME         = 256;
 
 const int PROJECTILE_EXPLOSION_DURATION   = 5;
 
+const int MAX_SHRINKED_TIMER              = 2000;
+const int SHRINKED_TIMER_STEP             = 1;
+
+const int FARTNIGHT_DAMAGE                = 5;
+const float FARTNIGHT_RADIUS              = 50;
+
 const int ENTITY_INITIAL_AMMO             = 20;
 const int ENTITY_INITIAL_HP               = 100;
 

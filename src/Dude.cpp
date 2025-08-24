@@ -108,7 +108,18 @@ void Dude::update()
         oldPos[i - 1] = oldPos[i];
     }
 
+
     oldPos[ENTITY_POSITION_HISTORY_LEN - 1] = old;
+
+    if (shrinked)
+    {
+        shrinkTimer -= SHRINKED_TIMER_STEP;
+
+        if (shrinkTimer <= 0)
+        {
+            shrinked = false;
+        }
+    }
 
     ps.updateSystem();
 }
@@ -581,27 +592,6 @@ void Dude::setupToxicParticles()
     ps.setPos(0, 0, 0);
     ps.start();
 }
-//-----------------------------
-void Dude::damageOthersIfToxic(DArray<Dude>& others, unsigned yourIndex)
-{
-    if (equipedGame != ITEM_GAME_FART_NIGHT)
-    {
-        return;
-    }
-
-    for (unsigned i = 0; i < others.count(); ++i)
-    {
-        if (i != yourIndex && !others[i].shot && !others[i].spawn && !others[i].hit)
-        {
-            if (CirclesColide(x, y, 50, others[i].x, others[i].y, 10))
-            {
-                others[i].damage(5);
-                others[i].lastDamagedBy = id;
-                others[i].hit = true;
-            }
-        }
-    }
-}
 //---------------------------------
 void Dude::killShrinked(DArray<Dude>& dudes, unsigned yourIndex)
 {
@@ -622,4 +612,17 @@ void Dude::killShrinked(DArray<Dude>& dudes, unsigned yourIndex)
             }
         }
     }
+}
+//------------------------------
+bool Dude::shrink()
+{
+    if (!shrinked)
+    {
+        shrinked = true;
+        shrinkTimer = MAX_SHRINKED_TIMER;
+        return true;
+    }
+
+    return false;
+
 }
