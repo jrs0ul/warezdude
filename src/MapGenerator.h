@@ -15,13 +15,23 @@ struct BSPTreeNode
     int starty;
     int width;
     int height;
+
+    int roomPosX;
+    int roomPosY;
+    int roomWidth;
+    int roomHeight;
+
     DivisionType divType;
 
     BSPTreeNode* left;
     BSPTreeNode* right;
 
     BSPTreeNode()
-    : divType(DIV_NONE)
+    : roomPosX(-1)
+    , roomPosY(-1)
+    , roomWidth(-1)
+    , roomHeight(-1)
+    , divType(DIV_NONE)
     , left(nullptr)
     , right(nullptr)
     {
@@ -49,8 +59,9 @@ public:
 
 private:
     void divide(BSPTreeNode* parent);
-    void makeRoom(BSPTreeNode* parent, CMap* map);
-    void addTunels(BSPTreeNode* parent, CMap* map);
+    void makeRoom(BSPTreeNode* node, CMap* map);
+    void connectRooms(BSPTreeNode* node, CMap* map);
+
     void erase(BSPTreeNode* parent);
 
 private:
