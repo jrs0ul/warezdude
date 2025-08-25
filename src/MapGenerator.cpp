@@ -105,12 +105,12 @@ void MapGenerator::makeRoom(BSPTreeNode* parent, CMap* map)
     if (parent->left == nullptr && parent->right == nullptr) // this is the leaf node
     {
 
-        int roomPosY = 1;
 
         int maxRandomHeightAddition = (parent->height - MIN_ROOM_HEIGHT < 0) ? 0 : parent->height - MIN_ROOM_HEIGHT;
         int maxRandomWidthAddition = (parent->width - MIN_ROOM_WIDTH < 0) ? 0 : parent->width - MIN_ROOM_WIDTH;
-        int roomHeight =  (maxRandomHeightAddition > 0) ? MIN_ROOM_HEIGHT  + rand() % maxRandomHeightAddition : MIN_ROOM_HEIGHT;
+        int roomHeight = (maxRandomHeightAddition) ? MIN_ROOM_HEIGHT  + rand() % maxRandomHeightAddition : MIN_ROOM_HEIGHT;
         int roomWidth = (maxRandomWidthAddition) ? MIN_ROOM_WIDTH + rand() % maxRandomWidthAddition : MIN_ROOM_WIDTH;
+        const int roomPosY = (parent->height - roomHeight)? rand() % (parent->height - roomHeight) : 0;
 
         for (int i = parent->starty + roomPosY; i < parent->starty + roomPosY + roomHeight; ++i)
         {
@@ -119,7 +119,7 @@ void MapGenerator::makeRoom(BSPTreeNode* parent, CMap* map)
                 if (i < (int)map->height() && a < (int)map->width())
                 {
 
-                    if (a == parent->startx && i > parent->starty)
+                    if (a == parent->startx)
                     {
                         map->tiles[i][a] = TILE_V_WALL;
                     }
@@ -129,38 +129,31 @@ void MapGenerator::makeRoom(BSPTreeNode* parent, CMap* map)
                     }
                     else
                     {
-                        map->tiles[i][a] = 37;
+                        map->tiles[i][a] = TILE_CONCRETE_FLOOR;
                     }
                 }
             }
         }
 
-        int roomTopY = parent->starty;
+        const int roomTopY    = parent->starty + roomPosY;
+        const int roomBottomY = parent->starty + roomPosY + roomHeight - 1;
 
 
-        for (int a = parent->startx + 1; a < parent->startx + roomWidth - 1; ++a)
+        //horizontal walls
+        for (int a = parent->startx; a < parent->startx + roomWidth; ++a)
         {
-            if (roomTopY < (int)map->height() && a < (int)map->width())
+            if (roomTopY < (int)map->height() && a < (int)map->width() && roomBottomY < (int)map->height())
             {
                 map->tiles[roomTopY][a] = TILE_H_WALL;
-            }
-        }
-
-        int roomBottomY = parent->starty + roomHeight;
-
-        for (int a = parent->startx + 1; a < parent->startx + roomWidth - 1; ++a)
-        {
-            if (roomBottomY < (int)map->height() && a < (int)map->width())
-            {
                 map->tiles[roomBottomY][a] = TILE_H_WALL;
             }
         }
 
         //corners
-        map->tiles[parent->starty][parent->startx] = 22;
-        map->tiles[parent->starty][parent->startx + roomWidth - 1] = 23;
-        map->tiles[roomBottomY][parent->startx + roomWidth - 1] = 25;
-        map->tiles[roomBottomY][parent->startx] = 24;
+        map->tiles[parent->starty + roomPosY][parent->startx]                 = TILE_CORNER_TL;
+        map->tiles[parent->starty + roomPosY][parent->startx + roomWidth - 1] = TILE_CORNER_TR;
+        map->tiles[roomBottomY][parent->startx + roomWidth - 1]    = TILE_CORNER_BR;
+        map->tiles[roomBottomY][parent->startx]                    = TILE_CORNER_BL;
 
         return;
     }
@@ -174,6 +167,7 @@ void MapGenerator::makeRoom(BSPTreeNode* parent, CMap* map)
 
 void MapGenerator::addTunels(BSPTreeNode* parent, CMap* map)
 {
+    //return;
     switch(parent->divType)
     {
         case DIV_NONE:
