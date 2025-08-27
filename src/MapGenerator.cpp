@@ -1,6 +1,7 @@
 #include "MapGenerator.h"
 #include <cstdio>
 #include <cstdlib>
+#include "Vectors.h"
 #include "map.h"
 
 MapGenerator::~MapGenerator()
@@ -13,8 +14,13 @@ MapGenerator::~MapGenerator()
 void MapGenerator::generate(CMap* map)
 {
     divide(&root);
+    int depth = getDepth(&root);
+    printf("tree depth: %d\n", depth);
     makeRoom(&root, map);
-    connectRooms(&root, map);
+    for (int i = 0; i < depth; ++i)
+    {
+        connectRooms(&root, map);
+    }
 }
 
 void MapGenerator::divide(BSPTreeNode* parent)
@@ -104,6 +110,9 @@ void MapGenerator::makeRoom(BSPTreeNode* node, CMap* map)
 
     if (node->left == nullptr && node->right == nullptr) // this is the leaf node
     {
+
+        node->connectedWithTunel = true;
+
         const int maxRandomHeightAddition = (node->height - MIN_ROOM_HEIGHT < 0) ? 0 : node->height - MIN_ROOM_HEIGHT;
         const int maxRandomWidthAddition = (node->width - MIN_ROOM_WIDTH < 0) ? 0 : node->width - MIN_ROOM_WIDTH;
 
@@ -111,6 +120,14 @@ void MapGenerator::makeRoom(BSPTreeNode* node, CMap* map)
         node->roomWidth = (maxRandomWidthAddition) ? MIN_ROOM_WIDTH + rand() % maxRandomWidthAddition : MIN_ROOM_WIDTH;
         node->roomPosY = (node->height - node->roomHeight) ? rand() % (node->height - node->roomHeight) : 0;
         node->roomPosX = (node->width - node->roomWidth) ? rand() % (node->width - node->roomWidth) : 0;
+
+        node->connectionPoints.destroy();
+
+        int xRoomMiddle = node->roomWidth / 2;
+        int yRoomMiddle = node->roomHeight / 2;
+
+        Vector3D v(node->startx + node->roomPosX + xRoomMiddle, node->starty + node->roomPosY + yRoomMiddle, 0);
+        node->connectionPoints.add(v);
 
         for (int i = node->starty + node->roomPosY; i < node->starty + node->roomPosY + node->roomHeight; ++i)
         {
@@ -167,61 +184,133 @@ void MapGenerator::makeRoom(BSPTreeNode* node, CMap* map)
 
 }
 
-void MapGenerator::connectRooms(BSPTreeNode* parent, CMap* map)
+void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
 {
-    switch(parent->divType)
+    BSPTreeNode* l = node->left;
+    BSPTreeNode* r = node->right;
+
+    if (node->divType == DIV_NONE)
     {
-        case DIV_NONE:
-            {
-                return;
-            }
-
-        case DIV_VERTICAL:
-            {
-                for (int i = parent->starty + 1; i < parent->starty + parent->height - 1; ++i)
-                {
-
-                    if (map->tiles[i][parent->startx + 1] == TILE_H_WALL )
-                    {
-
-                        if (rand() % 10 == 1)
-                        {
-                            map->tiles[i][parent->startx + 1] = 33;
-                            map->tiles[i][parent->startx + 2] = TILE_CONCRETE_FLOOR;
-                            map->tiles[i][parent->startx + 3] = 32;
-                        }
-                        else
-                        {
-                            map->tiles[i][parent->startx + 2] = 69;
-                        }
-                    }
-                    else
-                    {
-                        map->tiles[i][parent->startx + 2] = TILE_CONCRETE_FLOOR;
-                    }
-                }
-
-            } break;
-
-        case DIV_HORIZONTAL:
-            {
-                for (int i = parent->startx + 1; i < parent->startx + parent->width - 1; ++i)
-                {
-                    if (map->tiles[parent->starty + 1][i] == TILE_V_WALL )
-                    {
-                        map->tiles[parent->starty + 2][i] = 71;
-                    }
-                    else
-                    {
-                        map->tiles[parent->starty + 2][i] = TILE_CONCRETE_FLOOR;
-                    }
-                }
-
-            } break;
+        return;
     }
 
-    connectRooms(parent->left, map);
-    connectRooms(parent->right, map);
+    if (l->connectedWithTunel && r->connectedWithTunel && !node->connectedWithTunel)
+    {
+
+        int lPoint = rand() % l->connectionPoints.count();
+        int rPoint = rand() % r->connectionPoints.count();
+
+        int lx = l->connectionPoints[lPoint].x;
+        int ly = l->connectionPoints[lPoint].y;
+
+        int rx = r->connectionPoints[rPoint].x;
+        int ry = r->connectionPoints[rPoint].y;
+
+        while (lx != rx || ly != ry)
+        {
+            int dir = 0;
+
+            if (rx > lx)
+            {
+                ++lx;
+                dir = 1;
+            }
+            else if (rx < lx)
+            {
+                --lx;
+                dir = 1;
+            }
+            else if (ry > ly)
+            {
+                ++ly;
+                dir = 2;
+            }
+            else if (ry < ly)
+            {
+                --ly;
+                dir = 2;
+            }
+
+
+            switch(dir)
+            {
+                case 0 : break;
+                case 1 :
+                {
+                    if (ly - 1 >= 0 && ly - 1 < (int)map->height() &&
+                            lx >= 0 && lx < (int)map->width() && map->tiles[ly - 1][lx] != TILE_CONCRETE_FLOOR)
+                    {
+                        map->tiles[ly - 1][lx] = TILE_H_WALL;
+                    }
+
+                    if (ly + 1 >= 0 && ly + 1 < (int)map->height() &&
+                            lx >= 0 && lx < (int)map->width() && map->tiles[ly + 1][lx] != TILE_CONCRETE_FLOOR)
+                    {
+                        map->tiles[ly + 1][lx] = TILE_H_WALL;
+                    }
+
+
+                } break;
+                case 2 :
+                {
+                    if (ly >= 0 && ly < (int)map->height() &&
+                            lx - 1 >= 0 && lx - 1 < (int)map->width() && map->tiles[ly][lx - 1] != TILE_CONCRETE_FLOOR)
+                    {
+                        map->tiles[ly][lx - 1] = TILE_V_WALL;
+                    }
+
+                    if (ly >= 0 && ly < (int)map->height() &&
+                            lx + 1 >= 0 && lx + 1 < (int)map->width() && map->tiles[ly][lx + 1] != TILE_CONCRETE_FLOOR)
+                    {
+                        map->tiles[ly][lx + 1] = TILE_V_WALL;
+                    }
+
+                }
+
+            }
+
+            if (ly >= 0 && ly < (int)map->height() && lx >= 0 && lx < (int)map->width())
+            {
+                map->tiles[ly][lx] = TILE_CONCRETE_FLOOR;
+            }
+
+        }
+
+        node->connectedWithTunel = true;
+
+        for (unsigned i = 0; i < l->connectionPoints.count(); ++i)
+        {
+            node->connectionPoints.add(l->connectionPoints[i]);
+        }
+
+        for (unsigned i = 0; i < r->connectionPoints.count(); ++i)
+        {
+            node->connectionPoints.add(r->connectionPoints[i]);
+        }
+
+
+    }
+
+
+    connectRooms(node->left, map);
+    connectRooms(node->right, map);
+}
+
+
+int MapGenerator::getDepth(BSPTreeNode* node)
+{
+
+    if (node == nullptr)
+    {
+        return -1;
+    }
+
+    int leftDepth = getDepth(node->left);
+    int rightDepth = getDepth(node->right);
+
+    int result = (leftDepth > rightDepth) ? leftDepth : rightDepth;
+
+    return result + 1;
 }
 
 

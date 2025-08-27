@@ -1,5 +1,8 @@
 #pragma once
 
+#include "DArray.h"
+
+class Vector3D;
 
 enum DivisionType
 {
@@ -11,6 +14,8 @@ enum DivisionType
 
 struct BSPTreeNode
 {
+    DArray<Vector3D> connectionPoints;
+
     int startx;
     int starty;
     int width;
@@ -26,6 +31,8 @@ struct BSPTreeNode
     BSPTreeNode* left;
     BSPTreeNode* right;
 
+    bool connectedWithTunel;
+
     BSPTreeNode()
     : roomPosX(-1)
     , roomPosY(-1)
@@ -34,6 +41,7 @@ struct BSPTreeNode
     , divType(DIV_NONE)
     , left(nullptr)
     , right(nullptr)
+    , connectedWithTunel(false)
     {
     }
 };
@@ -61,6 +69,8 @@ private:
     void divide(BSPTreeNode* parent);
     void makeRoom(BSPTreeNode* node, CMap* map);
     void connectRooms(BSPTreeNode* node, CMap* map);
+
+    int getDepth(BSPTreeNode* node);
 
     void erase(BSPTreeNode* parent);
 
