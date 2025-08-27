@@ -143,7 +143,7 @@ void MapGenerator::makeRoom(BSPTreeNode* node, CMap* map)
                     {
                         if (i == middle && a > 1)
                         {
-                            map->tiles[i][a] = TILE_V_DOOR;
+                            map->tiles[i][a] = TILE_V_DOOR_CONCRETE;
                         }
                         else
                         {
@@ -154,7 +154,7 @@ void MapGenerator::makeRoom(BSPTreeNode* node, CMap* map)
                     {
                         if (i == middle && a < (int)map->width() - 1)
                         {
-                            map->tiles[i][a] = TILE_V_DOOR;
+                            map->tiles[i][a] = TILE_V_DOOR_CONCRETE;
                         }
                         else
                         {
@@ -208,6 +208,17 @@ void PutWall(CMap* map, int x, int y, unsigned char wallTile)
     {
         map->tiles[y][x] = wallTile;
     }
+}
+
+bool IsTileSet(CMap* map, int x, int y, unsigned char tile)
+{
+    if (y >= 0 && y < (int)map->height() &&
+        x >= 0 && x < (int)map->width() && map->tiles[y][x] == tile)
+    {
+        return true;
+    }
+
+    return false;
 
 }
 
@@ -235,6 +246,11 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
 
         CorridorDirections dir = DIR_NONE;
         CorridorDirections oldDir = dir;
+
+        int oldLy = ly;
+        bool topLeftWallCornerUsed_UP   = false;
+        bool topLeftWallCornerUsed_DOWN = false;
+        bool topRightWallCornerUsed_DOWN = false;
 
         while (lx != rx || ly != ry)
         {
@@ -268,24 +284,82 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
                 {
                     PutWall(map, lx, ly - 1, TILE_H_WALL);
                     PutWall(map, lx, ly + 1, TILE_H_WALL);
-
-                    if (oldDir == DIR_UP || oldDir == DIR_DOWN)
-                    {
-                        PutWall(map, lx - 1, ly, TILE_V_WALL);
-                        PutWall(map, lx + 1, ly, TILE_V_WALL);
-                    }
-
                 } break;
                 case DIR_UP:
-                case DIR_DOWN :
                 {
-                    PutWall(map, lx - 1, ly, TILE_V_WALL);
+                    if (IsTileSet(map, lx - 2, ly, TILE_H_WALL))
+                    {
+                        if (!topLeftWallCornerUsed_UP)
+                        {
+                            PutWall(map, lx - 1, ly, TILE_CORNER_BR);
+                            topLeftWallCornerUsed_UP = true;
+                        }
+                        else
+                        {
+                            PutWall(map, lx - 1, ly, TILE_CORNER_TR);
+                        }
+                    }
+                    else
+                    {
+                        PutWall(map, lx - 1, ly, TILE_V_WALL);
+                    }
+
+
                     PutWall(map, lx + 1, ly, TILE_V_WALL);
 
                     if (oldDir == DIR_RIGHT || oldDir == DIR_LEFT)
                     {
-                        PutWall(map, lx, ly - 1, TILE_H_WALL);
-                        PutWall(map, lx, ly + 1, TILE_H_WALL);
+                        puts("FROM HORIZ TO UP");
+                        PutWall(map, lx - 1, oldLy, TILE_V_WALL);
+                        PutWall(map, lx + 1, oldLy, TILE_V_WALL);
+                        PutWall(map, lx - 1, oldLy + 1, TILE_CORNER_BR);
+                        PutWall(map, lx + 1, oldLy + 1, TILE_CORNER_BR);
+                    }
+
+                } break;
+                case DIR_DOWN :
+                {
+                    if (IsTileSet(map, lx - 2, ly, TILE_H_WALL)) //maybe we need to put a corner tile
+                    {
+                        if (!topLeftWallCornerUsed_DOWN)
+                        {
+                            PutWall(map, lx - 1, ly, TILE_CORNER_TR);
+                            topLeftWallCornerUsed_DOWN = true;
+                        }
+                        else
+                        {
+                            PutWall(map, lx - 1, ly, TILE_CORNER_BR);
+                        }
+                    }
+                    else
+                    {
+                        PutWall(map, lx - 1, ly, TILE_V_WALL); //  regular vertical wall
+                    }
+
+                    if (IsTileSet(map, lx + 2, ly, TILE_H_WALL))
+                    {
+                        if (!topRightWallCornerUsed_DOWN)
+                        {
+                            PutWall(map, lx + 1, ly, TILE_CORNER_TL);
+                            topRightWallCornerUsed_DOWN = true;
+                        }
+                        else
+                        {
+                            PutWall(map, lx + 1, ly, TILE_CORNER_BL);
+                        }
+                    }
+                    else
+                    {
+                        PutWall(map, lx + 1, ly, TILE_V_WALL);  //  regular vertical wall
+                    }
+
+                    if (oldDir == DIR_RIGHT || oldDir == DIR_LEFT)
+                    {
+                        puts("FROM HORIZ TO DOWN");
+                        PutWall(map, lx - 1, oldLy, TILE_V_WALL);
+                        PutWall(map, lx + 1, oldLy, TILE_V_WALL);
+                        PutWall(map, lx - 1, oldLy - 1, TILE_V_WALL);
+                        PutWall(map, lx + 1, oldLy - 1, TILE_V_WALL);
                     }
                 }
 
@@ -297,6 +371,7 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
             }
 
             oldDir = dir;
+            oldLy = ly;
 
         }
 

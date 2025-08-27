@@ -203,7 +203,9 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 void Game::DrawMiniMap(int x, int y)
 {
 
-    pics.draw(12, x, y, 0, false ,mapas.width(), mapas.height(), 0, COLOR(1,1,1, 0.6f), COLOR(1,1,1, 0.6f));
+    const int MINIMAP_TILESET = 12;
+
+    pics.draw(MINIMAP_TILESET, x, y, 0, false ,mapas.width(), mapas.height(), 0, COLOR(1,1,1, 0.6f), COLOR(1,1,1, 0.6f));
 
     for (unsigned i = 0; i < mapas.height(); i++)
     {
@@ -211,15 +213,26 @@ void Game::DrawMiniMap(int x, int y)
         {
             int frame = 0;
 
-            if ((mapas.tiles[i][a] != 65) && (mapas.tiles[i][a] != 67) && (mapas.tiles[i][a] != 69)
-                    && (mapas.tiles[i][a] != 71))
+            if ( mapas.tiles[i][a] == TILE_V_DOOR_DIRT || mapas.tiles[i][a] == TILE_V_DOOR_CONCRETE)
+            {
+                frame = 4;
+            }
+            else if (mapas.tiles[i][a] == TILE_H_DOOR_DIRT || mapas.tiles[i][a] == TILE_H_DOOR_CONCRETE)
+            {
+                frame = 5;
+            }
+            else if (mapas.tiles[i][a] == TILE_EXIT)
+            {
+                frame = 6;
+            }
+            else
             {
                 frame = mapas.colide(a, i);
             }
 
             if (frame)
             {
-                pics.draw(12,
+                pics.draw(MINIMAP_TILESET,
                           a * MINIMAP_TILE_WIDTH + x,
                           i * MINIMAP_TILE_WIDTH + y,
                           frame, false, 1.f, 1.f, 0.f, COLOR(1,1,1,0.6f), COLOR(1,1,1,0.6f));
@@ -229,18 +242,18 @@ void Game::DrawMiniMap(int x, int y)
 
     Dude* player = mapas.getPlayer((netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0);
 
-    pics.draw(12,
-              x + (round(player->x / 32.0f) * MINIMAP_TILE_WIDTH),
-              y + (round(player->y / 32.0f) * MINIMAP_TILE_WIDTH),
+    pics.draw(MINIMAP_TILESET,
+              x + (round(player->x / TILE_WIDTH) * MINIMAP_TILE_WIDTH),
+              y + (round(player->y / TILE_WIDTH) * MINIMAP_TILE_WIDTH),
               3,
               false);
 
     for (unsigned i = 0; i<mapas.items.count(); i++)
     {
-        pics.draw(12,
-                  x + (round(mapas.items[i].x / 32.0f) * MINIMAP_TILE_WIDTH),
-                  y + (round(mapas.items[i].y / 32.0f) * MINIMAP_TILE_WIDTH),
-                  4,
+        pics.draw(MINIMAP_TILESET,
+                  x + (round(mapas.items[i].x / TILE_WIDTH) * MINIMAP_TILE_WIDTH),
+                  y + (round(mapas.items[i].y / TILE_WIDTH) * MINIMAP_TILE_WIDTH),
+                  2,
                   false);
     }
 
