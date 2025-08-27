@@ -11,6 +11,14 @@ enum DivisionType
     DIV_HORIZONTAL
 };
 
+enum CorridorDirections
+{
+    DIR_NONE = 0,
+    DIR_RIGHT,
+    DIR_LEFT,
+    DIR_DOWN,
+    DIR_UP
+};
 
 struct BSPTreeNode
 {

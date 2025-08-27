@@ -64,6 +64,7 @@ const unsigned char TILE_CORNER_BL        = 24;
 const unsigned char TILE_CORNER_BR        = 25;
 const unsigned char TILE_SLIME            = 35;
 const unsigned char TILE_CONCRETE_FLOOR   = 37;
+const unsigned char TILE_V_DOOR           = 71;
 const unsigned char TILE_EXIT             = 81;
 
 

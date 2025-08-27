@@ -129,6 +129,9 @@ void MapGenerator::makeRoom(BSPTreeNode* node, CMap* map)
         Vector3D v(node->startx + node->roomPosX + xRoomMiddle, node->starty + node->roomPosY + yRoomMiddle, 0);
         node->connectionPoints.add(v);
 
+
+        int middle = node->starty + node->roomPosY + (node->roomHeight / 2);
+
         for (int i = node->starty + node->roomPosY; i < node->starty + node->roomPosY + node->roomHeight; ++i)
         {
             for (int a = node->startx + node->roomPosX; a < node->startx + node->roomPosX + node->roomWidth; ++a)
@@ -138,11 +141,25 @@ void MapGenerator::makeRoom(BSPTreeNode* node, CMap* map)
 
                     if (a == node->startx + node->roomPosX)
                     {
-                        map->tiles[i][a] = TILE_V_WALL;
+                        if (i == middle && a > 1)
+                        {
+                            map->tiles[i][a] = TILE_V_DOOR;
+                        }
+                        else
+                        {
+                            map->tiles[i][a] = TILE_V_WALL;
+                        }
                     }
                     else if (a == node->startx + node->roomPosX + node->roomWidth - 1)
                     {
-                        map->tiles[i][a] = TILE_V_WALL;
+                        if (i == middle && a < (int)map->width() - 1)
+                        {
+                            map->tiles[i][a] = TILE_V_DOOR;
+                        }
+                        else
+                        {
+                            map->tiles[i][a] = TILE_V_WALL;
+                        }
                     }
                     else
                     {
@@ -184,6 +201,16 @@ void MapGenerator::makeRoom(BSPTreeNode* node, CMap* map)
 
 }
 
+void PutWall(CMap* map, int x, int y, unsigned char wallTile)
+{
+    if (y >= 0 && y < (int)map->height() &&
+        x >= 0 && x < (int)map->width() && map->tiles[y][x] != TILE_CONCRETE_FLOOR)
+    {
+        map->tiles[y][x] = wallTile;
+    }
+
+}
+
 void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
 {
     BSPTreeNode* l = node->left;
@@ -206,65 +233,60 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
         int rx = r->connectionPoints[rPoint].x;
         int ry = r->connectionPoints[rPoint].y;
 
+        CorridorDirections dir = DIR_NONE;
+        CorridorDirections oldDir = dir;
+
         while (lx != rx || ly != ry)
         {
-            int dir = 0;
-
             if (rx > lx)
             {
                 ++lx;
-                dir = 1;
+                dir = DIR_RIGHT;
             }
             else if (rx < lx)
             {
                 --lx;
-                dir = 1;
+                dir = DIR_LEFT;
             }
             else if (ry > ly)
             {
                 ++ly;
-                dir = 2;
+                dir = DIR_DOWN;
             }
             else if (ry < ly)
             {
                 --ly;
-                dir = 2;
+                dir = DIR_UP;
             }
 
 
             switch(dir)
             {
-                case 0 : break;
-                case 1 :
+                case DIR_NONE : break;
+                case DIR_LEFT :
+                case DIR_RIGHT :
                 {
-                    if (ly - 1 >= 0 && ly - 1 < (int)map->height() &&
-                            lx >= 0 && lx < (int)map->width() && map->tiles[ly - 1][lx] != TILE_CONCRETE_FLOOR)
-                    {
-                        map->tiles[ly - 1][lx] = TILE_H_WALL;
-                    }
+                    PutWall(map, lx, ly - 1, TILE_H_WALL);
+                    PutWall(map, lx, ly + 1, TILE_H_WALL);
 
-                    if (ly + 1 >= 0 && ly + 1 < (int)map->height() &&
-                            lx >= 0 && lx < (int)map->width() && map->tiles[ly + 1][lx] != TILE_CONCRETE_FLOOR)
+                    if (oldDir == DIR_UP || oldDir == DIR_DOWN)
                     {
-                        map->tiles[ly + 1][lx] = TILE_H_WALL;
+                        PutWall(map, lx - 1, ly, TILE_V_WALL);
+                        PutWall(map, lx + 1, ly, TILE_V_WALL);
                     }
-
 
                 } break;
-                case 2 :
+                case DIR_UP:
+                case DIR_DOWN :
                 {
-                    if (ly >= 0 && ly < (int)map->height() &&
-                            lx - 1 >= 0 && lx - 1 < (int)map->width() && map->tiles[ly][lx - 1] != TILE_CONCRETE_FLOOR)
-                    {
-                        map->tiles[ly][lx - 1] = TILE_V_WALL;
-                    }
+                    PutWall(map, lx - 1, ly, TILE_V_WALL);
+                    PutWall(map, lx + 1, ly, TILE_V_WALL);
 
-                    if (ly >= 0 && ly < (int)map->height() &&
-                            lx + 1 >= 0 && lx + 1 < (int)map->width() && map->tiles[ly][lx + 1] != TILE_CONCRETE_FLOOR)
+                    if (oldDir == DIR_RIGHT || oldDir == DIR_LEFT)
                     {
-                        map->tiles[ly][lx + 1] = TILE_V_WALL;
+                        PutWall(map, lx, ly - 1, TILE_H_WALL);
+                        PutWall(map, lx, ly + 1, TILE_H_WALL);
                     }
-
                 }
 
             }
@@ -273,6 +295,8 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
             {
                 map->tiles[ly][lx] = TILE_CONCRETE_FLOOR;
             }
+
+            oldDir = dir;
 
         }
 
@@ -316,6 +340,9 @@ int MapGenerator::getDepth(BSPTreeNode* node)
 
 void MapGenerator::erase(BSPTreeNode* parent)
 {
+
+    parent->connectionPoints.destroy();
+
     if (parent->left)
     {
         erase(parent->left);
