@@ -150,13 +150,13 @@ void CMap::arangeItems()
 
 
 //-------------------------------------
-void CMap::generate()
+void CMap::generate(int level)
 {
 
     if (!tiles)
     {
-        _width = 20 + rand() % 40;
-        _height = 20 + rand() % 40;
+        _width = 20 + level * 10 + (5 - rand() % 10);
+        _height = 20 + level * 10 + (5 - rand() % 10);
 
         tiles = new unsigned char* [_height];
 
@@ -176,6 +176,43 @@ void CMap::generate()
 
     MapGenerator gen(_width, _height);
     gen.generate(this);
+    buildCollisionmap();
+
+    unsigned exitRoomIdx = rand() % gen.getRoomCount();
+    BSPTreeNode* exitRoom = gen.getRoomNode(exitRoomIdx);
+
+    exit.x = exitRoom->startx + exitRoom->roomPosX + exitRoom->roomWidth / 2;
+    exit.y = exitRoom->starty + exitRoom->roomPosY + exitRoom->roomHeight / 2;
+
+    tiles[(int)exit.y][(int)exit.x] = TILE_EXIT;
+
+    unsigned startRoomIdx = rand() % gen.getRoomCount();
+
+    while (startRoomIdx == exitRoomIdx)
+    {
+        startRoomIdx = rand() % gen.getRoomCount();
+    }
+
+    BSPTreeNode* startRoom = gen.getRoomNode(startRoomIdx);
+
+    start.x = startRoom->startx + startRoom->roomPosX + startRoom->roomWidth / 2;
+    start.y = startRoom->starty + startRoom->roomPosY + startRoom->roomHeight / 2;
+
+    start.x *= TILE_WIDTH;
+    start.y *= TILE_WIDTH;
+
+
+    enemyCount = gen.getRoomCount() + level * 2;
+
+    for (int i = 0; i < enemyCount; ++i)
+    {
+        Dude m;
+        m.id = i;
+        m.race = rand() % MONSTER_MAX_RACE + 1;
+        m.initMonsterHP();
+        m.appearInRandomPlace(_colide, width(), height());
+        mons.add(m);
+    }
 
 }
 

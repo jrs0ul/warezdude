@@ -72,6 +72,8 @@ public:
     ~MapGenerator();
 
     void generate(CMap* map);
+    unsigned getRoomCount(){return roomList.count();}
+    BSPTreeNode* getRoomNode(unsigned idx);
 
 private:
     void divide(BSPTreeNode* parent);
@@ -84,6 +86,7 @@ private:
 
 private:
     BSPTreeNode root;
+    DArray<BSPTreeNode*> roomList;
     int newCount;
     int deleteCount;
 };

@@ -6,6 +6,7 @@
 
 MapGenerator::~MapGenerator()
 {
+    roomList.destroy();
     erase(&root);
     printf("not erased nodes: %d\n", newCount - deleteCount);
 }
@@ -21,6 +22,11 @@ void MapGenerator::generate(CMap* map)
     {
         connectRooms(&root, map);
     }
+}
+
+BSPTreeNode* MapGenerator::getRoomNode(unsigned idx)
+{
+    return roomList[idx];
 }
 
 void MapGenerator::divide(BSPTreeNode* parent)
@@ -120,6 +126,8 @@ void MapGenerator::makeRoom(BSPTreeNode* node, CMap* map)
         node->roomWidth = (maxRandomWidthAddition) ? MIN_ROOM_WIDTH + rand() % maxRandomWidthAddition : MIN_ROOM_WIDTH;
         node->roomPosY = (node->height - node->roomHeight) ? rand() % (node->height - node->roomHeight) : 0;
         node->roomPosX = (node->width - node->roomWidth) ? rand() % (node->width - node->roomWidth) : 0;
+
+        roomList.add(node);
 
         node->connectionPoints.destroy();
 
@@ -252,6 +260,9 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
         bool topLeftWallCornerUsed_DOWN = false;
         bool topRightWallCornerUsed_DOWN = false;
 
+        bool horizontalTunelTopWallFirstCornerUsed = false;
+        bool horizontalTunelBottomWallFirstCornerUsed = false;
+
         while (lx != rx || ly != ry)
         {
             if (rx > lx)
@@ -282,16 +293,54 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
                 case DIR_LEFT :
                 case DIR_RIGHT :
                 {
-                    PutWall(map, lx, ly - 1, TILE_H_WALL);
-                    PutWall(map, lx, ly + 1, TILE_H_WALL);
+
+                    //top wall
+                    if (IsTileSet(map, lx, ly - 2, TILE_V_WALL) || IsTileSet(map, lx, ly - 2, TILE_CORNER_TR)
+                         || IsTileSet(map, lx, ly - 2, TILE_CORNER_TL) || IsTileSet(map, lx, ly - 2, TILE_V_DOOR_CONCRETE))
+                    {
+                        if (!horizontalTunelTopWallFirstCornerUsed)
+                        {
+                            PutWall(map, lx, ly - 1, TILE_CORNER_BL);
+                            horizontalTunelTopWallFirstCornerUsed = true;
+                        }
+                        else
+                        {
+                            PutWall(map, lx, ly - 1, TILE_CORNER_BR);
+                        }
+                    }
+                    else
+                    {
+                        PutWall(map, lx, ly - 1, TILE_H_WALL);
+                    }
+
+
+                    //bottom wall
+                    if (IsTileSet(map, lx, ly + 2, TILE_V_WALL) || IsTileSet(map, lx, ly + 2, TILE_CORNER_BR) ||
+                            IsTileSet(map, lx, ly + 2, TILE_V_DOOR_CONCRETE) || IsTileSet(map, lx, ly + 2, TILE_CORNER_BL) )
+                    {
+                        if (!horizontalTunelBottomWallFirstCornerUsed)
+                        {
+                            PutWall(map, lx, ly + 1, TILE_CORNER_TL);
+                            horizontalTunelBottomWallFirstCornerUsed = true;
+                        }
+                        else
+                        {
+                            PutWall(map, lx, ly + 1, TILE_CORNER_TR);
+                        }
+                    }
+                    else
+                    {
+                        PutWall(map, lx, ly + 1, TILE_H_WALL);
+                    }
                 } break;
                 case DIR_UP:
                 {
+                    //left wall
                     if (IsTileSet(map, lx - 2, ly, TILE_H_WALL))
                     {
                         if (!topLeftWallCornerUsed_UP)
                         {
-                            PutWall(map, lx - 1, ly, TILE_CORNER_BR);
+                            PutWall(map, lx - 1, ly, TILE_CORNER_TR);
                             topLeftWallCornerUsed_UP = true;
                         }
                         else
@@ -305,7 +354,15 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
                     }
 
 
-                    PutWall(map, lx + 1, ly, TILE_V_WALL);
+                    //right wall
+                    if ( IsTileSet(map, lx + 2, ly, TILE_H_WALL) || IsTileSet(map, lx + 2, ly, TILE_CORNER_BR))
+                    {
+                        PutWall(map, lx + 1, ly, TILE_CORNER_TL);
+                    }
+                    else
+                    {
+                        PutWall(map, lx + 1, ly, TILE_V_WALL);
+                    }
 
                     if (oldDir == DIR_RIGHT || oldDir == DIR_LEFT)
                     {
@@ -319,7 +376,10 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
                 } break;
                 case DIR_DOWN :
                 {
-                    if (IsTileSet(map, lx - 2, ly, TILE_H_WALL)) //maybe we need to put a corner tile
+
+                    //Left vertical wall
+                    if (IsTileSet(map, lx - 2, ly, TILE_H_WALL) || IsTileSet(map, lx - 2, ly, TILE_CORNER_BL) ||
+                            IsTileSet(map, lx - 2, ly, TILE_CORNER_TL)) //maybe we need to put a corner tile
                     {
                         if (!topLeftWallCornerUsed_DOWN)
                         {
@@ -336,7 +396,9 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
                         PutWall(map, lx - 1, ly, TILE_V_WALL); //  regular vertical wall
                     }
 
-                    if (IsTileSet(map, lx + 2, ly, TILE_H_WALL))
+                    //Right vertical wall
+
+                    if (IsTileSet(map, lx + 2, ly, TILE_H_WALL) || IsTileSet(map, lx + 2, ly, TILE_CORNER_BR) || IsTileSet(map, lx + 2, ly, TILE_CORNER_TR))
                     {
                         if (!topRightWallCornerUsed_DOWN)
                         {

@@ -536,7 +536,7 @@ void Game::GoToLevel(int currentHp, int currentAmmo, int level, int otherplayer)
     }
     else
     {
-        GenerateTheMap(currentHp, currentAmmo);
+        GenerateTheMap(level, currentHp, currentAmmo);
     }
 
     fadein = true;
@@ -1587,60 +1587,23 @@ void Game::AnimateSlime()
     }
 }
 //-------------------------------------------------------
-void Game::GenerateTheMap(int currentHp, int currentAmmo)
+void Game::GenerateTheMap(int level, int currentHp, int currentAmmo)
 {
     bulbox.destroy();
     mapas.destroy();
 
-    mapas.generate();
+    mapas.generate(level);
 
-
-    mapas.buildCollisionmap();
-
-    mapas.exit.x = rand() % mapas.width();
-    mapas.exit.y = rand() % mapas.height();
-
-    while(mapas._colide[(int)mapas.exit.y][(int)mapas.exit.x])
-    {
-        mapas.exit.x = rand() % mapas.width();
-        mapas.exit.y = rand() % mapas.height();
-    }
-
-    mapas.start.x = rand() % mapas.width();
-    mapas.start.y = rand() % mapas.height();
-
-    while(mapas._colide[(int)mapas.start.y][(int)mapas.start.x])
-    {
-        mapas.start.x = rand() % mapas.width();
-        mapas.start.y = rand() % mapas.height();
-    }
-
-    mapas.start.x *= TILE_WIDTH;
-    mapas.start.y *= TILE_WIDTH;
-
-
-    mapas.tiles[(int)mapas.exit.y][(int)mapas.exit.x] = TILE_EXIT;
-
-    mapas.enemyCount = 2 + rand() % 10;
-
-    mapas.misionItems = 4;
+    mapas.misionItems = rand() % 2 + 2;
     mapas.goods = 10;
 
-    for (int i = 0; i < mapas.enemyCount; ++i)
-    {
-        Dude m;
-        m.id = i;
-        m.race = rand() % MONSTER_MAX_RACE + 1;
-        m.initMonsterHP();
-        m.appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
-        mapas.mons.add(m);
-    }
 
     Dude thePlayer;
     mapas.addMonster(thePlayer);
     Dude* player = mapas.getPlayer();
 
-    player->appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+    player->x = (float)mapas.start.x;
+    player->y = (float)mapas.start.y;
     player->id = mapas.enemyCount;
     player->shot = false;
     player->setHP(currentHp);
@@ -1649,7 +1612,6 @@ void Game::GenerateTheMap(int currentHp, int currentAmmo)
     player->setWeaponCount(PLAYER_SIMULTANEOUS_WEAPONS);
     player->setSkinCount(PLAYER_MAX_SKIN_COUNT);
     player->setFrame((player->activeSkin[player->getCurrentWeapon()] + 1) * 4 - 2);
-
 
 
     for (int i = 0; i < PlayerCount() - 1; ++i)
@@ -1710,7 +1672,7 @@ void Game::LoadFirstMap()
 {
     if (netMode != NETMODE_CLIENT) //offline & server
     {
-        GenerateTheMap(ENTITY_INITIAL_HP, ENTITY_INITIAL_AMMO);
+        GenerateTheMap(0, ENTITY_INITIAL_HP, ENTITY_INITIAL_AMMO);
     }
 }
 

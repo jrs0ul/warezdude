@@ -72,7 +72,7 @@ public:
         void setPosY(float value){mapPos.y = value;}
         void move(Vector3D v, float size);
 
-        void generate();
+        void generate(int level);
         bool load(const char* path, bool createItems=true, int otherplayers=0);
         bool save(const char* path);
 
