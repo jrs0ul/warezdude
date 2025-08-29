@@ -1617,7 +1617,7 @@ void Game::GenerateTheMap(int level, int currentHp, int currentAmmo)
     for (int i = 0; i < PlayerCount() - 1; ++i)
     {
         Dude p;
-        p.race = 4;
+        p.race = MONSTER_RACE_PLAYER;
         p.appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
         p.id = mapas.mons[mapas.mons.count() - 1].id + 1;
         mapas.mons.add(p);

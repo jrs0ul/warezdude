@@ -366,7 +366,6 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
 
                     if (oldDir == DIR_RIGHT || oldDir == DIR_LEFT)
                     {
-                        puts("FROM HORIZ TO UP");
                         PutWall(map, lx - 1, oldLy, TILE_V_WALL);
                         PutWall(map, lx + 1, oldLy, TILE_V_WALL);
                         PutWall(map, lx - 1, oldLy + 1, TILE_CORNER_BR);
@@ -417,7 +416,6 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
 
                     if (oldDir == DIR_RIGHT || oldDir == DIR_LEFT)
                     {
-                        puts("FROM HORIZ TO DOWN");
                         PutWall(map, lx - 1, oldLy, TILE_V_WALL);
                         PutWall(map, lx + 1, oldLy, TILE_V_WALL);
                         PutWall(map, lx - 1, oldLy - 1, TILE_V_WALL);

@@ -157,6 +157,7 @@ public:
         void killShrinked(DArray<Dude>& dudes, unsigned yourIndex);
         void stopParticles(){ps.stop();}
         bool shrink();
+        bool isColideWithOthers(DArray<Dude>& chars, float newx, float newy, bool coop, unsigned monsterCount);
 
 private:
         bool movement(Vector3D dir,
@@ -168,7 +169,6 @@ private:
                       bool coop,
                       unsigned monsterCount);
 
-        bool isColideWithOthers(DArray<Dude>& chars, float newx, float newy, bool coop, unsigned monsterCount);
 };
 
 

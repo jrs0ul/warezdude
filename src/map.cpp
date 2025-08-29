@@ -178,7 +178,9 @@ void CMap::generate(int level)
     gen.generate(this);
     buildCollisionmap();
 
-    unsigned exitRoomIdx = rand() % gen.getRoomCount();
+    const unsigned ROOM_COUNT = gen.getRoomCount();
+
+    unsigned exitRoomIdx = rand() % ROOM_COUNT;
     BSPTreeNode* exitRoom = gen.getRoomNode(exitRoomIdx);
 
     exit.x = exitRoom->startx + exitRoom->roomPosX + exitRoom->roomWidth / 2;
@@ -186,11 +188,11 @@ void CMap::generate(int level)
 
     tiles[(int)exit.y][(int)exit.x] = TILE_EXIT;
 
-    unsigned startRoomIdx = rand() % gen.getRoomCount();
+    unsigned startRoomIdx = rand() % ROOM_COUNT;
 
     while (startRoomIdx == exitRoomIdx)
     {
-        startRoomIdx = rand() % gen.getRoomCount();
+        startRoomIdx = rand() % ROOM_COUNT;
     }
 
     BSPTreeNode* startRoom = gen.getRoomNode(startRoomIdx);
@@ -202,16 +204,43 @@ void CMap::generate(int level)
     start.y *= TILE_WIDTH;
 
 
-    enemyCount = gen.getRoomCount() + level * 2;
+    enemyCount = 0;
 
-    for (int i = 0; i < enemyCount; ++i)
+    for (unsigned i = 0; i < ROOM_COUNT; ++i)
     {
-        Dude m;
-        m.id = i;
-        m.race = rand() % MONSTER_MAX_RACE + 1;
-        m.initMonsterHP();
-        m.appearInRandomPlace(_colide, width(), height());
-        mons.add(m);
+        if (startRoomIdx == i)
+        {
+            continue;
+        }
+
+        BSPTreeNode* room = gen.getRoomNode(i);
+
+        const int monstersInTheRoom = (room->roomWidth * room->roomHeight) / 20;
+
+        for (int a = 0; a < monstersInTheRoom; ++a)
+        {
+            Dude m;
+            m.id = enemyCount;
+            m.race = rand() % MONSTER_MAX_RACE + 1;
+            m.initMonsterHP();
+            m.x = room->startx + room->roomPosX + (1 + rand() % (room->roomWidth - 2));
+            m.y = room->starty + room->roomPosY + (1 + rand() % (room->roomHeight - 2));
+            m.x *= TILE_WIDTH;
+            m.y *= TILE_WIDTH;
+            mons.add(m);
+
+            while (mons[enemyCount - 1].isColideWithOthers(mons, 
+                                                           mons[enemyCount - 1].x, 
+                                                           mons[enemyCount - 1].y, 
+                                                           false,
+                                                           enemyCount))
+            {
+                mons[enemyCount - 1].x = room->startx + room->roomPosX + (1 + rand() % (room->roomWidth - 2));
+                mons[enemyCount - 1].y = room->starty + room->roomPosY + (1 + rand() % (room->roomHeight - 2));
+            }
+
+            ++enemyCount;
+        }
     }
 
 }
