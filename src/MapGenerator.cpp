@@ -313,7 +313,7 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
                         PutWall(map, lx, ly - 1, TILE_H_WALL);
                     }
 
-
+                    //-----------
                     //bottom wall
                     if (IsTileSet(map, lx, ly + 2, TILE_V_WALL) || IsTileSet(map, lx, ly + 2, TILE_CORNER_BR) ||
                             IsTileSet(map, lx, ly + 2, TILE_V_DOOR_CONCRETE) || IsTileSet(map, lx, ly + 2, TILE_CORNER_BL) )
@@ -336,7 +336,8 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
                 case DIR_UP:
                 {
                     //left wall
-                    if (IsTileSet(map, lx - 2, ly, TILE_H_WALL))
+                    if (IsTileSet(map, lx - 2, ly, TILE_H_WALL) || IsTileSet(map, lx - 2, ly, TILE_CORNER_BL)
+                        || IsTileSet(map, lx - 2, ly, TILE_CORNER_TR))
                     {
                         if (!topLeftWallCornerUsed_UP)
                         {
@@ -364,12 +365,28 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
                         PutWall(map, lx + 1, ly, TILE_V_WALL);
                     }
 
-                    if (oldDir == DIR_RIGHT || oldDir == DIR_LEFT)
+                    if (oldDir == DIR_RIGHT)
                     {
-                        PutWall(map, lx - 1, oldLy, TILE_V_WALL);
-                        PutWall(map, lx + 1, oldLy, TILE_V_WALL);
-                        PutWall(map, lx - 1, oldLy + 1, TILE_CORNER_BR);
-                        PutWall(map, lx + 1, oldLy + 1, TILE_CORNER_BR);
+                        if (map->tiles[oldLy][lx - 1] != TILE_H_WALL)
+                            PutWall(map, lx - 1, oldLy, TILE_V_WALL);
+                        if (map->tiles[oldLy][lx + 1] != TILE_H_WALL)
+                            PutWall(map, lx + 1, oldLy, TILE_V_WALL);
+                        if (map->tiles[oldLy + 1][lx - 1] != TILE_H_WALL)
+                            PutWall(map, lx - 1, oldLy + 1, TILE_CORNER_BR);
+                        if (map->tiles[oldLy + 1][lx + 1] != TILE_H_WALL)
+                            PutWall(map, lx + 1, oldLy + 1, TILE_CORNER_BR);
+                    }
+                    else if (oldDir == DIR_LEFT)
+                    {
+
+                        if (map->tiles[oldLy][lx - 1] != TILE_H_WALL)
+                            PutWall(map, lx - 1, oldLy, TILE_V_WALL);
+                        if (map->tiles[oldLy][lx + 1] != TILE_H_WALL)
+                            PutWall(map, lx + 1, oldLy, TILE_V_WALL);
+                        if (map->tiles[oldLy + 1][lx - 1] != TILE_H_WALL)
+                            PutWall(map, lx - 1, oldLy + 1, TILE_CORNER_BR);
+                        if (map->tiles[oldLy + 1][lx + 1] != TILE_H_WALL)
+                            PutWall(map, lx + 1, oldLy + 1, TILE_CORNER_BR);
                     }
 
                 } break;
@@ -414,12 +431,27 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
                         PutWall(map, lx + 1, ly, TILE_V_WALL);  //  regular vertical wall
                     }
 
-                    if (oldDir == DIR_RIGHT || oldDir == DIR_LEFT)
+                    if (oldDir == DIR_RIGHT)
                     {
-                        PutWall(map, lx - 1, oldLy, TILE_V_WALL);
-                        PutWall(map, lx + 1, oldLy, TILE_V_WALL);
-                        PutWall(map, lx - 1, oldLy - 1, TILE_V_WALL);
-                        PutWall(map, lx + 1, oldLy - 1, TILE_V_WALL);
+                        if (map->tiles[oldLy][lx - 1] != TILE_H_WALL)
+                            PutWall(map, lx - 1, oldLy, TILE_V_WALL);
+                        if (map->tiles[oldLy][lx + 1] != TILE_H_WALL)
+                            PutWall(map, lx + 1, oldLy, TILE_V_WALL);
+                        if (map->tiles[oldLy - 1][lx - 1] != TILE_H_WALL)
+                            PutWall(map, lx - 1, oldLy - 1, TILE_V_WALL);
+                        if (map->tiles[oldLy - 1][lx + 1] != TILE_H_WALL)
+                            PutWall(map, lx + 1, oldLy - 1, TILE_V_WALL);
+                    }
+                    else if (oldDir == DIR_LEFT)
+                    {
+                        if (map->tiles[oldLy][lx - 1] != TILE_H_WALL)
+                            PutWall(map, lx - 1, oldLy, TILE_V_WALL);
+                        if (map->tiles[oldLy][lx + 1] != TILE_H_WALL)
+                            PutWall(map, lx + 1, oldLy, TILE_V_WALL);
+                        if (map->tiles[oldLy - 1][lx - 1] != TILE_H_WALL)
+                            PutWall(map, lx - 1, oldLy - 1, TILE_V_WALL);
+                        if (map->tiles[oldLy - 1][lx + 1] != TILE_H_WALL)
+                            PutWall(map, lx + 1, oldLy - 1, TILE_V_WALL);
                     }
                 }
 
