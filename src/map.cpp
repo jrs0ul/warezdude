@@ -136,6 +136,8 @@ void CMap::generate(int level)
         }
     }
 
+    putSlimeCircle();
+
     MapGenerator gen(_width, _height);
     gen.generate(this);
     buildCollisionmap();
@@ -874,4 +876,30 @@ void CMap::placeAmmoAndMedkits()
 
     }
 
+}
+//--------------------------------
+void CMap::putSlimeCircle()
+{
+    float circleX = 0;
+    float circleY = 0;
+
+    float posX = rand() % (_width * TILE_WIDTH);
+    float posY = rand() % (_height * TILE_WIDTH);
+
+    for (int a = 0; a < 150; a += 10)
+    {
+        for (float i = 0; i < 2 * M_PI; i += 0.1f)
+        {
+            circleY  = posY + (sinf(i) * a);
+            circleX  = posX + (cosf(i) * a);
+
+            unsigned x = (unsigned)roundf(circleX / TILE_WIDTH);
+            unsigned y = (unsigned)roundf(circleY / TILE_WIDTH);
+
+            if (x < _width && y < _height)
+            {
+                tiles[y][x] = TILE_SLIME + rand() % 2;
+            }
+        }
+    }
 }

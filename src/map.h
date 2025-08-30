@@ -99,6 +99,7 @@ public:
         void arrangeItemsInPremadeMap();
         Items pickRandomGameCartridge();
         void placeAmmoAndMedkits();
+        void putSlimeCircle();
 
 };
 
