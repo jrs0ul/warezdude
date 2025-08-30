@@ -1594,8 +1594,7 @@ void Game::GenerateTheMap(int level, int currentHp, int currentAmmo)
 
     mapas.generate(level);
 
-    mapas.misionItems = rand() % 2 + 2;
-    mapas.goods = 10;
+   
 
 
     Dude thePlayer;
@@ -1624,7 +1623,6 @@ void Game::GenerateTheMap(int level, int currentHp, int currentAmmo)
 
     }
 
-    mapas.arangeItems();
 
     AdaptMapView();
 }

@@ -31,7 +31,7 @@ void CMap::move(Vector3D v, float size)
 
 
 //-----------------------------------------
-void CMap::arangeItems()
+void CMap::arrangeItemsInPremadeMap()
 {
     int ix;
     int iy;
@@ -44,9 +44,9 @@ void CMap::arangeItems()
 
         bool found = false;
 
-        for (unsigned long i=0;i<items.count();i++)
+        for (unsigned long i = 0; i < items.count();i++)
         {
-            if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y))
+            if (( (float)ix == items[i].x)&&((float)iy == items[i].y))
             {
                 found=true;
                 break;
@@ -69,83 +69,45 @@ void CMap::arangeItems()
             }
         }
 
-
-        int dice = rand() % 1000;
-
-        Items game = ITEM_GAME_DUKE_ATOMIC;
-
-        if (dice < 800)
-        {
-            game = ITEM_GAME_CONTRABANDISTS;
-
-            if (dice < 600)
-            {
-                game = ITEM_GAME_FART_NIGHT;
-
-                if (dice < 400)
-                {
-                    game = ITEM_GAME_UNABOMBER_GUY;
-
-                    if (dice < 200)
-                    {
-                        game = ITEM_GAME_SPEEDBALL;
-                    }
-                }
-            }
-
-        }
-
+        Items game = pickRandomGameCartridge();
         addItem(ix * TILE_WIDTH, iy * TILE_WIDTH, game);
-        //rand() % 16 + ITEM_GAME_NINJA_MAN);
 
     }
 
-    //places ammo and medkits
-    for (int a=0; a<goods; a++)
+    placeAmmoAndMedkits();
+
+}
+
+
+//----------------------------------
+Items CMap::pickRandomGameCartridge()
+{
+    int dice = rand() % 1000;
+
+    Items game = ITEM_GAME_DUKE_ATOMIC;
+
+    if (dice < 800)
     {
-        ix=rand() % _width;
-        iy=rand() % _height;
+        game = ITEM_GAME_CONTRABANDISTS;
 
-
-
-        bool found=false;
-        for (unsigned long i=0;i<items.count();i++)
+        if (dice < 600)
         {
-            if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y)){
-                found=true;
-                break;
-         }
-        }
+            game = ITEM_GAME_FART_NIGHT;
 
-        while ((_colide[iy][ix]) || (found))
-        {
-            ix=rand() % _width;
-            iy=rand() % _height;
-
-            found = false;
-
-            for (unsigned long i=0;i<items.count();i++)
+            if (dice < 400)
             {
-                if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y))
+                game = ITEM_GAME_UNABOMBER_GUY;
+
+                if (dice < 200)
                 {
-                    found=true;
-                    break;
+                    game = ITEM_GAME_SPEEDBALL;
                 }
             }
         }
 
-        if ((rand()%2+1)==2)
-        {
-            addItem(ix*32.0f,iy*32.0f, ITEM_MEDKIT);
-        }
-        else
-        {
-            addItem(ix*32.0f,iy*32.0f, ITEM_AMMO_PACK);
-        }
-
     }
 
-
+    return game;
 }
 
 
@@ -242,6 +204,21 @@ void CMap::generate(int level)
             ++enemyCount;
         }
     }
+
+    misionItems = rand() % 2 + 2;
+    goods = rand() % 8 + 2;
+
+    for (int i = 0; i < misionItems; ++i)
+    {
+        int roomIdx = rand() % ROOM_COUNT;
+        BSPTreeNode* room = gen.getRoomNode(roomIdx);
+        Items game = pickRandomGameCartridge();
+        int ix = room->startx + room->roomPosX + (1 + rand() % (room->roomWidth - 2));
+        int iy = room->starty + room->roomPosY + (1 + rand() % (room->roomHeight - 2));
+        addItem(ix * TILE_WIDTH, iy * TILE_WIDTH, game);
+    }
+
+    placeAmmoAndMedkits();
 
 }
 
@@ -518,7 +495,7 @@ bool CMap::load(const char* path, bool createItems, int otherplayers){
 
     if (createItems)
     {
-        arangeItems();
+        arrangeItemsInPremadeMap();
     }
 
 
@@ -849,4 +826,50 @@ int CMap::findCreatureById(int id)
     }
 
     return -1;
+}
+
+//----------------------
+void CMap::placeAmmoAndMedkits()
+{
+    int ix = 0;
+    int iy = 0;
+
+    for (int a = 0; a < goods; ++a)
+    {
+        ix = rand() % _width;
+        iy = rand() % _height;
+
+        bool found = false;
+
+        for (unsigned long i = 0; i < items.count(); ++i)
+        {
+            if ((ix == (int)items[i].x) && (iy == (int)items[i].y))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        while ((_colide[iy][ix]) || (found))
+        {
+            ix=rand() % _width;
+            iy=rand() % _height;
+
+            found = false;
+
+            for (unsigned long i=0;i<items.count();i++)
+            {
+                if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y))
+                {
+                    found=true;
+                    break;
+                }
+            }
+        }
+
+        const Items theItem = ((rand() % 2 + 1) == 2) ? ITEM_MEDKIT : ITEM_AMMO_PACK;
+        addItem(ix * TILE_WIDTH, iy * TILE_WIDTH, theItem);
+
+    }
+
 }
