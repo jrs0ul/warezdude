@@ -79,6 +79,8 @@ private:
     void divide(BSPTreeNode* parent);
     void makeRoom(BSPTreeNode* node, CMap* map);
     void connectRooms(BSPTreeNode* node, CMap* map);
+    void makeWallsPretty(CMap* map);
+    void putDoorsToOutside(CMap* map);
 
     int getDepth(BSPTreeNode* node);
 

@@ -185,8 +185,8 @@ void CMap::generate(int level)
             m.id = enemyCount;
             m.race = rand() % MONSTER_MAX_RACE + 1;
             m.initMonsterHP();
-            m.x = room->startx + room->roomPosX + (1 + rand() % (room->roomWidth - 2));
-            m.y = room->starty + room->roomPosY + (1 + rand() % (room->roomHeight - 2));
+            m.x = room->startx + room->roomPosX + (1 + rand() % (room->roomWidth - 3));
+            m.y = room->starty + room->roomPosY + (1 + rand() % (room->roomHeight - 3));
             m.x *= TILE_WIDTH;
             m.y *= TILE_WIDTH;
             mons.add(m);
@@ -197,8 +197,10 @@ void CMap::generate(int level)
                                                            false,
                                                            enemyCount))
             {
-                mons[enemyCount - 1].x = room->startx + room->roomPosX + (1 + rand() % (room->roomWidth - 2));
-                mons[enemyCount - 1].y = room->starty + room->roomPosY + (1 + rand() % (room->roomHeight - 2));
+                mons[enemyCount - 1].x = room->startx + room->roomPosX + (1 + rand() % (room->roomWidth - 3));
+                mons[enemyCount - 1].y = room->starty + room->roomPosY + (1 + rand() % (room->roomHeight - 3));
+                mons[enemyCount - 1].x *= TILE_WIDTH;
+                mons[enemyCount - 1].y *= TILE_WIDTH;
             }
 
             ++enemyCount;
