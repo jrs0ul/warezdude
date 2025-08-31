@@ -74,12 +74,12 @@ public:
     void generate(CMap* map);
     unsigned getRoomCount(){return roomList.count();}
     BSPTreeNode* getRoomNode(unsigned idx);
+    void makeWallsPretty(CMap* map);
 
 private:
     void divide(BSPTreeNode* parent);
     void makeRoom(BSPTreeNode* node, CMap* map);
     void connectRooms(BSPTreeNode* node, CMap* map);
-    void makeWallsPretty(CMap* map);
     void putDoorsToOutside(CMap* map);
 
     int getDepth(BSPTreeNode* node);
