@@ -447,7 +447,8 @@ void MapGenerator::makeWallsPretty(CMap* map)
                     continue;
                 }
 
-                if (rightTile != TILE_WALL && bottomTile != TILE_WALL)
+                if (rightTile != TILE_WALL && bottomTile != TILE_WALL && 
+                        (leftTile == TILE_H_WALL || leftTile == TILE_WALL_TAIL_LEFT || leftTile == TILE_CORNER_BL))
                 {
                     map->tiles[i][a] = TILE_WALL_TAIL_RIGHT;
                     continue;
