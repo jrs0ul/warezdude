@@ -398,10 +398,12 @@ void MapGenerator::makeWallsPretty(CMap* map)
                     continue;
                 }
 
-                if ((leftTile == TILE_H_WALL || leftTile == TILE_WALL || leftTile == TILE_CORNER_BL || leftTile == TILE_CORNER_TL) &&
+                if ((leftTile == TILE_H_WALL || leftTile == TILE_WALL || leftTile == TILE_CORNER_BL || 
+                      leftTile == TILE_CORNER_TL || leftTile == TILE_TSHAPE_180) &&
                         rightTile != TILE_WALL && 
                         bottomTile == TILE_WALL && 
-                        (topTile != TILE_H_WALL && topTile != TILE_WALL_TAIL_UP && topTile != TILE_V_WALL))
+                        (/*topTile != TILE_H_WALL &&*/ topTile != TILE_WALL_TAIL_UP && 
+                         topTile != TILE_V_WALL && topTile != TILE_CORNER_TL))
                 {
                     map->tiles[i][a] = TILE_CORNER_TR;
                     continue;
@@ -417,8 +419,8 @@ void MapGenerator::makeWallsPretty(CMap* map)
 
                 if (!(rightTile == TILE_WALL && topRightTile != TILE_V_WALL) && 
                         (leftTile == TILE_WALL || leftTile == TILE_H_WALL || leftTile == TILE_CORNER_BL || leftTile == TILE_CORNER_TL) &&
-                        (topTile == TILE_V_WALL || topTile == TILE_CORNER_TL || topTile == TILE_CORNER_TR) &&
-                        bottomTile != TILE_WALL)
+                        (topTile == TILE_V_WALL || topTile == TILE_CORNER_TL || topTile == TILE_CORNER_TR) /*&&
+                        bottomTile != TILE_WALL*/)
                 {
                     map->tiles[i][a] = TILE_CORNER_BR;
                     continue;
@@ -448,7 +450,8 @@ void MapGenerator::makeWallsPretty(CMap* map)
                 }
 
                 if (rightTile != TILE_WALL && bottomTile != TILE_WALL && 
-                        (leftTile == TILE_H_WALL || leftTile == TILE_WALL_TAIL_LEFT || leftTile == TILE_CORNER_BL))
+                        (leftTile == TILE_H_WALL || leftTile == TILE_WALL_TAIL_LEFT || leftTile == TILE_CORNER_BL ||
+                         leftTile == TILE_TSHAPE_180))
                 {
                     map->tiles[i][a] = TILE_WALL_TAIL_RIGHT;
                     continue;
