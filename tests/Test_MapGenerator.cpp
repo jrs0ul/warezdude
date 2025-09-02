@@ -321,7 +321,32 @@ TEST(MapGenerator, makeWallsPretty_WrinklyCorner1)
     gen.makeWallsPretty(&map);
 
     EXPECT_EQ(map.tiles[2][7], TILE_CORNER_TL);
-    //TODO: FINISH THIS
+    EXPECT_EQ(map.tiles[2][8], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[2][9], TILE_WALL_TAIL_RIGHT);
+
+    EXPECT_EQ(map.tiles[3][7], TILE_V_WALL);
+    EXPECT_EQ(map.tiles[4][0], TILE_WALL_TAIL_LEFT);
+    EXPECT_EQ(map.tiles[4][1], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[4][2], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[4][3], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[4][4], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[4][5], TILE_CORNER_TR);
+    EXPECT_EQ(map.tiles[4][7], TILE_V_WALL);
+    EXPECT_EQ(map.tiles[5][3], TILE_CORNER_TL);
+    EXPECT_EQ(map.tiles[5][4], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[5][5], TILE_CORNER_BR);
+    EXPECT_EQ(map.tiles[5][7], TILE_CORNER_BL);
+    EXPECT_EQ(map.tiles[5][8], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[5][9], TILE_CORNER_TR);
+    EXPECT_EQ(map.tiles[6][3], TILE_V_WALL);
+    EXPECT_EQ(map.tiles[6][9], TILE_V_WALL);
+    EXPECT_EQ(map.tiles[7][3], TILE_CORNER_BL);
+    EXPECT_EQ(map.tiles[7][4], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[7][5], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[7][6], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[7][7], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[7][8], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[7][9], TILE_CORNER_BR);
 
     deleteDummyMap(&map);
 }
@@ -582,16 +607,178 @@ TEST(MapGenerator, makeWallsPretty_WrinklyCorner2)
     map.tiles[3][1] = TILE_WALL;
     map.tiles[3][3] = TILE_WALL;
 
-    //TODO: FINISH FILLING
+
+    map.tiles[4][1] = TILE_WALL;
+    map.tiles[4][3] = TILE_WALL;
+    map.tiles[4][4] = TILE_WALL;
+    map.tiles[4][5] = TILE_WALL;
+
+    map.tiles[4][7] = TILE_WALL;
+    map.tiles[4][8] = TILE_WALL;
+    map.tiles[4][9] = TILE_WALL;
+
+    map.tiles[5][1] = TILE_WALL;
+    map.tiles[5][2] = TILE_WALL;
+    map.tiles[5][3] = TILE_WALL;
+    map.tiles[5][4] = TILE_WALL;
+    map.tiles[5][5] = TILE_WALL;
+
+    map.tiles[5][9] = TILE_WALL;
+    map.tiles[6][9] = TILE_WALL;
+
+    for (int i = 1; i < 10; ++i)
+    {
+        map.tiles[7][i] = TILE_WALL;
+    }
+
+    map.tiles[8][1] = TILE_WALL;
+    map.tiles[9][1] = TILE_WALL;
+
 
     MapGenerator gen(10, 10);
     gen.makeWallsPretty(&map);
 
     EXPECT_EQ(map.tiles[0][6], TILE_WALL_TAIL_UP);
-    //TODO: FINISH CHECKS
+    EXPECT_EQ(map.tiles[1][6], TILE_CORNER_BR);
+    EXPECT_EQ(map.tiles[1][5], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[1][4], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[1][3], TILE_CORNER_TL);
+    EXPECT_EQ(map.tiles[2][3], TILE_V_WALL);
+    EXPECT_EQ(map.tiles[3][0], TILE_WALL_TAIL_LEFT);
+    EXPECT_EQ(map.tiles[3][1], TILE_CORNER_TR);
+    EXPECT_EQ(map.tiles[3][3], TILE_V_WALL);
+    EXPECT_EQ(map.tiles[4][1], TILE_V_WALL);
+    EXPECT_EQ(map.tiles[4][3], TILE_CORNER_BL);
+    EXPECT_EQ(map.tiles[4][4], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[4][5], TILE_CORNER_TR);
+
+    EXPECT_EQ(map.tiles[4][7], TILE_WALL_TAIL_LEFT);
+    EXPECT_EQ(map.tiles[4][8], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[4][9], TILE_CORNER_TR);
+
+    EXPECT_EQ(map.tiles[5][1], TILE_CORNER_BL);
+    EXPECT_EQ(map.tiles[5][2], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[5][3], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[5][4], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[5][5], TILE_CORNER_BR);
+    EXPECT_EQ(map.tiles[5][9], TILE_V_WALL);
+    EXPECT_EQ(map.tiles[6][9], TILE_V_WALL);
+    EXPECT_EQ(map.tiles[7][1], TILE_CORNER_TL);
+    EXPECT_EQ(map.tiles[7][2], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[7][3], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[7][4], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[7][5], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[7][6], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[7][7], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[7][8], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[7][9], TILE_CORNER_BR);
+    EXPECT_EQ(map.tiles[8][1], TILE_V_WALL);
+    EXPECT_EQ(map.tiles[9][1], TILE_WALL_TAIL_DOWN);
+
 
     deleteDummyMap(&map);
 }
 
 
+TEST(MapGenerator, makeWallsPretty_WrinklyEntrance)
+{
+    CMap map;
+    makeDummyMap(&map);
+
+    //0000011111
+    //0000010000
+    //1111110000
+    //1000110000
+    //1000110000
+    //1000000000
+    //1000110000
+    //1101111111
+    //0101000000
+    //0101000000
+
+    map.tiles[0][5] = TILE_WALL;
+    map.tiles[0][6] = TILE_WALL;
+    map.tiles[0][7] = TILE_WALL;
+    map.tiles[0][8] = TILE_WALL;
+    map.tiles[0][9] = TILE_WALL;
+    map.tiles[1][5] = TILE_WALL;
+    map.tiles[2][0] = TILE_WALL;
+    map.tiles[2][1] = TILE_WALL;
+    map.tiles[2][2] = TILE_WALL;
+    map.tiles[2][3] = TILE_WALL;
+    map.tiles[2][4] = TILE_WALL;
+    map.tiles[2][5] = TILE_WALL;
+    map.tiles[3][0] = TILE_WALL;
+    map.tiles[3][4] = TILE_WALL;
+    map.tiles[3][5] = TILE_WALL;
+    map.tiles[4][0] = TILE_WALL;
+    map.tiles[4][4] = TILE_WALL;
+    map.tiles[4][5] = TILE_WALL;
+    map.tiles[5][0] = TILE_WALL;
+    map.tiles[6][0] = TILE_WALL;
+    map.tiles[6][4] = TILE_WALL;
+    map.tiles[6][5] = TILE_WALL;
+    map.tiles[7][0] = TILE_WALL;
+    map.tiles[7][1] = TILE_WALL;
+    map.tiles[7][3] = TILE_WALL;
+    map.tiles[7][4] = TILE_WALL;
+    map.tiles[7][5] = TILE_WALL;
+    map.tiles[7][6] = TILE_WALL;
+    map.tiles[7][7] = TILE_WALL;
+    map.tiles[7][8] = TILE_WALL;
+    map.tiles[7][9] = TILE_WALL;
+    map.tiles[8][1] = TILE_WALL;
+    map.tiles[8][3] = TILE_WALL;
+    map.tiles[9][1] = TILE_WALL;
+    map.tiles[9][3] = TILE_WALL;
+
+    MapGenerator gen(10, 10);
+    gen.makeWallsPretty(&map);
+
+    EXPECT_EQ(map.tiles[0][9], TILE_WALL_TAIL_RIGHT);
+    EXPECT_EQ(map.tiles[0][8], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[0][7], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[0][6], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[0][5], TILE_CORNER_TL);
+    EXPECT_EQ(map.tiles[1][5], TILE_V_WALL);
+    EXPECT_EQ(map.tiles[2][0], TILE_CORNER_TL);
+    EXPECT_EQ(map.tiles[2][1], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[2][2], TILE_H_WALL);
+    EXPECT_EQ(map.tiles[2][3], TILE_H_WALL);
+    //EXPECT_EQ(map.tiles[2][4], TILE_CORNER_TR);
+    //TODO: finish testing this
+
+    deleteDummyMap(&map);
+}
+
+
+    //0000100000
+    //1111100000
+    //0001100000
+    //0000000000
+    //0001111100
+    //0011111100
+    //0010100000
+    //0010100000
+    //0010100000
+    //0011100000
+    //0001111100
+
+    //0100100000
+    //0100100000
+    //0100101111
+    //0110101000
+    //0010101000
+    //0011101100
+    //0011000100
+    //0011000100
+    //1111000100
+    //0001111100
+
+    
+
+
+
+
+    
 

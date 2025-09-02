@@ -342,6 +342,16 @@ void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
     connectRooms(node->right, map);
 }
 
+bool IsWallTile(unsigned char tile)
+{
+    if (tile >= TILE_WALL && tile <= TILE_WALL_TAIL_DOWN)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 void MapGenerator::makeWallsPretty(CMap* map)
 {
     for (unsigned i = 0; i < map->height(); ++i)
@@ -359,23 +369,38 @@ void MapGenerator::makeWallsPretty(CMap* map)
                 const unsigned char topTile = (i - 1 < map->height())    ? map->tiles[i - 1][a]  : 0;
                 const unsigned char bottomTile = (i + 1 < map->height()) ? map->tiles[i + 1][a]  : 0;
 
+                const unsigned char topLefTile = (i - 1 < map->height() && a - 1 < map->width()) ? map->tiles[i - 1][a - 1] : 0;
                 const unsigned char topRightTile = (i - 1 < map->height() && a + 1 < map->width()) ? map->tiles[i - 1][a + 1] : 0;
                 const unsigned char bottomLeftTile = (i + 1 < map->height() && a - 1 < map->width()) ? map->tiles[i + 1][a - 1] : 0;
                 const unsigned char bottomRightTile = (i + 1 < map->height() && a + 1 < map->width()) ? map->tiles[i + 1][a + 1] : 0;
+
+
+                if ((leftTile == TILE_H_WALL || leftTile == TILE_WALL || leftTile == TILE_CORNER_BL || 
+                      leftTile == TILE_CORNER_TL || leftTile == TILE_TSHAPE_180 || leftTile == TILE_WALL_TAIL_LEFT) &&
+                        rightTile != TILE_WALL &&
+                        bottomTile == TILE_WALL && 
+                        (topTile != TILE_WALL_TAIL_UP && 
+                         topTile != TILE_V_WALL && topTile != TILE_CORNER_TL))
+                {
+                    map->tiles[i][a] = TILE_CORNER_TR;
+                    continue;
+                }
+
 
                 if (rightTile == TILE_WALL && 
                         (leftTile == TILE_WALL || leftTile == TILE_H_WALL ||
                          leftTile == TILE_CORNER_TL || leftTile == TILE_CORNER_BL ||
                          leftTile == TILE_WALL_TAIL_LEFT || leftTile == TILE_TSHAPE_L90 ||
                          leftTile == TILE_TSHAPE || leftTile == TILE_TSHAPE_180) &&
-                        (topTile != TILE_V_WALL && topTile != TILE_CORNER_TL) && 
-                        !(bottomTile == TILE_WALL && bottomLeftTile != TILE_WALL && bottomRightTile != TILE_WALL))
+                        (topTile != TILE_V_WALL && topTile != TILE_CORNER_TL) &&
+                        !(bottomTile == TILE_WALL && !IsWallTile(bottomLeftTile) && IsWallTile(leftTile) && !IsWallTile(topTile) && bottomRightTile != TILE_WALL))
                 {
                     map->tiles[i][a] = TILE_H_WALL;
                     continue;
                 }
 
                 if (!(rightTile == TILE_WALL && bottomRightTile != TILE_WALL) &&
+                        !(rightTile == TILE_WALL && bottomTile == TILE_WALL && bottomRightTile == TILE_WALL && IsWallTile(topRightTile) == false) &&
                         (leftTile != TILE_WALL && leftTile != TILE_H_WALL && 
                          leftTile != TILE_CORNER_BL && leftTile != TILE_CORNER_TL) &&
                         (topTile == TILE_WALL || topTile == TILE_V_WALL ||
@@ -398,29 +423,20 @@ void MapGenerator::makeWallsPretty(CMap* map)
                     continue;
                 }
 
-                if ((leftTile == TILE_H_WALL || leftTile == TILE_WALL || leftTile == TILE_CORNER_BL || 
-                      leftTile == TILE_CORNER_TL || leftTile == TILE_TSHAPE_180) &&
-                        rightTile != TILE_WALL && 
-                        bottomTile == TILE_WALL && 
-                        (/*topTile != TILE_H_WALL &&*/ topTile != TILE_WALL_TAIL_UP && 
-                         topTile != TILE_V_WALL && topTile != TILE_CORNER_TL))
-                {
-                    map->tiles[i][a] = TILE_CORNER_TR;
-                    continue;
-                }
-
+               
                 if ((topTile == TILE_V_WALL || topTile == TILE_CORNER_TR || topTile == TILE_CORNER_TL) && 
                         (leftTile != TILE_H_WALL && leftTile != TILE_WALL && leftTile != TILE_WALL_TAIL_LEFT) &&
-                        bottomTile != TILE_WALL && rightTile == TILE_WALL)
+                        /*bottomTile != TILE_WALL &&*/ rightTile == TILE_WALL)
                 {
                     map->tiles[i][a] = TILE_CORNER_BL;
                     continue;
                 }
 
                 if (!(rightTile == TILE_WALL && topRightTile != TILE_V_WALL) && 
-                        (leftTile == TILE_WALL || leftTile == TILE_H_WALL || leftTile == TILE_CORNER_BL || leftTile == TILE_CORNER_TL) &&
-                        (topTile == TILE_V_WALL || topTile == TILE_CORNER_TL || topTile == TILE_CORNER_TR) /*&&
-                        bottomTile != TILE_WALL*/)
+                        (leftTile == TILE_WALL || leftTile == TILE_H_WALL || leftTile == TILE_CORNER_BL ||
+                         leftTile == TILE_CORNER_TL) &&
+                        (topTile == TILE_V_WALL || topTile == TILE_CORNER_TL || topTile == TILE_CORNER_TR ||
+                         topTile == TILE_WALL_TAIL_UP))
                 {
                     map->tiles[i][a] = TILE_CORNER_BR;
                     continue;
