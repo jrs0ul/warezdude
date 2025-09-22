@@ -1,7 +1,6 @@
 #include "Game.h"
 
-
-#include <cstdio>     //sprinf
+#include <cstdio>
 #include <ctime>
 #include <cassert>
 
@@ -261,16 +260,16 @@ void Game::DrawMiniMap(int x, int y)
 }
 
 //---------------------
-//sudelioja 3zenkli skaiciu is bmp
-void Game::DrawNum(int x, int y,int num)
+void Game::DrawNumber(int x, int y,int num)
 {
-    int arr[3]={0};
+    int arr[3] = {0};
 
-    int i=2;
-    while (num!=0)
+    int i = 2;
+
+    while (num != 0)
     {
-        arr[i]=num%10;
-        num=num/10;
+        arr[i] = num % 10;
+        num = num / 10;
         i--;
     }
 
@@ -385,7 +384,7 @@ void Game::DrawStats()
               2, false, 1.f, 1.f, 0.f, 
               COLOR(1.f, 1.f, 1.f, 0.6f), 
               COLOR(1.f, 1.f, 1.f, 0.6f));
-    DrawNum(58,
+    DrawNumber(58,
             sys.ScreenHeight - 40,
             player->getHP());
 
@@ -394,14 +393,14 @@ void Game::DrawStats()
               120,
               sys.ScreenHeight - 40,
               0, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f)); 
-    DrawNum(155,
+    DrawNumber(155,
             sys.ScreenHeight - 40,
             player->ammo);
 
     if (netGameState == MPMODE_DEATHMATCH)
     {
         pics.draw(STAT_ICON, 220, sys.ScreenHeight - 40, 3, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
-        DrawNum(255, sys.ScreenHeight - 40, frags);
+        DrawNumber(255, sys.ScreenHeight - 40, frags);
     }
 
     if (player->equipedGame)
@@ -584,7 +583,7 @@ void Game::SendFragsToClient(int clientIdx, int frags)
     printf("sent %d frags to client %d\n", frags, clientIdx);
 }
 //-----------------------------------
-//klientas servui isiuncia infa apie paimta daikta
+//The client sends information about the taken item to the server
 void Game::SendItemCRemove(int itemIndex)
 {
     char bufer[MAX_MESSAGE_DATA_SIZE];
@@ -730,7 +729,7 @@ void Game::SendMapData(int clientIndex, CMap& map)
 }
 
 //---------------------------------
-//siuncia servui msg kad keistu mapa
+//Client sends a message to change the map
 void Game::SendWarpMessage()
 {
     char buferis[MAX_MESSAGE_DATA_SIZE];
@@ -757,7 +756,7 @@ void Game::ItemPickup()
             int item = mapas.items[i].value;
 
             if ((item != 0) && ((item != ITEM_MEDKIT) || (player->getHP() < ENTITY_INITIAL_HP)))
-            { //daiktas bus paimtas
+            {  //  the item will be taken
 
                 SoundSystem* ss = SoundSystem::getInstance();
 
@@ -770,8 +769,6 @@ void Game::ItemPickup()
                     PlaySoundAt(ss, player->x, player->y, 1);
                 }
 
-
-                //siunciam infa----------
                 switch (netMode)
                 {
                     case NETMODE_NONE : break;
@@ -989,7 +986,6 @@ void Game::SendServerDoorState(unsigned int clientIndex, int doorx,int doory, un
 }
 
 //--------------------------------
-//viskas kas susije su durimis
 void Game::DoorsInteraction()
 {
 
@@ -1396,7 +1392,7 @@ void Game::MonsterAI(int index)
         }
 
 
-        //1 kas kolidina super duper figuroje
+        //1 who collides inside the shape
         int kiekplayeriu = 1;
 
         if (netMode == NETMODE_SERVER)
@@ -1418,7 +1414,7 @@ void Game::MonsterAI(int index)
 
         if (victimindex)
         {
-            //2 rask spindulio kelia iki pirmojo kolidinancio
+            //2 find the path
             Vector3D * line = Line(round(mapas.mons[index].x),
                     round(mapas.mons[index].y),
                     round(mapas.mons[victimindex].x),
@@ -1499,7 +1495,7 @@ void Game::MonsterAI(int index)
     }
 
     else if (mapas.mons[index].shot)
-    { //jei mus kazkas pasove shot=true
+    {
         mapas.mons[index].disintegrationAnimation();
 
         if (!mapas.mons[index].shot) //if finally disintegrated
@@ -1510,7 +1506,7 @@ void Game::MonsterAI(int index)
     }
 
 
-    if ((!mapas.mons[index].shot)&&(!mapas.mons[index].spawn))
+    if ((!mapas.mons[index].shot) && (!mapas.mons[index].spawn))
     {
 
         if (mapas.mons[index].hit)
@@ -1593,9 +1589,6 @@ void Game::GenerateTheMap(int level, int currentHp, int currentAmmo)
     mapas.destroy();
 
     mapas.generate(level);
-
-   
-
 
     Dude thePlayer;
     mapas.addMonster(thePlayer);
@@ -1812,7 +1805,6 @@ void Game::TitleMenuLogic()
                 ipedit.deactivate();
                 ipedit.reset();
                 netmenu.activate();
-                
             }
 
         }
@@ -1884,9 +1876,11 @@ void Game::TitleMenuLogic()
         if (options.active())
         {
             if (!options.selected)
+            {
                 options.getInput(Keys, OldKeys);
-            else{
-                
+            }
+            else
+            {
                 options.deactivate();
                 //mainmenu.activate();
                 switch (options.state){
@@ -1899,8 +1893,6 @@ void Game::TitleMenuLogic()
                             SfxVolumeC.activate();
                            } break;
                 }
-    
-             
             }
             if (options.canceled){
                 mainmenu.activate();
@@ -1910,7 +1902,8 @@ void Game::TitleMenuLogic()
         }
 
 
-        if (MusicVolumeC.active()){
+        if (MusicVolumeC.active())
+        {
             if (!MusicVolumeC.selected)
             {
                 MusicVolumeC.getInput(Keys, OldKeys);
@@ -1937,7 +1930,8 @@ void Game::TitleMenuLogic()
 
         }
 
-        if (SfxVolumeC.active()){
+        if (SfxVolumeC.active())
+        {
             if (!SfxVolumeC.selected)
                 SfxVolumeC.getInput(Keys, OldKeys);
             else{
@@ -1970,7 +1964,7 @@ void Game::IntroScreenLogic()
     }
 
     intro.logic();
-   }
+}
 //---------------------------------------------------------------
 void Game::HelpScreenLogic()
 {
@@ -1978,13 +1972,13 @@ void Game::HelpScreenLogic()
 
     if (itmtim > 10)
     {
-        mapas.itmframe++; //animuoti daiktai
+        mapas.itmframe++; //supposed to be animated items
         if (mapas.itmframe > 3)
         {
             mapas.itmframe = 0;
         }
 
-        itmtim=0;
+        itmtim = 0;
     }
 
     if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])||(!FirstTime))
@@ -1992,7 +1986,7 @@ void Game::HelpScreenLogic()
 
         if (FirstTime)
         {
-            FirstTime=false;
+            FirstTime = false;
         }
 
         state = GAMESTATE_GAME;
@@ -2010,7 +2004,7 @@ void Game::EndingLogic()
 
     if (itmtim > 10)
     {
-        mapas.itmframe++; //animuoti daiktai
+        mapas.itmframe++; //animated items ?
         if (mapas.itmframe > 3)
         {
             mapas.itmframe = 0;
@@ -2058,7 +2052,8 @@ int Game::PlayerCount()
 
 //===============================================================
 
-void Game::logic(){
+void Game::logic()
+{
 
     if ((mapas.timeToComplete) && (state == GAMESTATE_GAME))
     {
@@ -2139,7 +2134,7 @@ void Game::logic(){
         }
     }
 
-    if (music.playing()) //updeitinam muzona
+    if (music.playing())
     {
         music.update();
     }
@@ -2387,7 +2382,7 @@ void Game::CoreGameLogic()
     AnimateSlime();
 
     //hero movement
-   
+
     if (player->shot)
     { //hero dies here
 
@@ -2775,9 +2770,7 @@ void Game::DrawTitleScreen()
     pics.draw(0, 320, 180, 0, true);
     pics.draw(16, 0,0,0);
 
-
-
-    char buf[80];   
+    char buf[80];
 
     sprintf(buf,"Jrs%dul",0);
     WriteText(sys.ScreenWidth - 50, 10, pics, 10, buf, 0.5f, 0.5f);
@@ -2983,29 +2976,7 @@ void Game::DrawGameplay()
 {
     switch(msg)
     {
-    
 
-    case WM_ACTIVATE:{
-
-        if (wparam==WA_INACTIVE){
-            ClipCursor(0);
-        }
-        else{
-             RECT rcClip;
-            GetWindowRect(hwndMain, &rcClip);  
-            rcClip.top+=30;
-            ClipCursor(&rcClip); 
-        }
-
-        if( WA_INACTIVE != wparam && input.pKeyboard ){
-            input.pKeyboard->Acquire();
-            input.pMouse->Acquire();
-        }
-                     }
-        break;
-
-
-   
     case WM_KEYUP:{
         if (wparam == VK_F4) fullscreenswitch();
         if (wparam ==VK_F1) showdebugtext=!showdebugtext;
@@ -3049,7 +3020,6 @@ void Game::DrawGameplay()
 }*/
 
 //----------------------------------------
-//siuncia kliento info i serva
 void Game::SendClientCoords()
 {
     Dude* player = mapas.getPlayer(clientMyIndex + 1);
@@ -3237,7 +3207,7 @@ void Game::GetMapInfo(const unsigned char* bufer, int* index)
      {
 
          if (strcmp(mapname, mapas.name) != 0)
-         {//jei mapas ne tas pats tai uzloadinam
+         {  //  Let's load if the map is different
              LoadTheMap(mapname, false, otherClientCount, ENTITY_INITIAL_HP);
              Client_GotMapData = true;
              state = GAMESTATE_GAME;
@@ -3557,21 +3527,28 @@ void Game::GetDoorInfo(const unsigned char* bufer, unsigned * index, int* dx, in
     *index+=sizeof(unsigned char);
 
     mapas.tiles[doory][doorx]=doorframe;
-    if ((doorframe==65)||(doorframe==67)||(doorframe==69)||(doorframe==71))
+    if ((doorframe==65) || (doorframe==67) || (doorframe==69) || (doorframe==71))
     {
         mapas._colide[doory][doorx] = true;
     }
     else
     {
-        mapas._colide[doory][doorx]=false;
+        mapas._colide[doory][doorx] = false;
     }
 
     if (dx)
+    {
         *dx=doorx;
+    }
+
     if (dy)
-        *dy=doory;
+    {
+        *dy = doory;
+    }
     if (frame)
-        *frame=doorframe;
+    {
+        *frame = doorframe;
+    }
 }
 //---------------------------------------
 void Game::GetNewItemInfo(unsigned char* bufer, int* index)

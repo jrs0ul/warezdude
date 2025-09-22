@@ -87,21 +87,21 @@ public:
         , shot(false)
         , shrinked(false)
         {
-            tim=0;
-            stim=0;
+            tim = 0;
+            stim = 0;
             ammo = ENTITY_INITIAL_AMMO;
-            canAtack=true;
-            reloadtime=0;
+            canAtack = true;
+            reloadtime = 0;
             r = g = b = 1.0f;
-            hit=false;
-            hittim=0;
-            id=0;
+            hit = false;
+            hittim = 0;
+            id = 0;
 
-            victimID=0;
-            colid=0;
-            atim=0;
-            enemyseen=false;
-            item=0;
+            victimID = 0;
+            colid = 0;
+            atim = 0;
+            enemyseen = false;
+            item = 0;
             delay = rand()%2+1;
 
             equipedGame = 0;
@@ -128,17 +128,16 @@ public:
 
         /* shoots or deploys a mine if the entity has some ammo */
         bool shoot(bool useBullets, WeaponTypes weaponType, CBulletContainer* bulcon);
-        //atakuoja, jei kolidina tai true jei ne false
+        //melee attack
         int hitIt(Dude& enemy, float vectorx, float vetory, int damage);
 
-        //gydosi
         void heal();
 
         void disintegrationAnimation();
         void appearInRandomPlace(bool** map, int mapwidth, int mapheight);
-        //kai kas nors atakuoja - paraudonuoja
+        //gets red if damaged
         void damageAnim();
-        //prasuka laika, kad vel galetu atakuoti
+        // waits so it could attack again
         void reload(int time);
         void chageNextWeapon();
 

@@ -61,30 +61,36 @@ MapList::MapList()
     mapList.destroy();
 
 
-    current=0;
+    current = 0;
 }
 
-void MapList::Destroy(){
-    if (_count){
-     for (int i=0;i<_count;i++){
-         if (maps[i]){
-          delete []maps[i];
+void MapList::Destroy()
+{
+    if (_count)
+    {
+        for (int i = 0; i < _count; ++i)
+        {
+            if (maps[i])
+            {
+                delete []maps[i];
+            }
+        }
 
-          
-         }
-     }
-      delete []maps;
-      maps=0;
-      
+        delete []maps;
+        maps = 0;
+
     }
-    //}
 
 }
 
-
-void MapList::getMapName(int i, char*name){
-  if ((i>=0)&&(i<_count)){
-   strcpy(name,maps[i]);  
-  }
-  else name=0;
+void MapList::getMapName(int i, char*name)
+{
+    if ((i >= 0) && (i < _count))
+    {
+        strcpy(name,maps[i]);
+    }
+    else
+    {
+        name=0;
+    }
 }

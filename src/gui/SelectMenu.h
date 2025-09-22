@@ -20,27 +20,25 @@ struct Smenu{
 class SelectMenu : public BasicControl
 {
     public:
-        char title[30];  //antraste
-        Smenu selection;   //meniu
+        char title[30];
+        Smenu selection;
         unsigned pressedkey;
-        unsigned int width;        //plotis
-        unsigned int height;       //aukstis
-        unsigned char defstate;     //defaultine opcija
-        unsigned char state;        //parinkta tuo metu opcija
+        unsigned int width;
+        unsigned int height;
+        unsigned char defstate;
+        unsigned char state;
 
-        bool selected;  //jau viskas pasirinkta, enter paspaustas
-        bool canceled;  //ar menu atshauktas
+        bool selected;
+        bool canceled;
 
         SelectMenu(){selected = false; canceled = false;}
 
-        //priskiriam data dx,dy:lango metrikos dst:defstate
-        void init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel, unsigned char dst,unsigned int dheight=0);
-        //numusa userio atlikta pasirinkima
+        void init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel, unsigned char dst,unsigned int dheight = 0);
+        // resets the selection
         void reset();
-        //jei keyus i virsu apcia tai keiciasi ir state
+        //changes the state depending on input keys
         void getInput(const unsigned char* keys, const unsigned char* oldKeys);
-        //nupaisom
-        void draw( PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons=0);
+        void draw( PicsContainer& pics, unsigned rod,  unsigned font, unsigned icons = 0);
 
 };
 

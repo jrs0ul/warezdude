@@ -4,17 +4,18 @@
 
 
 void ScroollControl::init(unsigned int dx, unsigned int dy,
-                          const char *dt, long defstate, long dmaxstate, int dstep){
+        const char *dt, long defstate, long dmaxstate, int dstep)
+{
 
-                              setpos(dx, dy);
-                              strcpy(title,dt);
-                              state=defstate;
-                              maxstate=dmaxstate;
-                              step=dstep;
-                              selected=false; //dar nieko neisirinkom
-                              canceled=false;
-                              deactivate();
-                              pressedkey=0;
+    setpos(dx, dy);
+    strcpy(title,dt);
+    state = defstate;
+    maxstate = dmaxstate;
+    step = dstep;
+    selected = false;
+    canceled = false;
+    deactivate();
+    pressedkey = 0;
 
 }
 
@@ -27,13 +28,14 @@ void ScroollControl::draw(PicsContainer& pics, unsigned rod, unsigned bg, unsign
         pics.draw(bg, getX() + 10+i, getY() + 16, 2);
     }
 
-    pics.draw(rod, getX() + 10 + state/step, getY() + 16+8, 1, true, 1.0f,1.0f, 0.0f, COLOR(1.0f,1.0f,1.0f, 1.f), COLOR(1.f,1.f,1.f,1.f));
+    pics.draw(rod, getX() + 10 + state/step, getY() + 16+8, 1, true, 1.0f,1.0f, 0.0f, 
+              COLOR(1.0f,1.0f,1.0f, 1.f), COLOR(1.f,1.f,1.f,1.f));
 
 }
 
 void ScroollControl::getInput(const unsigned char* keys, const unsigned char* oldKeys)
 {
-    //cia tam kad parinktu kai mygtuka atleidi
+
     if (keys[4] && !oldKeys[4]) 
     {
         selected = true;      //enter
@@ -58,7 +60,8 @@ void ScroollControl::getInput(const unsigned char* keys, const unsigned char* ol
 
 }
 //----------------------------
-void ScroollControl::reset(){
+void ScroollControl::reset()
+{
     selected=false;
     canceled=false;
 }

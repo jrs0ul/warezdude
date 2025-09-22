@@ -164,8 +164,8 @@ public:
     float RelativeMouseY;
     unsigned char globalKEY;
     unsigned char globalKeyUp;
-    unsigned char OldKeys[GameKeyCount]; //zaidimo mygtukai
-    unsigned char Keys[GameKeyCount]; //zaidimo mygtukai
+    unsigned char OldKeys[GameKeyCount]; //  old game keys
+    unsigned char Keys[GameKeyCount]; //  game keys
     char DocumentPath[255];
     bool Works;
     bool windowed;
@@ -281,7 +281,7 @@ private:
     void DeleteAudio();
     void HandlePlayerAttacks(Dude* player, int clientIndex);
     void CoreGameLogic();
-    void DrawNum(int x, int y, int num);
+    void DrawNumber(int x, int y, int num);
     void DrawHelp();
 };
 

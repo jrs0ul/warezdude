@@ -55,7 +55,6 @@ void SelectMenu::reset()
 void SelectMenu::getInput(const unsigned char* keys, const unsigned char* oldKeys)
 {
 
-    //cia tam kad parinktu kai mygtuka atleidi
     if (keys[4] && !oldKeys[4]) 
     {
         if (selection.count)
