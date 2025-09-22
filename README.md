@@ -1,10 +1,12 @@
+# Codename: Warezdude
+
 ![gameplay](wd.gif)
 
 ## Game features
-8 random generated levels. 
-Coop multiplayer or deathmatch (UDP protocol).
-Collectable game cartridges that act as special abilities for the main character.
-Very annoying music
+- 8 randomly generated levels 
+- Network based multiplayer mode (UDP protocol)
+- Collectable game cartridges acting as special abilities for the main character.
+- Very annoying music :-)
 
 ## Controls
 
