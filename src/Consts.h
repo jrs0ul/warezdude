@@ -58,7 +58,29 @@ const unsigned char TILE_ROCKS            = 8;
 const unsigned char TILE_WALL             = 19;
 const unsigned char TILE_V_WALL           = 20;
 const unsigned char TILE_H_WALL           = 21;
+const unsigned char TILE_CORNER_TL        = 22;
+const unsigned char TILE_CORNER_TR        = 23;
+const unsigned char TILE_CORNER_BL        = 24;
+const unsigned char TILE_CORNER_BR        = 25;
+
+
+const unsigned char TILE_TSHAPE_L90       = 26;
+const unsigned char TILE_TSHAPE_R90       = 27;
+const unsigned char TILE_TSHAPE_180       = 28;
+const unsigned char TILE_TSHAPE           = 29;
+const unsigned char TILE_WALL_CROSS       = 30;
+
+const unsigned char TILE_WALL_TAIL_UP     = 31;
+const unsigned char TILE_WALL_TAIL_LEFT   = 32;
+const unsigned char TILE_WALL_TAIL_RIGHT  = 33;
+const unsigned char TILE_WALL_TAIL_DOWN   = 34;
+
 const unsigned char TILE_SLIME            = 35;
+const unsigned char TILE_CONCRETE_FLOOR   = 37;
+const unsigned char TILE_H_DOOR_DIRT      = 65;
+const unsigned char TILE_V_DOOR_DIRT      = 65;
+const unsigned char TILE_H_DOOR_CONCRETE  = 69;
+const unsigned char TILE_V_DOOR_CONCRETE  = 71;
 const unsigned char TILE_EXIT             = 81;
 
 

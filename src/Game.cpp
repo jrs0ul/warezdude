@@ -203,7 +203,9 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 void Game::DrawMiniMap(int x, int y)
 {
 
-    pics.draw(12, x, y, 0, false ,mapas.width(), mapas.height(), 0, COLOR(1,1,1, 0.6f), COLOR(1,1,1, 0.6f));
+    const int MINIMAP_TILESET = 12;
+
+    pics.draw(MINIMAP_TILESET, x, y, 0, false ,mapas.width(), mapas.height(), 0, COLOR(1,1,1, 0.6f), COLOR(1,1,1, 0.6f));
 
     for (unsigned i = 0; i < mapas.height(); i++)
     {
@@ -211,15 +213,26 @@ void Game::DrawMiniMap(int x, int y)
         {
             int frame = 0;
 
-            if ((mapas.tiles[i][a] != 65) && (mapas.tiles[i][a] != 67) && (mapas.tiles[i][a] != 69)
-                    && (mapas.tiles[i][a] != 71))
+            if ( mapas.tiles[i][a] == TILE_V_DOOR_DIRT || mapas.tiles[i][a] == TILE_V_DOOR_CONCRETE)
+            {
+                frame = 4;
+            }
+            else if (mapas.tiles[i][a] == TILE_H_DOOR_DIRT || mapas.tiles[i][a] == TILE_H_DOOR_CONCRETE)
+            {
+                frame = 5;
+            }
+            else if (mapas.tiles[i][a] == TILE_EXIT)
+            {
+                frame = 6;
+            }
+            else
             {
                 frame = mapas.colide(a, i);
             }
 
             if (frame)
             {
-                pics.draw(12,
+                pics.draw(MINIMAP_TILESET,
                           a * MINIMAP_TILE_WIDTH + x,
                           i * MINIMAP_TILE_WIDTH + y,
                           frame, false, 1.f, 1.f, 0.f, COLOR(1,1,1,0.6f), COLOR(1,1,1,0.6f));
@@ -229,18 +242,18 @@ void Game::DrawMiniMap(int x, int y)
 
     Dude* player = mapas.getPlayer((netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0);
 
-    pics.draw(12,
-              x + (round(player->x / 32.0f) * MINIMAP_TILE_WIDTH),
-              y + (round(player->y / 32.0f) * MINIMAP_TILE_WIDTH),
+    pics.draw(MINIMAP_TILESET,
+              x + (round(player->x / TILE_WIDTH) * MINIMAP_TILE_WIDTH),
+              y + (round(player->y / TILE_WIDTH) * MINIMAP_TILE_WIDTH),
               3,
               false);
 
     for (unsigned i = 0; i<mapas.items.count(); i++)
     {
-        pics.draw(12,
-                  x + (round(mapas.items[i].x / 32.0f) * MINIMAP_TILE_WIDTH),
-                  y + (round(mapas.items[i].y / 32.0f) * MINIMAP_TILE_WIDTH),
-                  4,
+        pics.draw(MINIMAP_TILESET,
+                  x + (round(mapas.items[i].x / TILE_WIDTH) * MINIMAP_TILE_WIDTH),
+                  y + (round(mapas.items[i].y / TILE_WIDTH) * MINIMAP_TILE_WIDTH),
+                  2,
                   false);
     }
 
@@ -523,7 +536,7 @@ void Game::GoToLevel(int currentHp, int currentAmmo, int level, int otherplayer)
     }
     else
     {
-        GenerateTheMap(currentHp, currentAmmo);
+        GenerateTheMap(level, currentHp, currentAmmo);
     }
 
     fadein = true;
@@ -1574,60 +1587,22 @@ void Game::AnimateSlime()
     }
 }
 //-------------------------------------------------------
-void Game::GenerateTheMap(int currentHp, int currentAmmo)
+void Game::GenerateTheMap(int level, int currentHp, int currentAmmo)
 {
     bulbox.destroy();
     mapas.destroy();
 
-    mapas.generate();
+    mapas.generate(level);
 
+   
 
-    mapas.buildCollisionmap();
-
-    mapas.exit.x = rand() % mapas.width();
-    mapas.exit.y = rand() % mapas.height();
-
-    while(mapas._colide[(int)mapas.exit.y][(int)mapas.exit.x])
-    {
-        mapas.exit.x = rand() % mapas.width();
-        mapas.exit.y = rand() % mapas.height();
-    }
-
-    mapas.start.x = rand() % mapas.width();
-    mapas.start.y = rand() % mapas.height();
-
-    while(mapas._colide[(int)mapas.start.y][(int)mapas.start.x])
-    {
-        mapas.start.x = rand() % mapas.width();
-        mapas.start.y = rand() % mapas.height();
-    }
-
-    mapas.start.x *= TILE_WIDTH;
-    mapas.start.y *= TILE_WIDTH;
-
-
-    mapas.tiles[(int)mapas.exit.y][(int)mapas.exit.x] = TILE_EXIT;
-
-    mapas.enemyCount = 2 + rand() % 10;
-
-    mapas.misionItems = 4;
-    mapas.goods = 10;
-
-    for (int i = 0; i < mapas.enemyCount; ++i)
-    {
-        Dude m;
-        m.id = i;
-        m.race = rand() % MONSTER_MAX_RACE + 1;
-        m.initMonsterHP();
-        m.appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
-        mapas.mons.add(m);
-    }
 
     Dude thePlayer;
     mapas.addMonster(thePlayer);
     Dude* player = mapas.getPlayer();
 
-    player->appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+    player->x = (float)mapas.start.x;
+    player->y = (float)mapas.start.y;
     player->id = mapas.enemyCount;
     player->shot = false;
     player->setHP(currentHp);
@@ -1638,18 +1613,16 @@ void Game::GenerateTheMap(int currentHp, int currentAmmo)
     player->setFrame((player->activeSkin[player->getCurrentWeapon()] + 1) * 4 - 2);
 
 
-
     for (int i = 0; i < PlayerCount() - 1; ++i)
     {
         Dude p;
-        p.race = 4;
+        p.race = MONSTER_RACE_PLAYER;
         p.appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
         p.id = mapas.mons[mapas.mons.count() - 1].id + 1;
         mapas.mons.add(p);
 
     }
 
-    mapas.arangeItems();
 
     AdaptMapView();
 }
@@ -1697,7 +1670,7 @@ void Game::LoadFirstMap()
 {
     if (netMode != NETMODE_CLIENT) //offline & server
     {
-        GenerateTheMap(ENTITY_INITIAL_HP, ENTITY_INITIAL_AMMO);
+        GenerateTheMap(0, ENTITY_INITIAL_HP, ENTITY_INITIAL_AMMO);
     }
 }
 

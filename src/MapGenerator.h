@@ -1,5 +1,8 @@
 #pragma once
 
+#include "DArray.h"
+
+class Vector3D;
 
 enum DivisionType
 {
@@ -8,22 +11,45 @@ enum DivisionType
     DIV_HORIZONTAL
 };
 
+enum CorridorDirections
+{
+    DIR_NONE = 0,
+    DIR_RIGHT,
+    DIR_LEFT,
+    DIR_DOWN,
+    DIR_UP
+};
 
 struct BSPTreeNode
 {
+    DArray<Vector3D> connectionPoints;
+
     int startx;
     int starty;
     int width;
     int height;
+
+    int roomPosX;
+    int roomPosY;
+    int roomWidth;
+    int roomHeight;
+
     DivisionType divType;
 
     BSPTreeNode* left;
     BSPTreeNode* right;
 
+    bool connectedWithTunel;
+
     BSPTreeNode()
-    : divType(DIV_NONE)
+    : roomPosX(-1)
+    , roomPosY(-1)
+    , roomWidth(-1)
+    , roomHeight(-1)
+    , divType(DIV_NONE)
     , left(nullptr)
     , right(nullptr)
+    , connectedWithTunel(false)
     {
     }
 };
@@ -46,15 +72,23 @@ public:
     ~MapGenerator();
 
     void generate(CMap* map);
+    unsigned getRoomCount(){return roomList.count();}
+    BSPTreeNode* getRoomNode(unsigned idx);
+    void makeWallsPretty(CMap* map);
 
 private:
     void divide(BSPTreeNode* parent);
-    void makeRoom(BSPTreeNode* parent, CMap* map);
-    void addTunels(BSPTreeNode* parent, CMap* map);
+    void makeRoom(BSPTreeNode* node, CMap* map);
+    void connectRooms(BSPTreeNode* node, CMap* map);
+    void putDoorsToOutside(CMap* map);
+
+    int getDepth(BSPTreeNode* node);
+
     void erase(BSPTreeNode* parent);
 
 private:
     BSPTreeNode root;
+    DArray<BSPTreeNode*> roomList;
     int newCount;
     int deleteCount;
 };

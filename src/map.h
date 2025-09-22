@@ -5,10 +5,12 @@
 #include "DArray.h"
 #include "Dude.h"
 #include "Decal.h"
+#include "Item.h"
 
 
 
 struct Item;
+class MapGenerator;
 
 
 const int ColidingTiles[256] = {
@@ -72,7 +74,7 @@ public:
         void setPosY(float value){mapPos.y = value;}
         void move(Vector3D v, float size);
 
-        void generate();
+        void generate(int level);
         bool load(const char* path, bool createItems=true, int otherplayers=0);
         bool save(const char* path);
 
@@ -93,8 +95,11 @@ public:
 
         void destroy();
 
-    //private:
-        void arangeItems();
+    private:
+        void arrangeItemsInPremadeMap();
+        Items pickRandomGameCartridge();
+        void placeAmmoAndMedkits();
+        void putSlimeCircle();
 
 };
 

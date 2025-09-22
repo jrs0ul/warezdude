@@ -226,7 +226,7 @@ private:
     void BeatEnemy(int aID, int damage);
     void SendServerMeleeImpulseToClient(unsigned int clientIndex, int victim, int hp, int attacker);
     void SendBulletImpulse(int monsterindex, int ammo, int clientIndex, unsigned char weaponType);
-    void GenerateTheMap(int currentHp, int currentAmmo);
+    void GenerateTheMap(int level, int currentHp, int currentAmmo);
     void LoadTheMap(const char* name, bool createItems, int otherPlayers, int currentHp);
     void LoadFirstMap();
     void TitleMenuLogic();

@@ -31,7 +31,7 @@ void CMap::move(Vector3D v, float size)
 
 
 //-----------------------------------------
-void CMap::arangeItems()
+void CMap::arrangeItemsInPremadeMap()
 {
     int ix;
     int iy;
@@ -44,9 +44,9 @@ void CMap::arangeItems()
 
         bool found = false;
 
-        for (unsigned long i=0;i<items.count();i++)
+        for (unsigned long i = 0; i < items.count();i++)
         {
-            if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y))
+            if (( (float)ix == items[i].x)&&((float)iy == items[i].y))
             {
                 found=true;
                 break;
@@ -69,94 +69,56 @@ void CMap::arangeItems()
             }
         }
 
-
-        int dice = rand() % 1000;
-
-        Items game = ITEM_GAME_DUKE_ATOMIC;
-
-        if (dice < 800)
-        {
-            game = ITEM_GAME_CONTRABANDISTS;
-
-            if (dice < 600)
-            {
-                game = ITEM_GAME_FART_NIGHT;
-
-                if (dice < 400)
-                {
-                    game = ITEM_GAME_UNABOMBER_GUY;
-
-                    if (dice < 200)
-                    {
-                        game = ITEM_GAME_SPEEDBALL;
-                    }
-                }
-            }
-
-        }
-
+        Items game = pickRandomGameCartridge();
         addItem(ix * TILE_WIDTH, iy * TILE_WIDTH, game);
-        //rand() % 16 + ITEM_GAME_NINJA_MAN);
 
     }
 
-    //places ammo and medkits
-    for (int a=0; a<goods; a++)
-    {
-        ix=rand() % _width;
-        iy=rand() % _height;
-
-
-
-        bool found=false;
-        for (unsigned long i=0;i<items.count();i++)
-        {
-            if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y)){
-                found=true;
-                break;
-         }
-        }
-
-        while ((_colide[iy][ix]) || (found))
-        {
-            ix=rand() % _width;
-            iy=rand() % _height;
-
-            found = false;
-
-            for (unsigned long i=0;i<items.count();i++)
-            {
-                if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y))
-                {
-                    found=true;
-                    break;
-                }
-            }
-        }
-
-        if ((rand()%2+1)==2)
-        {
-            addItem(ix*32.0f,iy*32.0f, ITEM_MEDKIT);
-        }
-        else
-        {
-            addItem(ix*32.0f,iy*32.0f, ITEM_AMMO_PACK);
-        }
-
-    }
-
+    placeAmmoAndMedkits();
 
 }
 
 
+//----------------------------------
+Items CMap::pickRandomGameCartridge()
+{
+    int dice = rand() % 1000;
+
+    Items game = ITEM_GAME_DUKE_ATOMIC;
+
+    if (dice < 800)
+    {
+        game = ITEM_GAME_CONTRABANDISTS;
+
+        if (dice < 600)
+        {
+            game = ITEM_GAME_FART_NIGHT;
+
+            if (dice < 400)
+            {
+                game = ITEM_GAME_UNABOMBER_GUY;
+
+                if (dice < 200)
+                {
+                    game = ITEM_GAME_SPEEDBALL;
+                }
+            }
+        }
+
+    }
+
+    return game;
+}
+
+
 //-------------------------------------
-void CMap::generate()
+void CMap::generate(int level)
 {
 
     if (!tiles)
     {
-        _width = 20 + rand() % 40;
-        _height = 20 + rand() % 40;
+        _width = 20 + level * 10 + (5 - rand() % 10);
+        _height = 20 + level * 10 + (5 - rand() % 10);
 
         tiles = new unsigned char* [_height];
 
@@ -174,8 +136,93 @@ void CMap::generate()
         }
     }
 
+    putSlimeCircle();
+
     MapGenerator gen(_width, _height);
     gen.generate(this);
+    buildCollisionmap();
+
+    const unsigned ROOM_COUNT = gen.getRoomCount();
+
+    unsigned exitRoomIdx = rand() % ROOM_COUNT;
+    BSPTreeNode* exitRoom = gen.getRoomNode(exitRoomIdx);
+
+    exit.x = exitRoom->startx + exitRoom->roomPosX + exitRoom->roomWidth / 2;
+    exit.y = exitRoom->starty + exitRoom->roomPosY + exitRoom->roomHeight / 2;
+
+    tiles[(int)exit.y][(int)exit.x] = TILE_EXIT;
+
+    unsigned startRoomIdx = rand() % ROOM_COUNT;
+
+    while (startRoomIdx == exitRoomIdx)
+    {
+        startRoomIdx = rand() % ROOM_COUNT;
+    }
+
+    BSPTreeNode* startRoom = gen.getRoomNode(startRoomIdx);
+
+    start.x = startRoom->startx + startRoom->roomPosX + startRoom->roomWidth / 2;
+    start.y = startRoom->starty + startRoom->roomPosY + startRoom->roomHeight / 2;
+
+    start.x *= TILE_WIDTH;
+    start.y *= TILE_WIDTH;
+
+
+    enemyCount = 0;
+
+    for (unsigned i = 0; i < ROOM_COUNT; ++i)
+    {
+        if (startRoomIdx == i)
+        {
+            continue;
+        }
+
+        BSPTreeNode* room = gen.getRoomNode(i);
+
+        const int monstersInTheRoom = (room->roomWidth * room->roomHeight) / 20;
+
+        for (int a = 0; a < monstersInTheRoom; ++a)
+        {
+            Dude m;
+            m.id = enemyCount;
+            m.race = rand() % MONSTER_MAX_RACE + 1;
+            m.initMonsterHP();
+            m.x = room->startx + room->roomPosX + (1 + rand() % (room->roomWidth - 3));
+            m.y = room->starty + room->roomPosY + (1 + rand() % (room->roomHeight - 3));
+            m.x *= TILE_WIDTH;
+            m.y *= TILE_WIDTH;
+            mons.add(m);
+
+            while (mons[enemyCount - 1].isColideWithOthers(mons, 
+                                                           mons[enemyCount - 1].x, 
+                                                           mons[enemyCount - 1].y, 
+                                                           false,
+                                                           enemyCount))
+            {
+                mons[enemyCount - 1].x = room->startx + room->roomPosX + (1 + rand() % (room->roomWidth - 3));
+                mons[enemyCount - 1].y = room->starty + room->roomPosY + (1 + rand() % (room->roomHeight - 3));
+                mons[enemyCount - 1].x *= TILE_WIDTH;
+                mons[enemyCount - 1].y *= TILE_WIDTH;
+            }
+
+            ++enemyCount;
+        }
+    }
+
+    misionItems = rand() % 2 + 2;
+    goods = rand() % 8 + 2;
+
+    for (int i = 0; i < misionItems; ++i)
+    {
+        int roomIdx = rand() % ROOM_COUNT;
+        BSPTreeNode* room = gen.getRoomNode(roomIdx);
+        Items game = pickRandomGameCartridge();
+        int ix = room->startx + room->roomPosX + (1 + rand() % (room->roomWidth - 2));
+        int iy = room->starty + room->roomPosY + (1 + rand() % (room->roomHeight - 2));
+        addItem(ix * TILE_WIDTH, iy * TILE_WIDTH, game);
+    }
+
+    placeAmmoAndMedkits();
 
 }
 
@@ -452,7 +499,7 @@ bool CMap::load(const char* path, bool createItems, int otherplayers){
 
     if (createItems)
     {
-        arangeItems();
+        arrangeItemsInPremadeMap();
     }
 
 
@@ -783,4 +830,76 @@ int CMap::findCreatureById(int id)
     }
 
     return -1;
+}
+
+//----------------------
+void CMap::placeAmmoAndMedkits()
+{
+    int ix = 0;
+    int iy = 0;
+
+    for (int a = 0; a < goods; ++a)
+    {
+        ix = rand() % _width;
+        iy = rand() % _height;
+
+        bool found = false;
+
+        for (unsigned long i = 0; i < items.count(); ++i)
+        {
+            if ((ix == (int)items[i].x) && (iy == (int)items[i].y))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        while ((_colide[iy][ix]) || (found))
+        {
+            ix=rand() % _width;
+            iy=rand() % _height;
+
+            found = false;
+
+            for (unsigned long i=0;i<items.count();i++)
+            {
+                if ((ix*1.0f==items[i].x)&&(iy*1.0f==items[i].y))
+                {
+                    found=true;
+                    break;
+                }
+            }
+        }
+
+        const Items theItem = ((rand() % 2 + 1) == 2) ? ITEM_MEDKIT : ITEM_AMMO_PACK;
+        addItem(ix * TILE_WIDTH, iy * TILE_WIDTH, theItem);
+
+    }
+
+}
+//--------------------------------
+void CMap::putSlimeCircle()
+{
+    float circleX = 0;
+    float circleY = 0;
+
+    float posX = rand() % (_width * TILE_WIDTH);
+    float posY = rand() % (_height * TILE_WIDTH);
+
+    for (int a = 0; a < 150; a += 10)
+    {
+        for (float i = 0; i < 2 * M_PI; i += 0.1f)
+        {
+            circleY  = posY + (sinf(i) * a);
+            circleX  = posX + (cosf(i) * a);
+
+            unsigned x = (unsigned)roundf(circleX / TILE_WIDTH);
+            unsigned y = (unsigned)roundf(circleY / TILE_WIDTH);
+
+            if (x < _width && y < _height)
+            {
+                tiles[y][x] = TILE_SLIME + rand() % 2;
+            }
+        }
+    }
 }
