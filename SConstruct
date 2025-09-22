@@ -54,6 +54,11 @@ env.Program(target = "warezdude",
                       "src/audio/OggStream.cpp",
                       "src/audio/SoundSystem.cpp",
                       "src/Game.cpp",
+                      "src/Particles2D.cpp",
+                      "src/SaveGame.cpp",
+                      "src/GameData.cpp",
+                      "src/Collection.cpp",
+                      "src/Inventory.cpp"
                       ]
             )
 
