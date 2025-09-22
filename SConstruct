@@ -33,7 +33,7 @@ env.Program(target = "warezdude",
                       "src/maplist.cpp",
                       "src/gui/SelectMenu.cpp",
                       "src/OSTools.cpp",
-                      "src/gui/Text.cpp", ####################
+                      "src/gui/Text.cpp",
                       "src/gui/Slider.cpp",
                       "src/gui/EditBox.cpp",
                       "src/Intro.cpp",
