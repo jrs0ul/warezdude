@@ -129,8 +129,13 @@ class Game
     int clientInfoSendCounter;
 
     int  clientMyIndex;
+    int door_tim;
+    int objectivetim;
     bool Client_GotMapData;
     bool showMiniMap;
+    bool doFadein;
+    bool godmode;
+    bool slimeswap;
 
 
 public:

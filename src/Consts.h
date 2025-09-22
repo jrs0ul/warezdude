@@ -1,6 +1,8 @@
 #pragma once
 
 
+const unsigned NET_PORT                   = 6666;
+
 const unsigned NET_HEADER_LEN             = 3;
 const char NET_HEADER[NET_HEADER_LEN + 1] = "WD3";
 

@@ -23,25 +23,7 @@
 #endif
 
 
-//===================================GLOBALS
 
-const unsigned NetPort=6666;
-
-bool slimeswap=false;
-
-bool godmode=false;
-
-bool mapkey=false;
-
-int door_tim=0;
-
-bool fadein=true;
-int objectivetim=200;
-
-
-bool nextWepPressed = false;
-
-//==================================================
 
 Game::Game()
 : imgCount(0)
@@ -70,15 +52,20 @@ Game::Game()
     ms=0;
 
     mapas.itmframe = 0;
-    itmtim=0;
+    itmtim = 0;
+    door_tim = 0;
     fadeTimer = 0;
     netMode = NETMODE_NONE;
     clientInfoSendCounter = 0;
     Client_GotMapData = false;
     clientMyIndex = 0;
     slimeTimer = 0;
+    objectivetim = 200;
     doRumble = false;
     showMiniMap = false;
+    doFadein = true;
+    godmode = false;
+    slimeswap = false;
 }
 //-------------------------------------
 void PlaySoundAt(SoundSystem* ss, float x, float y, int soundIndex)
@@ -538,7 +525,7 @@ void Game::GoToLevel(int currentHp, int currentAmmo, int level, int otherplayer)
         GenerateTheMap(level, currentHp, currentAmmo);
     }
 
-    fadein = true;
+    doFadein = true;
     objectivetim = 200;
 
     if (showMiniMap)
@@ -833,9 +820,9 @@ void Game::InitServer()
 {
     netMode = NETMODE_SERVER;
 
-    printf("Launching server on port: %d\n", NetPort);
+    printf("Launching server on port: %d\n", NET_PORT);
 
-    if (serveris.launch(NetPort))
+    if (serveris.launch(NET_PORT))
     {
         printf("Server launched!\n");
 
@@ -1795,7 +1782,7 @@ void Game::TitleMenuLogic()
             {
                 netmenu.reset();
                 PlayNewSong("music.ogg");
-                JoinServer(ipedit.text,NetPort);
+                JoinServer(ipedit.text, NET_PORT);
                 ipedit.deactivate();
                 ipedit.reset();
             }
@@ -2073,7 +2060,7 @@ void Game::logic()
                     {
                         StopServer();
                         goToEnding();
-                        fadein = true;
+                        doFadein = true;
                         fadeTimer = 0;
                         objectivetim = 200;
                         gameOver = false;
@@ -2149,13 +2136,13 @@ void Game::logic()
         case GAMESTATE_GAME   : CoreGameLogic();    break;
     }
 
-    if (fadein)
+    if (doFadein)
     {
         fadeTimer++;
 
         if (fadeTimer == MAX_FADE_TIMER_VAL)
         {
-            fadein = false;
+            doFadein = false;
             fadeTimer = 0;
         }
 
@@ -2370,7 +2357,7 @@ void Game::CoreGameLogic()
         if (Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])
         {
             goToEnding();
-            fadein = true;
+            doFadein = true;
             fadeTimer = 0;
             objectivetim = 200;
             gameOver = false;
@@ -2486,14 +2473,9 @@ void Game::CoreGameLogic()
 
     if (!player->shot && !player->spawn && player->canAtack && !inventory.active())
     {
-        if (!Keys[ACTION_NEXT_WEAPON])
-        {
-            nextWepPressed=false;
-        }
 
-        if ((Keys[ACTION_NEXT_WEAPON]) && (!Keys[ACTION_FIRE]) && (!nextWepPressed))
+        if ((Keys[ACTION_NEXT_WEAPON]) && (!Keys[ACTION_FIRE]) && (!OldKeys[ACTION_NEXT_WEAPON]))
         {
-            nextWepPressed = true;
             player->chageNextWeapon();
         }
 
@@ -2889,7 +2871,7 @@ void Game::DrawGameplay()
     if ((mapas.width() > 0) && (mapas.height() > 0))
     {
 
-        if (fadein)
+        if (doFadein)
         {
             const float fadeColor = fadeTimer / (MAX_FADE_TIMER_VAL * 1.f);
             DrawMap(fadeColor, fadeColor, fadeColor);
@@ -2902,7 +2884,7 @@ void Game::DrawGameplay()
 
     }
 
-    if (fadein)
+    if (doFadein)
     {
         WriteText(sys.ScreenWidth / 2-150, 
                 sys.ScreenHeight/2-64,
@@ -3951,7 +3933,7 @@ void Game::ParseMessagesClientGot()
                         client.shutdown();
                         netMode = NETMODE_NONE;
                         goToEnding();
-                        fadein = true;
+                        doFadein = true;
                         fadeTimer = 0;
                         objectivetim = 200;
                         return;
