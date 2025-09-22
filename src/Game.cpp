@@ -2927,79 +2927,7 @@ void Game::DrawGameplay()
     }
 }
 
-//------------------------------------
 
-/*void fullscreenswitch(){
-
-    render.destroy();
-    pics.deleteContainer();
-
-
-    if (sys.windowed){   
-        ShowCursor(false);
-        sys.windowed=false;
-        InitD3D(); 
-    }//is windowed
-    else {
-        ShowCursor(true);
-        sys.windowed=true;   
-        InitD3D(); 
-        SetWindowPos(hwndMain,0,100,100,sys.width+4,sys.height+25,0);
-    }
-}*/
-
-
-//-----------------------------------
-
-/*LRESULT CALLBACK MainWinProc( HWND hwnd,
-                             UINT msg,
-                             WPARAM wparam,
-                             LPARAM lparam)
-{
-    switch(msg)
-    {
-
-    case WM_KEYUP:{
-        if (wparam == VK_F4) fullscreenswitch();
-        if (wparam ==VK_F1) showdebugtext=!showdebugtext;
-        if (wparam ==VK_F7){
-            int index=0;
-            char name[50];
-            sprintf(name,"screenshot%d.bmp",index); 
-            FILE* f;
-
-            f=fopen(name,"rb");
-            if (!f)
-                render.writeScreenshot(name);
-
-            while (f){
-                fclose(f);
-                index++; 
-                sprintf(name,"screenshot%d.bmp",index); 
-                f=fopen(name,"rb");
-            }
-            render.writeScreenshot(name);
-
-        }
-        if (wparam ==VK_F5) godmode=!godmode;
-        if (wparam ==VK_F6) mapas.mons[mapas.enemyCount].ammo+=5;
-        if (wparam==VK_ESCAPE){
-            if ((IntroScreen)||(HelpScreen)||
-                ((!TitleScreen)&&(!IntroScreen)&&(!HelpScreen))){
-                TitleScreen=true;
-                mainmenu.activate();    
-                PlayNewSong("Evil.ogg");
-            }
-        }
-
-
-        break;
-                  }
-
-    }
-
-    return DefWindowProc(hwnd, msg,wparam, lparam);
-}*/
 
 //----------------------------------------
 void Game::SendClientCoords()
@@ -4149,8 +4077,6 @@ void Game::init()
     glDepthFunc(GL_LEQUAL);
 
     glEnable (GL_BLEND);
-
-
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
@@ -4210,8 +4136,6 @@ void Game::init()
     PlayNewSong("evil.ogg");
 
     Works = true;
-
-
 }
 //--------------------------------
 void Game::destroy()
