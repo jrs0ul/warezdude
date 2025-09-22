@@ -698,7 +698,7 @@ void Game::SendMapData(int clientIndex, CMap& map)
 
     assert(index < MAX_MESSAGE_DATA_SIZE);
 
-    int tmp;
+    int tmp = 0;
     memcpy(&bufer[index], &tmp, sizeof(int));
     index += sizeof(int);
 

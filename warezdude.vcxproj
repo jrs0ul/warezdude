@@ -182,10 +182,12 @@
     <ClCompile Include="src\audio\SoundSystem.cpp" />
     <ClCompile Include="src\bullet.cpp" />
     <ClCompile Include="src\BulletContainer.cpp" />
+    <ClCompile Include="src\Collection.cpp" />
     <ClCompile Include="src\Decal.cpp" />
     <ClCompile Include="src\Dude.cpp" />
     <ClCompile Include="src\Extensions.cpp" />
     <ClCompile Include="src\Game.cpp" />
+    <ClCompile Include="src\GameData.cpp" />
     <ClCompile Include="src\gui\Button.cpp" />
     <ClCompile Include="src\gui\EditBox.cpp" />
     <ClCompile Include="src\gui\OnScreenBoard.cpp" />
@@ -196,6 +198,7 @@
     <ClCompile Include="src\gui\YesNoDialog.cpp" />
     <ClCompile Include="src\Image.cpp" />
     <ClCompile Include="src\Intro.cpp" />
+    <ClCompile Include="src\Inventory.cpp" />
     <ClCompile Include="src\mainer.cpp" />
     <ClCompile Include="src\map.cpp" />
     <ClCompile Include="src\MapGenerator.cpp" />
@@ -205,6 +208,8 @@
     <ClCompile Include="src\network\Server.cpp" />
     <ClCompile Include="src\network\Socket.cpp" />
     <ClCompile Include="src\OSTools.cpp" />
+    <ClCompile Include="src\Particles2D.cpp" />
+    <ClCompile Include="src\SaveGame.cpp" />
     <ClCompile Include="src\SDLVideo.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\ShaderProgram.cpp" />
