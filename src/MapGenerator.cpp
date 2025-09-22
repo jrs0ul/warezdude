@@ -369,22 +369,11 @@ void MapGenerator::makeWallsPretty(CMap* map)
                 const unsigned char topTile = (i - 1 < map->height())    ? map->tiles[i - 1][a]  : 0;
                 const unsigned char bottomTile = (i + 1 < map->height()) ? map->tiles[i + 1][a]  : 0;
 
-                const unsigned char topLefTile = (i - 1 < map->height() && a - 1 < map->width()) ? map->tiles[i - 1][a - 1] : 0;
+                //const unsigned char topLefTile = (i - 1 < map->height() && a - 1 < map->width()) ? map->tiles[i - 1][a - 1] : 0;
                 const unsigned char topRightTile = (i - 1 < map->height() && a + 1 < map->width()) ? map->tiles[i - 1][a + 1] : 0;
                 const unsigned char bottomLeftTile = (i + 1 < map->height() && a - 1 < map->width()) ? map->tiles[i + 1][a - 1] : 0;
                 const unsigned char bottomRightTile = (i + 1 < map->height() && a + 1 < map->width()) ? map->tiles[i + 1][a + 1] : 0;
 
-
-                if ((leftTile == TILE_H_WALL || leftTile == TILE_WALL || leftTile == TILE_CORNER_BL || 
-                      leftTile == TILE_CORNER_TL || leftTile == TILE_TSHAPE_180 || leftTile == TILE_WALL_TAIL_LEFT) &&
-                        rightTile != TILE_WALL &&
-                        bottomTile == TILE_WALL && 
-                        (topTile != TILE_WALL_TAIL_UP && 
-                         topTile != TILE_V_WALL && topTile != TILE_CORNER_TL))
-                {
-                    map->tiles[i][a] = TILE_CORNER_TR;
-                    continue;
-                }
 
 
                 if (rightTile == TILE_WALL && 
@@ -423,7 +412,18 @@ void MapGenerator::makeWallsPretty(CMap* map)
                     continue;
                 }
 
-               
+                if ((leftTile == TILE_H_WALL || leftTile == TILE_WALL || leftTile == TILE_CORNER_BL || 
+                      leftTile == TILE_CORNER_TL || leftTile == TILE_TSHAPE_180 || leftTile == TILE_WALL_TAIL_LEFT) &&
+                        rightTile != TILE_WALL &&
+                        bottomTile == TILE_WALL && 
+                        (topTile != TILE_WALL_TAIL_UP && 
+                         topTile != TILE_V_WALL && topTile != TILE_CORNER_TL))
+                {
+                    map->tiles[i][a] = TILE_CORNER_TR;
+                    continue;
+                }
+
+
                 if ((topTile == TILE_V_WALL || topTile == TILE_CORNER_TR || topTile == TILE_CORNER_TL) && 
                         (leftTile != TILE_H_WALL && leftTile != TILE_WALL && leftTile != TILE_WALL_TAIL_LEFT) &&
                         /*bottomTile != TILE_WALL &&*/ rightTile == TILE_WALL)
