@@ -1,12 +1,11 @@
 /*
  The Disarray 
- by jrs0ul(jrs0ul ^at^ gmail ^dot^ com) 2010
+ by jrs0ul(jrs0ul ^at^ gmail ^dot^ com) 2025
  -------------------------------------------
  Sprite batcher
- mod. 2010.09.27
+ mod. 2025.09.28
  */
-#ifndef TEXTURE_LOADER_H
-#define TEXTURE_LOADER_H
+#pragma once
 
 #ifdef _WIN32
     #ifdef _MSC_VER
@@ -92,7 +91,6 @@ struct SpriteBatchItem{
         upColor[1] = COLOR(1.0f, 1.0f, 1.0f, 1.0f);
         dwColor[0] = COLOR(1.0f, 1.0f, 1.0f, 1.0f);
         dwColor[1] = COLOR(1.0f, 1.0f, 1.0f, 1.0f);
-        
     }
 };
 //==================================
@@ -104,7 +102,8 @@ class PicsContainer{
 public:
     void drawVA(void * vertices, void * uvs, void *colors,
                 unsigned uvsCount, unsigned vertexCount,
-                ShaderProgram* shader);
+                ShaderProgram* shader,
+                bool useVulkan);
 private:
     void resizeContainer(unsigned long index,
                          int twidth, int theight, int filter,
@@ -144,7 +143,8 @@ public:
     //draws all sprites in batch
     void drawBatch(ShaderProgram * justColor,
                    ShaderProgram * uvColor,
-                   int method = 0);
+                   int method = 0,
+                   bool useVulkan = false);
 
     GLuint getname(unsigned long index);
     unsigned getTextureCount(){return TexNames.count();}
@@ -175,9 +175,5 @@ public:
     void remove(unsigned long index);
 
 };
-
-
-#endif //TEXTURE_LOADER_H
-
 
 

@@ -1,6 +1,6 @@
 #include "Inventory.h"
 #include "ActionKeys.h"
-#include "TextureLoader.h"
+#include "SpriteBatcher.h"
 #include "Item.h"
 #include "Consts.h"
 #include "GameData.h"

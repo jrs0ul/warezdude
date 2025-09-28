@@ -1,9 +1,9 @@
 /*
  The Disarray 
- by jrs0ul(jrs0ul ^at^ gmail ^dot^ com) 2010
+ by jrs0ul(jrs0ul ^at^ gmail ^dot^ com) 2025
  -------------------------------------------
  Sprite batcher
- mod. 2010.11.30
+ mod. 2025.09.28
  */
 
 #include <cstdio>
@@ -13,7 +13,7 @@
 #ifndef __ANDROID__
 #include "Extensions.h"
 #endif
-#include "TextureLoader.h"
+#include "SpriteBatcher.h"
 #include "Vectors.h"
 #include "OSTools.h"
 #include "Xml.h"
@@ -111,7 +111,8 @@ void PicsContainer::draw(
                 COLOR upColor,
                 COLOR dwColor,
                 bool flipColors
-               ){
+               )
+{
 
     SpriteBatchItem nb;
 
@@ -138,44 +139,36 @@ void PicsContainer::draw(
         batch.add(nb);
 }
 //---------------------------------------------------
-    void PicsContainer::drawVA(void * vertices, void * uvs, void *colors,
-                               unsigned uvsCount, unsigned vertexCount,
-                               ShaderProgram* shader){
-        //glEnableClientState(GL_VERTEX_ARRAY);
-        //if (uvsCount > 0)
-        //{
-        //    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        //}
-        //glEnableClientState(GL_COLOR_ARRAY);
-        //glVertexPointer(2, GL_FLOAT, 0, vertices);
-        //if (uvsCount > 0)
-        //    glTexCoordPointer(2, GL_FLOAT, 0, uvs);
-        //glColorPointer(4, GL_FLOAT, 0, colors);
-        //
+void PicsContainer::drawVA(void * vertices, 
+                           void * uvs,
+                           void *colors,
+                           unsigned uvsCount,
+                           unsigned vertexCount,
+                           ShaderProgram* shader,
+                           bool useVulkan)
+{
+    int attribID = 0;
+    int ColorAttribID = 0;
+    int UvsAttribID = 0;
 
-        int attribID = shader->getAttributeID("aPosition"); 
-        int ColorAttribID = shader->getAttributeID("aColor");
-
+    if (!useVulkan)
+    {
+        attribID = shader->getAttributeID("aPosition"); 
+        ColorAttribID = shader->getAttributeID("aColor");
         glVertexAttribPointer(attribID, 2, GL_FLOAT, GL_FALSE, 0, vertices);
         glEnableVertexAttribArray(attribID);
-       
-        int UvsAttribID = 0;
 
         if (uvsCount)
         {
             UvsAttribID = shader->getAttributeID("aUvs");
             glVertexAttribPointer(UvsAttribID, 2, GL_FLOAT, GL_FALSE, 0, uvs);
             glEnableVertexAttribArray(UvsAttribID);
-            //printf("setting up uvs attribute\n");
         }
 
         glVertexAttribPointer(ColorAttribID, 4, GL_FLOAT, GL_FALSE, 0, colors);
         glEnableVertexAttribArray(ColorAttribID);
 
         glDrawArrays(GL_TRIANGLES, 0, vertexCount / 2 );
-
-        //printf("triangles: %d\n", vertexCount/2);
-
 
         glDisableVertexAttribArray(ColorAttribID);
 
@@ -185,14 +178,11 @@ void PicsContainer::draw(
         }
 
         glDisableVertexAttribArray(attribID);
-       // glDisableClientState(GL_COLOR_ARRAY);
-        //if (uvsCount > 0)
-        //    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        //glDisableClientState(GL_VERTEX_ARRAY);
-
     }
+}
 //----------------------------------------------------------
-Vector3D CalcUvs(PicData * p, unsigned frame){
+Vector3D CalcUvs(PicData * p, unsigned frame)
+{
 
     //printf("%d\n", p->hframes);
     float hf = frame / p->hframes;
@@ -212,7 +202,8 @@ Vector3D CalcUvs(PicData * p, unsigned frame){
 //----------------------------------------------------------
 void PicsContainer::drawBatch(ShaderProgram * justColor,
                               ShaderProgram * uvColor,
-                              int method){
+                              int method,
+                              bool useVulkan){
 
         switch(method){
               //TODO: complete VA
@@ -246,7 +237,7 @@ void PicsContainer::drawBatch(ShaderProgram * justColor,
                         p = &PicInfo[batch[i].textureIndex];
                        // printf("tex index %ld\n", batch[i].textureIndex);
                     }
-                   
+
                     if (p)
                     {
                         if (p->sprites.count()) //iregular sprites in atlas
@@ -257,7 +248,7 @@ void PicsContainer::drawBatch(ShaderProgram * justColor,
                             float endX   = (spr->startX + spr->width) / (p->width * 1.f);
                             float startY =  ((p->height - spr->startY - spr->height) * 1.f) / (p->height * 1.f);
                             float endY = ((p->height - spr->startY) * 1.f) / (p->height * 1.f);
-                            
+
                             uv = Vector3D(startX, endX, endY, startY);
                             htilew = spr->width / 2.0f; 
                             htileh = spr->height / 2.0f;
@@ -309,7 +300,7 @@ void PicsContainer::drawBatch(ShaderProgram * justColor,
                     
 
                         drawVA(vertices.getData(), uvs.getData(), colors,
-                               uvs.count(), vertices.count(), currentShader);
+                               uvs.count(), vertices.count(), currentShader, useVulkan);
 
                         //printf("vertice count %d \n", (int)vertices.count());
                         //printf("uvs count %d \n", (int)uvs.count());
@@ -520,7 +511,7 @@ void PicsContainer::drawBatch(ShaderProgram * justColor,
                 }*/
 
                 drawVA(vertices.getData(), uvs.getData(), colors,
-                       uvs.count(), vertices.count(), currentShader);
+                       uvs.count(), vertices.count(), currentShader, useVulkan);
 
                 //printf("vertice count %d \n", (int)vertices.count());
                 //printf("uvs count %d \n", (int)uvs.count());
@@ -543,69 +534,95 @@ void PicsContainer::resizeContainer(unsigned long index,
                                     int twidth, int theight, int filter,
                                     const char * name,
                                     bool createTextures,
-                                    GLuint texname){
+                                    GLuint texname)
+{
 
-    if (PicInfo.count() < index + 1){
+    if (PicInfo.count() < index + 1)
+    {
 
-            GLuint glui = texname;
-            PicData p;
-            p.twidth = twidth;
-            p.theight = theight;
-            p.filter = filter;
-            for (unsigned i = PicInfo.count(); i < index + 1; i++){
-                PicInfo.add(p);
-                TexNames.add(glui);
-            }
+        GLuint glui = texname;
+        PicData p;
+        p.twidth = twidth;
+        p.theight = theight;
+        p.filter = filter;
 
-            if (createTextures)
-                glGenTextures(1, ((GLuint *)TexNames.getData()) + index);
-
-            char * copy = (char*)malloc(strlen(name)+1);
-            strcpy(copy, name);
-            char * res = 0;
-            res = strtok(copy, "/");
-            while (res){
-                strcpy(PicInfo[index].name, res);
-                res = strtok(0, "/");
-            }
-            free(copy);
-
+        for (unsigned i = PicInfo.count(); i < index + 1; i++)
+        {
+            PicInfo.add(p);
+            TexNames.add(glui);
         }
-        else{
-            PicData * pp = &PicInfo[index];
-            pp->twidth = twidth;
-            pp->theight = theight;
-            pp->filter = filter;
-            char * copy = (char*)malloc(strlen(name)+1);
-            strcpy(copy, name);
-            char * res = 0;
-            res = strtok(copy, "/");
-            while (res){
-                strcpy(pp->name, res);
-                res = strtok(0, "/");
-            }
-            free(copy);
-            
-            if (glIsTexture(TexNames[index]))
-                glDeleteTextures(1, ((GLuint *)TexNames.getData()) + index);
-            if (createTextures)
-                glGenTextures(1, ((GLuint *)TexNames.getData()) + index);
-            else
-                 *(((GLuint *)TexNames.getData()) + index) = texname;
 
+        if (createTextures)
+            glGenTextures(1, ((GLuint *)TexNames.getData()) + index);
+
+        char * copy = (char*)malloc(strlen(name)+1);
+        strcpy(copy, name);
+        char * res = 0;
+        res = strtok(copy, "/");
+
+        while (res)
+        {
+            strcpy(PicInfo[index].name, res);
+            res = strtok(0, "/");
         }
+
+        free(copy);
+
+    }
+    else
+    {
+        PicData * pp = &PicInfo[index];
+        pp->twidth = twidth;
+        pp->theight = theight;
+        pp->filter = filter;
+        char * copy = (char*)malloc(strlen(name)+1);
+        strcpy(copy, name);
+        char * res = 0;
+        res = strtok(copy, "/");
+
+        while (res)
+        {
+            strcpy(pp->name, res);
+            res = strtok(0, "/");
+        }
+
+        free(copy);
+
+        if (glIsTexture(TexNames[index]))
+        {
+            glDeleteTextures(1, ((GLuint *)TexNames.getData()) + index);
+        }
+
+        if (createTextures)
+        {
+            glGenTextures(1, ((GLuint *)TexNames.getData()) + index);
+        }
+        else
+        {
+            *(((GLuint *)TexNames.getData()) + index) = texname;
+        }
+
+    }
 
 
 }
 
 //-----------------------------------------------------
 #ifndef __ANDROID__
-bool PicsContainer::loadFile(const char* file, unsigned long index,
-                             int twidth, int theight, int filter){
+bool PicsContainer::loadFile(const char* file,
+                             unsigned long index,
+                             int twidth,
+                             int theight,
+                             int filter)
 #else
-bool PicsContainer::loadFile(const char* file, unsigned long index,
-                             int twidth, int theight, int filter, AAssetManager* man){
+bool PicsContainer::loadFile(const char* file,
+                             unsigned long index,
+                             int twidth,
+                             int theight,
+                             int filter,
+                             AAssetManager* man)
 #endif
+{
 
         Image naujas;
 
@@ -628,7 +645,7 @@ bool PicsContainer::loadFile(const char* file, unsigned long index,
 
 
         resizeContainer(index, twidth, theight, filter, file);
-       
+
         PicInfo[index].width = naujas.width;
         PicInfo[index].height = naujas.height;
 
@@ -666,12 +683,15 @@ bool PicsContainer::loadFile(const char* file, unsigned long index,
 }
 //---------------------------------------------------
 void PicsContainer::makeTexture(Image& img,
-                 const char * name,
-                 unsigned long index,
-                 int twidth, int theight, int filter){
+                                const char * name,
+                                unsigned long index,
+                                int twidth,
+                                int theight,
+                                int filter)
+{
 
     resizeContainer(index, twidth, theight, filter, name);
-       
+
     PicInfo[index].width = img.width;
     PicInfo[index].height = img.height;
 
@@ -706,7 +726,8 @@ void PicsContainer::makeTexture(Image& img,
 
 //--------------------------------------------------
 bool PicsContainer::loadFile(unsigned long index,
-                             const char * BasePath){
+                             const char * BasePath)
+{
 
     Image naujas;
 
@@ -714,7 +735,7 @@ bool PicsContainer::loadFile(unsigned long index,
 
 
     char dir[512];
-    char buf[512];
+    char buf[1024];
 
     sprintf(dir, "%spics/", BasePath);
     sprintf(buf, "%s%s", dir, PicInfo[index].name);
@@ -737,7 +758,7 @@ bool PicsContainer::loadFile(unsigned long index,
         }
 
     }
-        
+
     PicInfo[index].width = naujas.width;
     PicInfo[index].height = naujas.height;
 
@@ -773,7 +794,8 @@ bool PicsContainer::loadFile(unsigned long index,
 //---------------------------------
 void PicsContainer::attachTexture(GLuint textureID, unsigned long index,
                                   int width, int height,
-                                 int twidth, int theight, int filter){
+                                 int twidth, int theight, int filter)
+{
 
     resizeContainer(index, twidth, theight, filter, "lol", false, textureID);
     PicInfo[index].width = width;
@@ -806,17 +828,21 @@ int PicsContainer::findByName(const char* picname, bool debug){
     unsigned long start = 0;
 
     if (!PicInfo.count())
+    {
         return -1;
+    }
 
-    
-    while ((strcmp(PicInfo[start].name, picname) != 0) && (start < PicInfo.count())){
+    while ((strcmp(PicInfo[start].name, picname) != 0) && (start < PicInfo.count()))
+    {
         if (debug)
             puts(PicInfo[start].name);
         start++;
     }
 
     if (start == PicInfo.count())
+    {
         return -1;
+    }
 
     return start;
 }
@@ -868,7 +894,7 @@ bool PicsContainer::initContainer(const char *list, AAssetManager* assman)
                         if (wcscmp(atr->getName(), L"src") == 0)
                         {
                             wchar_t* value = atr->getValue();
-                            
+
                             if (value)
                             {
                                 sprintf(data.name, "%ls", value);
@@ -889,7 +915,7 @@ bool PicsContainer::initContainer(const char *list, AAssetManager* assman)
                         {
                             char buffer[100];
                             wchar_t* value = atr->getValue();
-                            
+
                             if (value)
                             {
                                 sprintf(buffer, "%ls", value);
@@ -900,7 +926,7 @@ bool PicsContainer::initContainer(const char *list, AAssetManager* assman)
                         {
                             char buffer[100];
                             wchar_t* value = atr->getValue();
-                            
+
                             if (value)
                             {
                                 sprintf(buffer, "%ls", value);
@@ -909,7 +935,7 @@ bool PicsContainer::initContainer(const char *list, AAssetManager* assman)
                         }
                     }
                 }
-                
+
                 XmlNode* pathNode = node->getNode(L"Path");
 
                 if (pathNode)
@@ -1023,6 +1049,4 @@ void PicsContainer::remove(unsigned long index){
     }
 
 }
-
-
 

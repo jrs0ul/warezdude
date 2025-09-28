@@ -32,6 +32,10 @@ class SDLVideo{
     SDL_Surface * icon;
     SDL_Window* mainWindow;
 
+    //Vulkan stuff
+    VkDevice   vkDevice;
+    VkInstance vkInstance;
+
 public:
 
     SDLVideo(){_width = 640; _height = 480;}
@@ -42,11 +46,11 @@ public:
     int      flags(){return _flags;}
     void     setMetrics(unsigned w, unsigned h);
 
-    bool     InitWindow(const char * title,
+    bool     initWindow(const char * title,
                         const char * iconPath,
                         bool isWindowed = true,
                         bool useVulkan = true);
-    void     Quit();
+    void     quit(bool useVulkan);
     void     swap();
 
 };

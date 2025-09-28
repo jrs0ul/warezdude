@@ -6,12 +6,12 @@
 
 #include "Dude.h"
 #include "BulletContainer.h"
-#include "TextureLoader.h"
+#include "SpriteBatcher.h"
 #include "bullet.h"
 #include "gui/Slider.h"
 #include "gui/Text.h"
 #include "Usefull.h"
-#include "TextureLoader.h"
+#include "SpriteBatcher.h"
 #include "Matrix.h"
 #include "audio/OggStream.h"
 #include "Intro.h"
@@ -2716,21 +2716,33 @@ void Game::DrawMissionObjectives()
 
 //---------------------------
 
-void Game::render()
+void Game::render(bool useVulkan)
 {
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (!useVulkan)
+    {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
 
     FlatMatrix identity;
     MatrixIdentity(identity.m);
 
     FlatMatrix finalM = identity * OrthoMatrix;
     defaultShader.use();
-    int MatrixID = defaultShader.getUniformID("ModelViewProjection");
-    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, finalM.m);
+
+    if (!useVulkan)
+    {
+        int MatrixID = defaultShader.getUniformID("ModelViewProjection");
+        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, finalM.m);
+    }
+
     colorShader.use();
-    int MatrixIDColor = colorShader.getUniformID("ModelViewProjection");
-    glUniformMatrix4fv(MatrixIDColor, 1, GL_FALSE, finalM.m);
+
+    if (!useVulkan)
+    {
+        int MatrixIDColor = colorShader.getUniformID("ModelViewProjection");
+        glUniformMatrix4fv(MatrixIDColor, 1, GL_FALSE, finalM.m);
+    }
 
     switch(state)
     {
@@ -2741,7 +2753,7 @@ void Game::render()
         case GAMESTATE_GAME   : DrawGameplay();         break;
     }
 
-    pics.drawBatch(&colorShader, &defaultShader, 666);
+    pics.drawBatch(&colorShader, &defaultShader, 666, useVulkan);
 
 }
 //-------------------------------------
@@ -3992,49 +4004,55 @@ void Game::ParseMessagesClientGot()
 
 
 //---------------------------------------
-void Game::LoadShader(ShaderProgram* shader, const char* name)
+void Game::LoadShader(ShaderProgram* shader, const char* name, bool useVulkan)
 {
-    shader->create();
+    shader->create(useVulkan);
 
     char error[1024];
     char buf[512];
 
-    Shader vert;
-    Shader frag;
+    if (!useVulkan)
+    {
 
-    printf("Loading vertex shader...\n");
-    sprintf(buf, "shaders/%s.vert", name);
+        Shader vert;
+        Shader frag;
+
+        printf("Loading vertex shader...\n");
+        sprintf(buf, "shaders/%s.vert", name);
+
 #ifdef __ANDROID__
-    vert.load(GL_VERTEX_SHADER, buf, AssetManager);
+        vert.load(GL_VERTEX_SHADER, buf, AssetManager);
 #else
-    vert.load(GL_VERTEX_SHADER, buf);
+        vert.load(GL_VERTEX_SHADER, buf);
 #endif
 
-    printf("Loading fragment shader...\n");
-    sprintf(buf, "shaders/%s.frag", name);
+        printf("Loading fragment shader...\n");
+        sprintf(buf, "shaders/%s.frag", name);
 #ifdef __ANDROID__
-    frag.load(GL_FRAGMENT_SHADER, buf, AssetManager);
+        frag.load(GL_FRAGMENT_SHADER, buf, AssetManager);
 #else
-    frag.load(GL_FRAGMENT_SHADER, buf);
+        frag.load(GL_FRAGMENT_SHADER, buf);
 #endif
 
-    shader->attach(vert);
-    shader->attach(frag);
-    shader->link();
+        shader->attach(vert);
+        shader->attach(frag);
+        shader->link();
 
-    shader->getLog(error, 1024);
-    if (strlen(error)) {
+        shader->getLog(error, 1024);
+        if (strlen(error)) 
+        {
 #ifdef __ANDROID__
-        LOGI("--%s--", buf);
-        LOGI("%s", error);
+            LOGI("--%s--", buf);
+            LOGI("%s", error);
+        }
+        LOGI("---------------");
+#else
+            printf("--%s--\n", buf);
+            puts(error);
+        }
+        puts("-----------");
+#endif
     }
-    LOGI("---------------");
-#else
-        printf("--%s--\n", buf);
-        puts(error);
-    }
-    puts("-----------");
-#endif
 }
 
 //----------------------
@@ -4054,28 +4072,36 @@ void Game::loadConfig()
 
 
 //-----------------------------------------
-void Game::init()
+void Game::init(bool useVulkan)
 {
 
    srand(time(0));
 
+
+   if (!useVulkan)
+   {
 #ifndef __ANDROID__
-    LoadExtensions();
+        LoadExtensions();
 #endif
-    printf("Creating shaders...\n");
-   
-    LoadShader(&defaultShader, "default");
-    LoadShader(&colorShader, "justcolor");
+   }
+        printf("Creating shaders...\n");
 
-    colorShader.use();
+        LoadShader(&defaultShader, "default", useVulkan);
+        LoadShader(&colorShader, "justcolor", useVulkan);
 
+        colorShader.use();
 
+    if (!useVulkan)
+    {
+        glEnable(GL_TEXTURE_2D);
+        glDepthFunc(GL_LEQUAL);
 
-    glEnable(GL_TEXTURE_2D);
-    glDepthFunc(GL_LEQUAL);
-
-    glEnable (GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable (GL_BLEND);
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   }
+   else  //  Vulkan
+   {
+   }
 
 
     MatrixOrtho(0.0, ScreenWidth / (float)sys.screenScaleX, ScreenHeight / (float)sys.screenScaleY, 0.0, -400, 400, OrthoMatrix);

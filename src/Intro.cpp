@@ -1,5 +1,5 @@
 #include "Intro.h"
-#include "TextureLoader.h"
+#include "SpriteBatcher.h"
 #include "SysConfig.h"
 #include "gui/Text.h"
 

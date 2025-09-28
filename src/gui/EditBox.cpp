@@ -45,21 +45,10 @@ void EditBox::getInput(const char* eventText, unsigned keydown)
 
 }
 //------------------------------------
-void EditBox::draw(PicsContainer& pics, unsigned font, unsigned remelis)
+void EditBox::draw(PicsContainer& pics, unsigned font)
 {
 
-    int ilgis;
 
-    if (strlen(title)>maxlength)
-    {
-        ilgis=(int)strlen(title);
-    }
-    else
-    {
-        ilgis=maxlength;
-    }
-
-    //DrawBlock(device,ekranas,x,y,ilgis*12,40,0,0,125);
     WriteShadedText(getX() + 2, getY() + 1, pics, font, title);
 
     if ((rand()%100)%5==0)
@@ -72,8 +61,6 @@ void EditBox::draw(PicsContainer& pics, unsigned font, unsigned remelis)
     {
         WriteShadedText(getX() + 5, getY() + 16, pics, font,text);
     }
-
-  //coolframe(x,y,ilgis*12,40,remelis,ekranas);
 
 }
 //----------------------------------------------

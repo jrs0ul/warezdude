@@ -9,7 +9,7 @@
 #include "SDLVideo.h"
 #include <cstdio>
 
-bool SDLVideo::InitWindow(const char * title,
+bool SDLVideo::initWindow(const char * title,
                           const char * iconPath,
                           bool isWindowed,
                           bool useVulkan)
@@ -52,7 +52,6 @@ bool SDLVideo::InitWindow(const char * title,
     }
 
     icon = SDL_LoadBMP(iconPath);
-   
 
     mainWindow = SDL_CreateWindow(title, 
                          SDL_WINDOWPOS_UNDEFINED,
@@ -77,7 +76,7 @@ bool SDLVideo::InitWindow(const char * title,
     }
     else //  Vulkan
     {
-        VkInstance vkInstance;
+        //VkInstance vkInstance;
 
         uint32_t extensionCount;
         const char** extensionNames = 0;
@@ -167,14 +166,14 @@ bool SDLVideo::InitWindow(const char * title,
             &deviceFeatures,                        // pEnabledFeatures
         };
 
-        VkDevice device;
-        vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &device);
+        //VkDevice device;
+        vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &vkDevice);
 
         VkQueue graphicsQueue;
-        vkGetDeviceQueue(device, graphicsQueueIndex, 0, &graphicsQueue);
+        vkGetDeviceQueue(vkDevice, graphicsQueueIndex, 0, &graphicsQueue);
 
         VkQueue presentQueue;
-        vkGetDeviceQueue(device, presentQueueIndex, 0, &presentQueue);
+        vkGetDeviceQueue(vkDevice, presentQueueIndex, 0, &presentQueue);
     }
 
     printf("Context created\n");
@@ -190,7 +189,20 @@ void SDLVideo::setMetrics(unsigned w, unsigned h){
 }
 
 //--------------------------------------------
-void SDLVideo::Quit(){
+void SDLVideo::quit(bool useVulkan)
+{
+    if (useVulkan)
+    {
+        vkDestroyDevice(vkDevice, nullptr);
+        vkDestroyInstance(vkInstance, nullptr);
+    }
+
+    SDL_DestroyWindow(mainWindow);
+
+    if (useVulkan)
+    {
+        SDL_Vulkan_UnloadLibrary();
+    }
 
     SDL_Quit();
 }

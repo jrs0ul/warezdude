@@ -2,7 +2,7 @@
 #define _BITMAP_TEXT_H
 
 #include "../Colors.h"
-#include "../TextureLoader.h"
+#include "../SpriteBatcher.h"
 
 
 //writes text

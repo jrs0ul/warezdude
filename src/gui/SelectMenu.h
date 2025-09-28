@@ -3,7 +3,7 @@
 
 #include <cstring>
 #include "BasicUiControl.h"
-#include "../TextureLoader.h"
+#include "../SpriteBatcher.h"
 
 struct Smenu{
   char opt[20][30];

@@ -2,7 +2,7 @@
 #define DECAL_H
 
 
-#include "TextureLoader.h"
+#include "SpriteBatcher.h"
 
 class Decal
 {

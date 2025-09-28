@@ -2,12 +2,13 @@
 #ifndef PARTICLES2D_H
 #define PARTICLES2D_H
 
-#include "TextureLoader.h"
+#include "SpriteBatcher.h"
 #include "Vectors.h"
 #include "Matrix.h"
 
 
-struct Particle{
+struct Particle
+{
     Vector3D pos;
     COLOR c;
     float size;
@@ -15,7 +16,8 @@ struct Particle{
     int age;
     bool isdead;
 
-    Particle(){
+    Particle()
+    {
         pos = Vector3D(0,0,0);
         c = COLOR(1.0f, 0.0f, 0.0f, 0.8f);
         velocity=Vector3D(0,0,0);

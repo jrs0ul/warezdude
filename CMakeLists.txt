@@ -39,7 +39,7 @@ add_executable(warezdude3
                     src/Xml.cpp
                     src/Matrix.cpp
                     src/Usefull.cpp
-                    src/TextureLoader.cpp
+                    src/SpriteBatcher.cpp
                     src/Image.cpp
                     src/SDLVideo.cpp
                     src/Extensions.cpp

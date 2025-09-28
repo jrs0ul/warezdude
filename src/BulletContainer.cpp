@@ -2,7 +2,7 @@
 #include <cstring>
 #include "Consts.h"
 #include "bullet.h"
-#include "TextureLoader.h"
+#include "SpriteBatcher.h"
 
 void CBulletContainer::add(Bullet& newbulet)
 {

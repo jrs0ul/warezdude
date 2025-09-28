@@ -2,7 +2,7 @@
 #define _EDITBOX_H_
 
 #include "BasicUiControl.h"
-#include "../TextureLoader.h"
+#include "../SpriteBatcher.h"
 
 
 
@@ -17,7 +17,7 @@ public:
         unsigned char pressedKey;
         void init(unsigned int dx, unsigned int dy, const char* dtitl, unsigned char dmaxl);
         void getInput(const char* eventText, unsigned keydown);
-        void draw(PicsContainer& pics, unsigned font, unsigned remelis=0);
+        void draw(PicsContainer& pics, unsigned font);
         void reset();
 };
 

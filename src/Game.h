@@ -185,8 +185,8 @@ public:
 
     Game();
 
-    void init();
-    void render();
+    void init(bool useVulkan);
+    void render(bool useVulkan);
     void network();
     void logic();
     void destroy();
@@ -276,7 +276,7 @@ private:
     void HelpScreenLogic();
     void EndingLogic();
     int PlayerCount();
-    void LoadShader(ShaderProgram* shader, const char* name);
+    void LoadShader(ShaderProgram* shader, const char* name, bool useShader);
     void IntroScreenLogic();
     void PlayNewSong(const char* songName);
 

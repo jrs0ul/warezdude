@@ -1,4 +1,4 @@
-/*    Copyright (C) 2017 by jrs0ul                                          *
+/*    Copyright (C) 2025 by jrs0ul                                          *
  *   jrs0ul@gmail.com                                                      *
 */
 
@@ -11,10 +11,17 @@
 
 #endif
 
-    void ShaderProgram::create(){
+void ShaderProgram::create(bool useVulkan)
+{
+
+    isVulkanShader = useVulkan;
+
+    if (!useVulkan)
+    {
         program = glCreateProgram();
     }
-//---------------------------
+}
+
 void ShaderProgram::destroy()
 {
     glDeleteProgram(program);
@@ -31,7 +38,6 @@ void ShaderProgram::getLog(char* string, int len)
 
 void ShaderProgram::attach(Shader & sh)
 {
-    //printf("attaching shader:%d to program %d\n", sh.id, program);
     glAttachShader(program, sh.id);
 }
 
@@ -58,8 +64,10 @@ void ShaderProgram::link()
 
 void ShaderProgram::use()
 {
-    glUseProgram(program);
-    //printf("program id %u\n", program);
+    if (!isVulkanShader)
+    {
+        glUseProgram(program);
+    }
 }
 
 int ShaderProgram::getUniformID(const char* name)

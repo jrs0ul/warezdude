@@ -1,5 +1,5 @@
 #include "Collection.h"
-#include "TextureLoader.h"
+#include "SpriteBatcher.h"
 #include "Item.h"
 #include "ActionKeys.h"
 

@@ -59,18 +59,26 @@ const char* GamePadTypes[] = {"Unknown", "XBOX 360", "XBOX One", "Playstation 3"
 Game Game;
 
 
-void ConfigureGraphicsLib()
+void ConfigureGraphicsLib(bool useVulkan)
 {
-    Game.init();
+    Game.init(useVulkan);
 }
 //-----------------
-void RenderScreen()
+void RenderScreen(bool useVulkan)
 {
-    Game.render();
-    glFlush();
 
-    //SDL_GL_SwapBuffers( );
-    SDL.swap();
+
+    Game.render(useVulkan);
+
+    if (!useVulkan)
+    {
+        glFlush();
+        SDL.swap();
+    }
+    else
+    {
+    }
+
 }
 //-----------------
 void Logic()
@@ -283,19 +291,7 @@ int main(int argc, char* argv[])
     GetHomePath(buf);
     sprintf(Game.DocumentPath, "%s.warezdude3", buf);
     MakeDir(Game.DocumentPath);
-#ifdef __APPLE__
-    CFBundleRef mainBundle = CFBundleGetMainBundle();
-    CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(mainBundle);
-    char path[PATH_MAX];
-    if (!CFURLGetFileSystemRepresentation(resourcesURL, TRUE, (UInt8 *)path, PATH_MAX)){
-        puts("Um...Error?");
-    }
-    CFRelease(resourcesURL);
-    chdir(path);
-#endif
     Game.loadConfig();
-
-       
 
     printf("%d %d\n", Game.ScreenWidth, Game.ScreenHeight);
     SDL.setMetrics(Game.ScreenWidth, Game.ScreenHeight);
@@ -303,7 +299,10 @@ int main(int argc, char* argv[])
 
     const char* title = "WD40";
 
-    if (!SDL.InitWindow(title, "icon1.bmp", Game.windowed)){
+    const bool USE_VULKAN = true;
+
+    if (!SDL.initWindow(title, "icon1.bmp", Game.windowed, USE_VULKAN))
+    {
         Game.Works = false;
     }
 
@@ -325,7 +324,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    ConfigureGraphicsLib();
+    ConfigureGraphicsLib(USE_VULKAN);
 
     Game.TimeTicks = SDL_GetTicks();
 
@@ -349,7 +348,7 @@ int main(int argc, char* argv[])
             }
 
             CheckKeys();
-            RenderScreen();
+            RenderScreen(USE_VULKAN);
 
             tick = SDL_GetTicks() + 1000 / 61;
         }
@@ -367,7 +366,7 @@ int main(int argc, char* argv[])
 
 
 
-    SDL.Quit();
+    SDL.quit(USE_VULKAN);
 
     return 0;
 }
