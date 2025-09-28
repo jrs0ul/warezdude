@@ -1,9 +1,9 @@
 /*
  The Disarray 
- by jrs0ul(jrs0ul ^at^ gmail ^dot^ com) 2010
+ by jrs0ul(jrs0ul ^at^ gmail ^dot^ com) 2025
  -------------------------------------------
  SDL window
- mod. 2010.09.27
+ mod. 2025.09.28
  */
 
 #ifndef _SDL_VIDEO_WRAP_H
@@ -17,6 +17,8 @@
     #endif
 #else
   #include <SDL2/SDL.h>
+  #include <SDL2/SDL_vulkan.h>
+ #include <vulkan/vulkan.hpp>
 #endif
 
 class SDLVideo{
@@ -40,8 +42,10 @@ public:
     int      flags(){return _flags;}
     void     setMetrics(unsigned w, unsigned h);
 
-    bool     InitWindow(const char * title, const char * iconPath,
-                    bool isWindowed = true, bool resizable = false);
+    bool     InitWindow(const char * title,
+                        const char * iconPath,
+                        bool isWindowed = true,
+                        bool useVulkan = true);
     void     Quit();
     void     swap();
 

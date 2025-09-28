@@ -23,8 +23,6 @@
 #endif
 
 
-
-
 Game::Game()
 : imgCount(0)
 {

@@ -56,6 +56,7 @@ target_link_libraries(warezdude3
                         GL
                         openal
                         vorbisfile
+                        vulkan
                         ogg
                      )
 

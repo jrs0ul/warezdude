@@ -33,7 +33,6 @@
 #include <unistd.h>
 #include <CoreFoundation/CoreFoundation.h>
 #endif
-#include <curl/curl.h>
 #include <string>
 #include <thread>
 
@@ -60,7 +59,7 @@ const char* GamePadTypes[] = {"Unknown", "XBOX 360", "XBOX One", "Playstation 3"
 Game Game;
 
 
-void ConfGL()
+void ConfigureGraphicsLib()
 {
     Game.init();
 }
@@ -309,6 +308,7 @@ int main(int argc, char* argv[])
     }
 
     SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+
     if(SDL_NumJoysticks() > 0)
     {
         Joy = SDL_JoystickOpen(0);
@@ -325,7 +325,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    ConfGL();
+    ConfigureGraphicsLib();
 
     Game.TimeTicks = SDL_GetTicks();
 
