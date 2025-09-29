@@ -2,7 +2,7 @@
 #define USEFULL_H
 #include "Vectors.h"
 
-
+#define CLAMP(x, lo, hi)    ((x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x))
 int roundDouble2Int(double x);
 
 bool CollisionCircleCircle(float x1, float y1, float radius1,

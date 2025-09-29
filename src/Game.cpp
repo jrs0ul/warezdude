@@ -2699,7 +2699,7 @@ void Game::DrawHelp()
 void Game::DrawMissionObjectives()
 {
     char buf[50];
-   
+
     sprintf(buf, "Time remaining:%d:%d", mapas.timeToComplete / 60, mapas.timeToComplete - 60 * (mapas.timeToComplete / 60));
     WriteText(sys.ScreenWidth / 2 - 100, 
               sys.ScreenHeight / 2 + 50,
@@ -2711,19 +2711,12 @@ void Game::DrawMissionObjectives()
               COLOR(1.f, 0.f, 0.f, 1.f)
               );
 
-
 }
 
 //---------------------------
 
 void Game::render(bool useVulkan)
 {
-
-    if (!useVulkan)
-    {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-
     FlatMatrix identity;
     MatrixIdentity(identity.m);
 

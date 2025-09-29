@@ -66,19 +66,11 @@ void ConfigureGraphicsLib(bool useVulkan)
 //-----------------
 void RenderScreen(bool useVulkan)
 {
-
+    SDL.beginRenderPass(useVulkan);
 
     Game.render(useVulkan);
 
-    if (!useVulkan)
-    {
-        glFlush();
-        SDL.swap();
-    }
-    else
-    {
-    }
-
+    SDL.swap(useVulkan);
 }
 //-----------------
 void Logic()

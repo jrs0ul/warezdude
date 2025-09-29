@@ -18,7 +18,7 @@
 #else
   #include <SDL2/SDL.h>
   #include <SDL2/SDL_vulkan.h>
- #include <vulkan/vulkan.hpp>
+  #include <vulkan/vulkan.hpp>
 #endif
 
 class SDLVideo{
@@ -33,8 +33,29 @@ class SDLVideo{
     SDL_Window* mainWindow;
 
     //Vulkan stuff
-    VkDevice   vkDevice;
-    VkInstance vkInstance;
+    std::vector<VkFence>         vkFences;
+    std::vector<VkCommandBuffer> vkCommandBuffers;
+    std::vector<VkImage>         vkSwapchainImages;
+    std::vector<VkImageView>     vkSwapchainImageViews;
+    std::vector<VkFramebuffer>   vkSwapchainFramebuffers;
+    VkDevice                     vkDevice;
+    VkPhysicalDevice             vkPhysicalDevice;
+    VkInstance                   vkInstance;
+    VkImage                      vkImage;
+    VkSwapchainKHR               vkSwapchain;
+    VkCommandBuffer              vkCommandBuffer;
+    VkSurfaceFormatKHR           vkSurfaceFormat;
+    VkSurfaceCapabilitiesKHR     vkSurfaceCapabilities;
+    VkExtent2D                   vkSwapchainSize;
+    VkFormat                     vkDepthFormat;
+    VkRenderPass                 vkRenderPass;
+    VkCommandPool                vkCommandPool;
+    VkSemaphore                  vkImageAvailableSemaphore;
+    VkSemaphore                  vkRenderingFinishedSemaphore;
+    VkQueue                      vkGraphicsQueue;
+    VkQueue                      vkPresentQueue;
+    uint32_t                     vkFrameIndex;
+    uint32_t                     vkSwapchainImageCount;
 
 public:
 
@@ -51,7 +72,27 @@ public:
                         bool isWindowed = true,
                         bool useVulkan = true);
     void     quit(bool useVulkan);
-    void     swap();
+
+    void     beginRenderPass(bool useVulkan);
+    void     swap(bool useVulkan);
+
+    void     VkAcquireNextImage();
+    void     VkResetCommandBuffer();
+    void     VkBeginCommandBuffer();
+    void     VkBeginRenderPass(VkClearColorValue clearColor,
+                               VkClearDepthStencilValue clearDepthStencil);
+    void     VkEndRenderPass();
+    void     VkEndCommandBuffer();
+    void     VkQueueSubmit();
+    void     VkQueuePresent();
+private:
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+    void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, 
+                        VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, 
+                        VkDeviceMemory& imageMemory);
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    void createSemaphore(VkSemaphore *semaphore);
+
 
 };
 
