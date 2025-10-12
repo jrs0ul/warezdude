@@ -1,4 +1,5 @@
 #include "OSTools.h"
+#include <vulkan/vulkan.hpp>
 #include "Shader.h"
 #ifdef __ANDROID__
 #include <android/log.h>
@@ -7,9 +8,9 @@
 #endif
 
 #ifdef __ANDROID__
-    bool Shader::load(GLenum shaderType, const char* path, AAssetManager* man)
+    bool Shader::loadGL(ShaderType shaderType, const char* path, AAssetManager* man)
 #else
-    bool Shader::load(GLenum shaderType, const char* path)
+    bool Shader::loadGL(ShaderType shaderType, const char* path)
 #endif
     {
 
@@ -65,8 +66,9 @@
         }
 
 
+        GLenum glShaderType = (shaderType == VERTEX_SHADER) ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER;
 
-        id = glCreateShader(shaderType);
+        id = glCreateShader(glShaderType);
 
         printf("shader id: %d\n", id);
 
@@ -92,9 +94,9 @@
                 if (buf) {
                     glGetShaderInfoLog(id, infoLen, NULL, buf);
 #ifdef __ANDROID__
-                    LOGI("Could not compile %d:\n%s\n", shaderType, buf);
+                    LOGI("Could not compile %d:\n%s\n", glShaderType, buf);
 #else
-                    printf("Could not compile %d:\n%s\n", shaderType, buf);
+                    printf("Could not compile %d:\n%s\n", glShaderType, buf);
 #endif
                     free(buf);
                 }
@@ -116,7 +118,42 @@
         }
         delete []code;
 
-        
         return true;
     }
 
+
+
+bool Shader::loadVK(const char* path, VkDevice* device)
+{
+    char* binShader = 0;
+    long res = ReadFileData(path, &binShader);
+
+    if (res <= 0)
+    {
+        printf("failed loading file %s\n", path);
+
+        if (binShader)
+        {
+            free(binShader);
+        }
+
+        return false;
+    }
+
+    VkShaderModuleCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = res;
+    createInfo.pCode = reinterpret_cast<const uint32_t*>(binShader);
+
+    VkShaderModule shaderModule;
+    auto vkres = vkCreateShaderModule(*device, &createInfo, nullptr, &shaderModule);
+
+    if (vkres != VK_SUCCESS)
+    {
+        printf("! Problem creating shader %s !\n", path);
+        return false;
+    }
+
+    printf("created shader %s .\n", path);
+    return true;
+}

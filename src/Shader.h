@@ -1,14 +1,21 @@
-#ifndef GLSL_SHADER_H
-#define GLSL_SHADER_H
+#pragma once
 
 #ifdef __ANDROID__
     #include <GLES2/gl2.h>
     #include <android/asset_manager.h>
 #else
     #include "Extensions.h"
+    #include <vulkan/vulkan.hpp>
 #endif
 
 class ShaderProgram;
+
+
+enum ShaderType
+{
+    VERTEX_SHADER,
+    FRAGMENT_SHADER
+};
 
 class Shader{
         GLuint id;
@@ -20,13 +27,13 @@ public:
         }
         //loads and compiles shader
 #ifndef __ANDROID__
-        bool load(GLenum shaderType, const char* path);
+        bool loadGL(ShaderType shaderType, const char* path);
+        bool loadVK(const char* path, VkDevice* device);
 #else
-        bool load(GLenum shaderType, const char* path, AAssetManager* man);
+        bool loadGL(ShaderType shaderType, const char* path, AAssetManager* man);
 #endif
 
         friend class ShaderProgram;
 
 };
 
-#endif //GLSL_SHADER

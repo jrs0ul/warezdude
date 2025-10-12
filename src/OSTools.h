@@ -3,7 +3,7 @@
  by jrs0ul(jrs0ul ^at^ gmail ^dot^ com) 2010
  -------------------------------------------
  some useful stuff
- mod. 2010.09.27
+ mod. 2025.10.12
  */
 #ifndef _UTILS_H
 #define _UTILS_H
@@ -51,9 +51,9 @@ void      UTF8toWchar(char* utftext, wchar_t * wchartext);
 //reads file to array, data is allocated in function
 //use free() to free the memory
 #ifdef __ANDROID__
-bool      ReadFileData(const char* path, char ** data, AAssetManager* man);
+long      ReadFileData(const char* path, char ** data, AAssetManager* man);
 #else
-bool      ReadFileData(const char* path, char ** data);
+long      ReadFileData(const char* path, char ** data);
 #endif
 
 //Multiplatform function gets user home path.

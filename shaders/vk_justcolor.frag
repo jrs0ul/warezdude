@@ -1,12 +1,11 @@
-#ifdef GL_ES
-//
-precision mediump float;
+#version 450
 
-#endif
 
-varying vec4 vColor;
+layout(location = 0) in vec4 vColor;
+
+layout(location = 0) out vec4 outColor;
 
 void main(void)
 {
-   gl_FragColor = vColor;
+   outColor = vColor;
 }

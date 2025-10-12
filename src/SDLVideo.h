@@ -85,6 +85,8 @@ public:
     void     VkEndCommandBuffer();
     void     VkQueueSubmit();
     void     VkQueuePresent();
+
+    VkDevice* getVkDevice(){return &vkDevice;}
 private:
     VkImageView createImageView(VkImage& image, VkFormat format, VkImageAspectFlags aspectFlags);
     void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, 

@@ -116,26 +116,32 @@ void      UTF8toWchar(char* utftext, wchar_t * wchartext){
 
 //-------------------------------------------------------------
 #ifdef __ANDROID__
-    bool      ReadFileData(const char* path, char ** data, AAssetManager* man)
+    long  ReadFileData(const char* path, char ** data, AAssetManager* man)
 #else
-    bool      ReadFileData(const char* path, char ** data)
+    long  ReadFileData(const char* path, char ** data)
 #endif
     {
         if (*data)
-            return false;
+        {
+            return -1;
+        }
 #ifndef __ANDROID__
         FILE * f = 0;
         f = fopen(path, "rb");
         if (!f)
-            return false;
+        {
+            return -1;
+        }
 #else
         LOGI("Opening file: %s", path);
         AAsset * f = 0;
         f = AAssetManager_open(man, path, AASSET_MODE_UNKNOWN );
         if(!f)
-            return false;
+        {
+            return -1;
+        }
 #endif
-        unsigned long fsize = 0;
+        long fsize = 0;
 #ifndef __ANDROID__
 
         fseek (f, 0, SEEK_END);
@@ -147,7 +153,9 @@ void      UTF8toWchar(char* utftext, wchar_t * wchartext){
 #endif
 
         if (fsize <= 0)
-            return false;
+        {
+            return -1;
+        }
 
         (*data) = (char *)malloc(fsize + 10);
 
@@ -168,7 +176,7 @@ void      UTF8toWchar(char* utftext, wchar_t * wchartext){
 #else
             AAsset_close(f);
 #endif
-            return false;
+            return -1;
         }
 #ifndef __ANDROID__
         fclose(f);
@@ -181,7 +189,7 @@ void      UTF8toWchar(char* utftext, wchar_t * wchartext){
 
         //LOGI("contents: %s", *data);
 
-        return true;
+        return fsize;
 
     }
 //-------------------------------------------------------------

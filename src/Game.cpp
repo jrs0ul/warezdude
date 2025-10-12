@@ -4006,7 +4006,6 @@ void Game::LoadShader(ShaderProgram* shader, const char* name, bool useVulkan)
 
     if (!useVulkan)
     {
-
         Shader vert;
         Shader frag;
 
@@ -4014,17 +4013,17 @@ void Game::LoadShader(ShaderProgram* shader, const char* name, bool useVulkan)
         sprintf(buf, "shaders/%s.vert", name);
 
 #ifdef __ANDROID__
-        vert.load(GL_VERTEX_SHADER, buf, AssetManager);
+        vert.loadGL(VERTEX_SHADER, buf, AssetManager);
 #else
-        vert.load(GL_VERTEX_SHADER, buf);
+        vert.loadGL(VERTEX_SHADER, buf);
 #endif
 
         printf("Loading fragment shader...\n");
         sprintf(buf, "shaders/%s.frag", name);
 #ifdef __ANDROID__
-        frag.load(GL_FRAGMENT_SHADER, buf, AssetManager);
+        frag.loadGL(FRAGMENT_SHADER, buf, AssetManager);
 #else
-        frag.load(GL_FRAGMENT_SHADER, buf);
+        frag.loadGL(FRAGMENT_SHADER, buf);
 #endif
 
         shader->attach(vert);
@@ -4046,6 +4045,17 @@ void Game::LoadShader(ShaderProgram* shader, const char* name, bool useVulkan)
         puts("-----------");
 #endif
     }
+    else //VULKAN
+    {
+        Shader vert;
+        Shader frag;
+
+        sprintf(buf, "shaders/%s_vert.spv", name);
+        vert.loadVK(buf, vulkanDevice);
+        sprintf(buf, "shaders/%s_frag.spv", name);
+        vert.loadVK(buf, vulkanDevice);
+    }
+
 }
 
 //----------------------

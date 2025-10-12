@@ -298,6 +298,8 @@ int main(int argc, char* argv[])
         Game.Works = false;
     }
 
+    Game.vulkanDevice = SDL.getVkDevice();
+
     SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 
     if(SDL_NumJoysticks() > 0)
@@ -319,6 +321,7 @@ int main(int argc, char* argv[])
     ConfigureGraphicsLib(USE_VULKAN);
 
     Game.TimeTicks = SDL_GetTicks();
+    
 
     SDL_ShowCursor(false);
 

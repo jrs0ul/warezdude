@@ -159,6 +159,8 @@ public:
 
     bool doRumble;
 
+    VkDevice * vulkanDevice;
+
     float MouseX;
     float MouseY;
 
