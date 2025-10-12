@@ -86,7 +86,7 @@ public:
     void     VkQueueSubmit();
     void     VkQueuePresent();
 private:
-    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+    VkImageView createImageView(VkImage& image, VkFormat format, VkImageAspectFlags aspectFlags);
     void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, 
                         VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, 
                         VkDeviceMemory& imageMemory);

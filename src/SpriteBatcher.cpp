@@ -553,7 +553,9 @@ void PicsContainer::resizeContainer(unsigned long index,
         }
 
         if (createTextures)
+        {
             glGenTextures(1, ((GLuint *)TexNames.getData()) + index);
+        }
 
         char * copy = (char*)malloc(strlen(name)+1);
         strcpy(copy, name);

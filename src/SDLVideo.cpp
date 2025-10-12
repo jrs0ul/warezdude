@@ -61,9 +61,14 @@ uint32_t SDLVideo::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags pro
 
 
 
-void SDLVideo::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, 
-                        VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, 
-                        VkDeviceMemory& imageMemory)
+void SDLVideo::createImage(uint32_t width,
+                           uint32_t height,
+                           VkFormat format,
+                           VkImageTiling tiling,
+                           VkImageUsageFlags usage,
+                           VkMemoryPropertyFlags properties,
+                           VkImage& image,
+                           VkDeviceMemory& imageMemory)
 {
     VkImageCreateInfo imageInfo = {};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -93,14 +98,15 @@ void SDLVideo::createImage(uint32_t width, uint32_t height, VkFormat format, VkI
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(vkDevice, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
+    if (vkAllocateMemory(vkDevice, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) 
+    {
         throw std::runtime_error("failed to allocate image memory!");
     }
 
     vkBindImageMemory(vkDevice, image, imageMemory, 0);
 }
 
-VkImageView SDLVideo::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
+VkImageView SDLVideo::createImageView(VkImage& image, VkFormat format, VkImageAspectFlags aspectFlags)
 {
     VkImageViewCreateInfo viewInfo = {};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -273,8 +279,40 @@ bool SDLVideo::initWindow(const char * title,
         vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, nullptr);
         std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
         vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, physicalDevices.data());
-        //TODO: figure out how to pick propper device idx
-        vkPhysicalDevice = physicalDevices[1];
+
+        bool physicalDeviceAssigned = false;
+
+        for (auto device : physicalDevices)
+        {
+            VkPhysicalDeviceProperties properties;
+            vkGetPhysicalDeviceProperties(device, &properties);
+
+            if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+            {
+                printf("We'll be using: %s!\n", properties.deviceName);
+                vkPhysicalDevice = device;
+                physicalDeviceAssigned = true;
+                break;
+            }
+        }
+
+        if (!physicalDeviceAssigned)
+        {
+            for (auto device : physicalDevices)
+            {
+                VkPhysicalDeviceProperties properties;
+                vkGetPhysicalDeviceProperties(device, &properties);
+
+
+                if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+                {
+                    printf("We'll be using: %s!\n", properties.deviceName);
+                    vkPhysicalDevice = device;
+                    physicalDeviceAssigned = true;
+                    break;
+                }
+            }
+        }
 
 
         uint32_t queueFamilyCount;
@@ -335,7 +373,6 @@ bool SDLVideo::initWindow(const char * title,
             &deviceFeatures,                        // pEnabledFeatures
         };
 
-        //VkDevice device;
         vkCreateDevice(vkPhysicalDevice, &deviceCreateInfo, nullptr, &vkDevice);
 
         vkGetDeviceQueue(vkDevice, graphicsQueueIndex, 0, &vkGraphicsQueue);
