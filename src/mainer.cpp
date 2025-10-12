@@ -299,6 +299,8 @@ int main(int argc, char* argv[])
     }
 
     Game.vulkanDevice = SDL.getVkDevice();
+    Game.vkCmd        = SDL.getVkCmd();
+    Game.vkRenderPass = SDL.getVkRenderPass();
 
     SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 

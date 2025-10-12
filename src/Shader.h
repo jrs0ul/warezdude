@@ -19,6 +19,8 @@ enum ShaderType
 
 class Shader{
         GLuint id;
+        ShaderType type;
+        VkShaderModule vkShaderModule;
 
 public:
 
@@ -28,7 +30,7 @@ public:
         //loads and compiles shader
 #ifndef __ANDROID__
         bool loadGL(ShaderType shaderType, const char* path);
-        bool loadVK(const char* path, VkDevice* device);
+        bool loadVK(ShaderType shaderType, const char* path, VkDevice* device);
 #else
         bool loadGL(ShaderType shaderType, const char* path, AAssetManager* man);
 #endif

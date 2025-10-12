@@ -86,7 +86,10 @@ public:
     void     VkQueueSubmit();
     void     VkQueuePresent();
 
-    VkDevice* getVkDevice(){return &vkDevice;}
+    VkDevice*        getVkDevice(){return &vkDevice;}
+    VkCommandBuffer* getVkCmd(){return &vkCommandBuffer;}
+    VkRenderPass*    getVkRenderPass(){return &vkRenderPass;}
+
 private:
     VkImageView createImageView(VkImage& image, VkFormat format, VkImageAspectFlags aspectFlags);
     void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, 

@@ -2721,7 +2721,7 @@ void Game::render(bool useVulkan)
     MatrixIdentity(identity.m);
 
     FlatMatrix finalM = identity * OrthoMatrix;
-    defaultShader.use();
+    defaultShader.use(vkCmd);
 
     if (!useVulkan)
     {
@@ -2729,7 +2729,7 @@ void Game::render(bool useVulkan)
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, finalM.m);
     }
 
-    colorShader.use();
+    colorShader.use(vkCmd);
 
     if (!useVulkan)
     {
@@ -4051,9 +4051,15 @@ void Game::LoadShader(ShaderProgram* shader, const char* name, bool useVulkan)
         Shader frag;
 
         sprintf(buf, "shaders/%s_vert.spv", name);
-        vert.loadVK(buf, vulkanDevice);
+        vert.loadVK(VERTEX_SHADER, buf, vulkanDevice);
+
+        shader->attach(vert);
+
         sprintf(buf, "shaders/%s_frag.spv", name);
-        vert.loadVK(buf, vulkanDevice);
+        vert.loadVK(FRAGMENT_SHADER, buf, vulkanDevice);
+
+        shader->attach(frag);
+        shader->buildVkPipeline(vulkanDevice, vkRenderPass);
     }
 
 }
@@ -4092,10 +4098,10 @@ void Game::init(bool useVulkan)
         LoadShader(&defaultShader, "default", useVulkan);
         LoadShader(&colorShader, "justcolor", useVulkan);
 
-        colorShader.use();
 
     if (!useVulkan)
     {
+        colorShader.use(vkCmd);
         glEnable(GL_TEXTURE_2D);
         glDepthFunc(GL_LEQUAL);
 

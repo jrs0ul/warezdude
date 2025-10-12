@@ -123,7 +123,7 @@
 
 
 
-bool Shader::loadVK(const char* path, VkDevice* device)
+bool Shader::loadVK(ShaderType shaderType, const char* path, VkDevice* device)
 {
     char* binShader = 0;
     long res = ReadFileData(path, &binShader);
@@ -140,13 +140,14 @@ bool Shader::loadVK(const char* path, VkDevice* device)
         return false;
     }
 
+    type = shaderType;
+
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = res;
     createInfo.pCode = reinterpret_cast<const uint32_t*>(binShader);
 
-    VkShaderModule shaderModule;
-    auto vkres = vkCreateShaderModule(*device, &createInfo, nullptr, &shaderModule);
+    auto vkres = vkCreateShaderModule(*device, &createInfo, nullptr, &vkShaderModule);
 
     if (vkres != VK_SUCCESS)
     {

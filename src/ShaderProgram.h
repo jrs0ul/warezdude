@@ -4,12 +4,16 @@
 #ifndef __ANDROID__
     #include "Extensions.h"
 #endif
+#include <vulkan/vulkan.hpp>
 #include "Shader.h"
 
 class ShaderProgram
 {
     GLuint program;
     bool isVulkanShader;
+//vulkan stuff
+    std::vector<VkPipelineShaderStageCreateInfo> vkShaderStages;
+    VkPipeline vkPipeline;
 
 public:
 
@@ -17,8 +21,12 @@ public:
     void destroy();
     void getLog(char* string, int len);
     void attach(Shader& sh);
+    //only for opengl
     void link();
-    void use();
+    //for Vulkan only
+    void buildVkPipeline(VkDevice* device, VkRenderPass* pass);
+    void use(VkCommandBuffer* vkCmd = nullptr);
+
     int  getUniformID(const char* name);
     int  getAttributeID(const char* name);
 
