@@ -2728,6 +2728,12 @@ void Game::render(bool useVulkan)
         int MatrixID = defaultShader.getUniformID("ModelViewProjection");
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, finalM.m);
     }
+    else // VULKAN
+    {
+        vkCmdPushConstants(*vkCmd,
+                           *defaultShader.getVkPipelineLayout(),
+                           VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(finalM.m), &finalM.m);
+    }
 
     colorShader.use(vkCmd);
 
@@ -2735,6 +2741,13 @@ void Game::render(bool useVulkan)
     {
         int MatrixIDColor = colorShader.getUniformID("ModelViewProjection");
         glUniformMatrix4fv(MatrixIDColor, 1, GL_FALSE, finalM.m);
+    }
+    else //VULKAN
+    {
+        vkCmdPushConstants(*vkCmd,
+                           *colorShader.getVkPipelineLayout(),
+                           VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(finalM.m), &finalM.m);
+
     }
 
     switch(state)

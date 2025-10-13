@@ -103,7 +103,8 @@ public:
     void drawVA(void * vertices, void * uvs, void *colors,
                 unsigned uvsCount, unsigned vertexCount,
                 ShaderProgram* shader,
-                bool useVulkan);
+                bool useVulkan,
+                VkCommandBuffer* vkCmd = nullptr);
 private:
     void resizeContainer(unsigned long index,
                          int twidth, int theight, int filter,

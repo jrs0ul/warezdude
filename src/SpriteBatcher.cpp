@@ -145,7 +145,8 @@ void PicsContainer::drawVA(void * vertices,
                            unsigned uvsCount,
                            unsigned vertexCount,
                            ShaderProgram* shader,
-                           bool useVulkan)
+                           bool useVulkan,
+                           VkCommandBuffer* vkCmd)
 {
     int attribID = 0;
     int ColorAttribID = 0;
@@ -178,6 +179,14 @@ void PicsContainer::drawVA(void * vertices,
         }
 
         glDisableVertexAttribArray(attribID);
+    }
+    else // VULKAN
+    {
+        VkBuffer buf;
+
+        VkDeviceSize offset = 0;
+        vkCmdBindVertexBuffers(*vkCmd, 0, 1, &buf, &offset);
+        vkCmdDraw(*vkCmd, vertexCount / 2, 1, 0, 0);
     }
 }
 //----------------------------------------------------------
@@ -301,7 +310,7 @@ void PicsContainer::drawBatch(ShaderProgram * justColor,
                     
 
                         drawVA(vertices.getData(), uvs.getData(), colors,
-                               uvs.count(), vertices.count(), currentShader, useVulkan);
+                               uvs.count(), vertices.count(), currentShader, useVulkan, vkCmd);
 
                         //printf("vertice count %d \n", (int)vertices.count());
                         //printf("uvs count %d \n", (int)uvs.count());
@@ -512,7 +521,7 @@ void PicsContainer::drawBatch(ShaderProgram * justColor,
                 }*/
 
                 drawVA(vertices.getData(), uvs.getData(), colors,
-                       uvs.count(), vertices.count(), currentShader, useVulkan);
+                       uvs.count(), vertices.count(), currentShader, useVulkan, vkCmd);
 
                 //printf("vertice count %d \n", (int)vertices.count());
                 //printf("uvs count %d \n", (int)uvs.count());
@@ -524,7 +533,9 @@ void PicsContainer::drawBatch(ShaderProgram * justColor,
             }
 
             if (colors)
+            {
                 free(colors);
+            }
         }
     }
 

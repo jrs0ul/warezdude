@@ -13,7 +13,8 @@ class ShaderProgram
     bool isVulkanShader;
 //vulkan stuff
     std::vector<VkPipelineShaderStageCreateInfo> vkShaderStages;
-    VkPipeline vkPipeline;
+    VkPipeline       vkPipeline;
+    VkPipelineLayout vkPipelineLayout;
 
 public:
 
@@ -25,10 +26,13 @@ public:
     void link();
     //for Vulkan only
     void buildVkPipeline(VkDevice* device, VkRenderPass* pass);
+
     void use(VkCommandBuffer* vkCmd = nullptr);
 
     int  getUniformID(const char* name);
     int  getAttributeID(const char* name);
+
+    VkPipelineLayout* getVkPipelineLayout() {return &vkPipelineLayout;}
 
     ShaderProgram()
     {

@@ -80,7 +80,6 @@ void ShaderProgram::link()
 void ShaderProgram::buildVkPipeline(VkDevice* device, VkRenderPass* pass)
 {
 
-    VkPipelineLayout           pipelineLayout;
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.pNext = nullptr;
@@ -90,7 +89,7 @@ void ShaderProgram::buildVkPipeline(VkDevice* device, VkRenderPass* pass)
     pipelineLayoutInfo.pushConstantRangeCount = 0;
     pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
-    vkCreatePipelineLayout(*device, &pipelineLayoutInfo, nullptr, &pipelineLayout);
+    vkCreatePipelineLayout(*device, &pipelineLayoutInfo, nullptr, &vkPipelineLayout);
 
 
     VkPipelineVertexInputStateCreateInfo   vertexInputInfo;
@@ -113,19 +112,19 @@ void ShaderProgram::buildVkPipeline(VkDevice* device, VkRenderPass* pass)
 
     VkViewport viewport;
     viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = 640;
-	viewport.height = 360;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
+    viewport.y = 0.0f;
+    viewport.width = 640;
+    viewport.height = 360;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
 
     VkPipelineViewportStateCreateInfo      viewportState = {};
     viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	viewportState.pNext = nullptr;
-	viewportState.viewportCount = 1;
-	viewportState.pViewports = &viewport;
-	viewportState.scissorCount = 1;
-	viewportState.pScissors = &scissor;
+    viewportState.pNext = nullptr;
+    viewportState.viewportCount = 1;
+    viewportState.pViewports = &viewport;
+    viewportState.scissorCount = 1;
+    viewportState.pScissors = &scissor;
 
     VkPipelineRasterizationStateCreateInfo rasterizer = {};
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -175,7 +174,7 @@ void ShaderProgram::buildVkPipeline(VkDevice* device, VkRenderPass* pass)
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState   = &multisampling;
     pipelineInfo.pColorBlendState    = &colorBlending;
-    pipelineInfo.layout              = pipelineLayout;
+    pipelineInfo.layout              = vkPipelineLayout;
     pipelineInfo.renderPass          = *pass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
