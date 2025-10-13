@@ -60,3 +60,37 @@ target_link_libraries(warezdude3
                         ogg
                      )
 
+add_custom_command(
+    OUTPUT ${CMAKE_SOURCE_DIR}/shaders/justcolor_vert.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_justcolor.vert --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/justcolor_vert.spv
+    DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_justcolor.vert
+)
+
+add_custom_command(
+    OUTPUT ${CMAKE_SOURCE_DIR}/shaders/justcolor_frag.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_justcolor.frag --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/justcolor_frag.spv
+    DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_justcolor.frag
+)
+
+add_custom_command(
+    OUTPUT ${CMAKE_SOURCE_DIR}/shaders/default_vert.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_default.vert --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/default_vert.spv
+    DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_default.vert
+)
+
+add_custom_command(
+    OUTPUT ${CMAKE_SOURCE_DIR}/shaders/default_frag.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_default.frag --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/default_frag.spv
+    DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_default.frag
+)
+
+
+
+add_custom_target(CompileShaders ALL DEPENDS
+    ${CMAKE_SOURCE_DIR}/shaders/justcolor_vert.spv
+    ${CMAKE_SOURCE_DIR}/shaders/justcolor_frag.spv
+    ${CMAKE_SOURCE_DIR}/shaders/default_vert.spv
+    ${CMAKE_SOURCE_DIR}/shaders/default_frag.spv
+)
+
+

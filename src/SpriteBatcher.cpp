@@ -203,7 +203,8 @@ Vector3D CalcUvs(PicData * p, unsigned frame)
 void PicsContainer::drawBatch(ShaderProgram * justColor,
                               ShaderProgram * uvColor,
                               int method,
-                              bool useVulkan){
+                              bool useVulkan,
+                              VkCommandBuffer* vkCmd){
 
         switch(method){
               //TODO: complete VA
@@ -278,7 +279,7 @@ void PicsContainer::drawBatch(ShaderProgram * justColor,
 
                             if (uvColor)
                             {
-                                uvColor->use();
+                                uvColor->use(vkCmd);
                                 //printf("drawing with uv color shader\n");
                             }
                         }
@@ -288,7 +289,7 @@ void PicsContainer::drawBatch(ShaderProgram * justColor,
 
                             if (justColor)
                             {
-                                justColor->use();
+                                justColor->use(vkCmd);
                                 currentShader = justColor;
                                 uvs.destroy();
                                 //printf("drawing with just color shader\n");
@@ -480,7 +481,7 @@ void PicsContainer::drawBatch(ShaderProgram * justColor,
                     //printf("tex index %u\n", TexNames[texIndex]);
                     if (uvColor)
                     {
-                        uvColor->use();
+                        uvColor->use(vkCmd);
                         //printf("drawing uvTex shader\n");
                     }
                 }
@@ -489,7 +490,7 @@ void PicsContainer::drawBatch(ShaderProgram * justColor,
                     glDisable(GL_TEXTURE_2D);
                     if (justColor)
                     {
-                        justColor->use();
+                        justColor->use(vkCmd);
                         currentShader = justColor;
                         uvs.destroy();
                         //printf("drawing with just color shader\n");

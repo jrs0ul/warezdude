@@ -2746,7 +2746,7 @@ void Game::render(bool useVulkan)
         case GAMESTATE_GAME   : DrawGameplay();         break;
     }
 
-    pics.drawBatch(&colorShader, &defaultShader, 666, useVulkan);
+    pics.drawBatch(&colorShader, &defaultShader, 666, useVulkan, vkCmd);
 
 }
 //-------------------------------------
@@ -4056,7 +4056,7 @@ void Game::LoadShader(ShaderProgram* shader, const char* name, bool useVulkan)
         shader->attach(vert);
 
         sprintf(buf, "shaders/%s_frag.spv", name);
-        vert.loadVK(FRAGMENT_SHADER, buf, vulkanDevice);
+        frag.loadVK(FRAGMENT_SHADER, buf, vulkanDevice);
 
         shader->attach(frag);
         shader->buildVkPipeline(vulkanDevice, vkRenderPass);

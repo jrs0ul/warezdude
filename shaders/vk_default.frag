@@ -8,5 +8,5 @@ layout(binding = 1) uniform sampler2D uTexture;
 
 void main(void)
 {
-   outColor = vec4(vColor * texture(uTexture, vUvs));
+   outColor = vColor * texture(uTexture, vUvs);
 }

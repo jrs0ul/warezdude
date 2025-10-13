@@ -144,7 +144,8 @@ public:
     void drawBatch(ShaderProgram * justColor,
                    ShaderProgram * uvColor,
                    int method = 0,
-                   bool useVulkan = false);
+                   bool useVulkan = false,
+                   VkCommandBuffer* vkCmd = nullptr);
 
     GLuint getname(unsigned long index);
     unsigned getTextureCount(){return TexNames.count();}
