@@ -134,7 +134,7 @@ void      UTF8toWchar(char* utftext, wchar_t * wchartext){
         }
 #else
         LOGI("Opening file: %s", path);
-        AAsset * f = 0;
+        AAsset * f = nullptr;
         f = AAssetManager_open(man, path, AASSET_MODE_UNKNOWN );
         if(!f)
         {

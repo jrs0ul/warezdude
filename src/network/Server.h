@@ -1,5 +1,4 @@
-#ifndef _CSERVER_H_
-#define _CSERVER_H_
+#pragma once
 
 //Server class
 
@@ -57,8 +56,3 @@ public:
 
     int findClientByAddress(const sockaddr_in& addr);
 };
-
-
-
-
-#endif //_CSERVER_H_

@@ -1,6 +1,7 @@
 #include "SoundSystem.h"
 
 #include <cstdio>
+#include <cwchar>
 #ifdef __APPLE__
     #include <TargetConditionals.h>
 #endif
@@ -10,22 +11,72 @@
     #include <vorbis/vorbisfile.h>
 #endif
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "native-activity", __VA_ARGS__))
+#endif
+
+#include "../Xml.h"
+
+
+#ifdef __ANDROID__
+
+
+static int android_read(void* cookie, char* buf, int size) {
+    return AAsset_read((AAsset*)cookie, buf, size);
+}
+
+static int android_write(void* cookie, const char* buf, int size) {
+    return EACCES; // can't provide write access to the apk
+}
+
+static fpos_t android_seek(void* cookie, fpos_t offset, int whence) {
+    return AAsset_seek((AAsset*)cookie, offset, whence);
+}
+
+static int android_close(void* cookie) {
+    AAsset_close((AAsset*)cookie);
+    return 0;
+}
+
+FILE* android_fopen(AAssetManager* assman, const char* fname, const char* mode) {
+    if(mode[0] == 'w') return NULL;
+
+    AAsset* asset = AAssetManager_open(assman, fname, 0);
+    if(!asset) return NULL;
+
+    return funopen(asset, android_read, android_write, android_seek, android_close);
+}
+#endif
+
 
 //-------------------------------------------------------------------
+#ifdef __ANDROID__
 char* SoundSystem::LoadOGG(char *fileName,  ALsizei & size,
-                           ALenum &format, ALsizei &freq){
+                           ALenum &format, ALsizei &freq, AAssetManager* assman)
+#else
+char* SoundSystem::LoadOGG(char *fileName,  ALsizei & size,
+                           ALenum &format, ALsizei &freq)
+#endif
+{
 
-    char * buffer =0;
+    char * buffer = nullptr;
     const int BUFFER_SIZE = 16384 ;
     int endian = 0;
 
     long bytes;
     char data[BUFFER_SIZE];
-    FILE *f = 0;
 
+    FILE* f = nullptr;
+#ifdef __ANDROID__
+
+    f = android_fopen(assman, fileName, "rb");
+#else
     f = fopen(fileName, "rb");
+#endif
 
-    if (!f){
+    if (!f)
+    {
         printf("Cannot open %s\n",fileName);
         return 0;
     }
@@ -54,7 +105,7 @@ char* SoundSystem::LoadOGG(char *fileName,  ALsizei & size,
     int btmp = 1;
     while (bytes > 0){
 
-        //uzpildome buferi
+        //fill the buffer
         siz = 0;
         while ((btmp) && (siz<BUFFER_SIZE)){
 
@@ -143,67 +194,118 @@ void SoundSystem::exit(){
     }
 }
 //--------------------------------------
-    void SoundSystem::loadFiles(const char * BasePath, const char * list){
+#ifdef __ANDROID__
+void SoundSystem::loadFiles(const char *BasePath, const char *list, AAssetManager* assman)
+#else
+void SoundSystem::loadFiles(const char *BasePath, const char *list)
+#endif
+{
+    char buf[255];
+    sprintf(buf, "%s%s", BasePath, list);
 
-        char buf[255];
-        sprintf(buf, "%s%s", BasePath, list);
+    Xml sfxList;
 
-        FILE* failas=fopen(buf,"rt");
+#ifndef __ANDROID__
+    bool result = sfxList.load(buf);
+#else
+    bool result = sfxList.load(buf, assman);
+#endif
 
-        if (failas) 
+    if (result)
+    {
+        XmlNode *mainnode = sfxList.root.getNode(L"Sounds");
+
+        int soundCount = 0;
+
+        if (mainnode)
         {
-            while (!feof(failas))
+            soundCount = mainnode->childrenCount();
+        }
+
+        for (int i = 0; i < soundCount; ++i)
+        {
+            XmlNode *node = mainnode->getNode(i);
+
+            if (node)
             {
-                SoundData data;
-                data.name[0] = 0;
-                if (fscanf(failas,"%s\n",data.name))
+                for (int j = 0; j < (int)node->attributeCount(); ++j)
                 {
-                    audioInfo.add(data);
+                    XmlAttribute* attr = node->getAttribute(j);
+                    SoundData data;
+                    data.name[0] = 0;
+
+                    if (attr)
+                    {
+                        if (wcscmp(attr->getName(), L"src") == 0)
+                        {
+                            wchar_t* value = attr->getValue();
+
+                            if (value)
+                            {
+                                sprintf(data.name, "%ls", value);
+                                audioInfo.push_back(data);
+                            }
+                        }
+                    }
                 }
             }
-
-            fclose(failas);
         }
 
-        buffers = new ALuint[audioInfo.count()];
-        alGenBuffers(audioInfo.count(), buffers);
-
-        sources = new ALuint[audioInfo.count()];
-        alGenSources(audioInfo.count(), sources);
-
-        char * data = 0;
-        ALenum format;
-        ALsizei size, freq;
-        //  ALboolean loop;
-
-
-        for (unsigned int i = 0 ; i<audioInfo.count(); i++){
-
-            sprintf(buf, "%s%s", BasePath, audioInfo[i].name);
-
-            data = LoadOGG(buf, size, format, freq);
-
-            if (data){
-                alBufferData(buffers[i],format,data,size,freq);
-                delete []data;
-                data = 0;
-            }
-            else
-                puts("No data");
-            alSourcei(sources[i], AL_BUFFER, buffers[i]);
-            alSource3f(sources[i], AL_POSITION,        0.0, 0.0, 0.0);
-            alSource3f(sources[i], AL_VELOCITY,        0.0, 0.0, 0.0);
-            alSource3f(sources[i], AL_DIRECTION,       0.0, 0.0, 0.0);
-            alSourcef (sources[i], AL_ROLLOFF_FACTOR,  0.0          );
-            alSourcei (sources[i], AL_SOURCE_RELATIVE, AL_TRUE      );
-        }
-
+        sfxList.destroy();
     }
 
-//--------------------------------------------
-void SoundSystem::playsound(unsigned int index, bool loop){
+    buffers = new ALuint[audioInfo.size()];
+    alGenBuffers(audioInfo.size(), buffers);
 
-    if (index < audioInfo.count()){
+    sources = new ALuint[audioInfo.size()];
+    alGenSources(audioInfo.size(), sources);
+
+    char *data = nullptr;
+    ALenum format;
+    ALsizei size, freq;
+    //  ALboolean loop;
+
+
+    for (unsigned int i = 0; i < audioInfo.size(); i++)
+    {
+
+        sprintf(buf, "%s%s", BasePath, audioInfo[i].name);
+
+#ifdef __ANDROID__
+        data = LoadOGG(buf, size, format, freq, assman);
+#else
+        data = LoadOGG(buf, size, format, freq);
+#endif
+
+        if (data)
+        {
+            alBufferData(buffers[i], format, data, size, freq);
+            delete[]data;
+            data = nullptr;
+        }
+        else
+        {
+#ifdef __ANDROID__
+            LOGI("Error loading %s", buf);
+#else
+            puts("No data");
+#endif
+        }
+        alSourcei(sources[i], AL_BUFFER, buffers[i]);
+        alSource3f(sources[i], AL_POSITION, 0.0, 0.0, 0.0);
+        alSource3f(sources[i], AL_VELOCITY, 0.0, 0.0, 0.0);
+        alSource3f(sources[i], AL_DIRECTION, 0.0, 0.0, 0.0);
+        alSourcef(sources[i], AL_ROLLOFF_FACTOR, 0.0);
+        alSourcei(sources[i], AL_SOURCE_RELATIVE, AL_TRUE);
+    }
+
+}
+
+//--------------------------------------------
+void SoundSystem::playsound(unsigned int index, bool loop)
+{
+
+    if (index < audioInfo.size()){
         if (loop)
             alSourcei(sources[index],AL_LOOPING,AL_TRUE);
         else
@@ -217,17 +319,16 @@ void SoundSystem::playsound(unsigned int index, bool loop){
 
 void SoundSystem::freeData(){
 
-    if (audioInfo.count()){
-
-
-        alDeleteSources(audioInfo.count(),sources);
-        alDeleteBuffers(audioInfo.count(),buffers);
+    if (audioInfo.size())
+    {
+        alDeleteSources(audioInfo.size(), sources);
+        alDeleteBuffers(audioInfo.size(), buffers);
         delete []buffers;
         delete []sources;
-        buffers=0;
-        sources=0;
+        buffers = nullptr;
+        sources = nullptr;
     }
-    audioInfo.destroy();
+    audioInfo.clear();
 }
 
 //----------------------------------------
@@ -261,5 +362,5 @@ void SoundSystem::setVolume(unsigned int index, int volume)
 
 //---------------------------------------------
 void SoundSystem::stopAll(){
-    alSourceStopv(audioInfo.count(),sources);
+    alSourceStopv(audioInfo.size(), sources);
 }

@@ -9,6 +9,11 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
 set(SRCDIR ../src/)
 find_package(game-activity REQUIRED CONFIG)
 
+set(OPENAL_DIR "/home/jrs0ul/libopenal")
+set(OGG_VORBIS_DIR "/home/jrs0ul/oggvorbis")
+include_directories("${OPENAL_DIR}/include")
+include_directories("${OGG_VORBIS_DIR}/inc")
+
 #find_package(Vulkan REQUIRED)
 
 add_library(game SHARED
@@ -17,7 +22,7 @@ add_library(game SHARED
              ${SRCDIR}game_android.cpp
              ${SRCDIR}Game.cpp
              ${SRCDIR}SpriteBatcher.cpp
-             ${SRCDIR}audio/AndroidSoundSystem.cpp
+             ${SRCDIR}audio/SoundSystem.cpp
              ${SRCDIR}Dude.cpp
              ${SRCDIR}MapGenerator.cpp
              ${SRCDIR}map.cpp
@@ -51,6 +56,17 @@ add_library(game SHARED
              ${SRCDIR}Shader.cpp
              )
 
+add_library(openal-soft SHARED IMPORTED)
+set_target_properties(openal-soft PROPERTIES IMPORTED_LOCATION
+        "${OPENAL_DIR}/${ANDROID_ABI}/libopenal.so")
+add_library(ogg SHARED IMPORTED)
+set_target_properties(ogg PROPERTIES IMPORTED_LOCATION
+        "${OGG_VORBIS_DIR}/lib/${ANDROID_ABI}/libogg.a")
+add_library(vorbis SHARED IMPORTED)
+set_target_properties(vorbis PROPERTIES IMPORTED_LOCATION
+        "${OGG_VORBIS_DIR}/lib/${ANDROID_ABI}/libvorbis.a")
+
+
 
 target_include_directories(game PRIVATE
                            ${CMAKE_CURRENT_SOURCE_DIR}
@@ -65,6 +81,9 @@ target_link_libraries(game PUBLIC
                        EGL
                        GLESv2
                        OpenSLES
+                       openal-soft
+                       ogg
+                       vorbis
                        game-activity::game-activity_static
                        #Vulkan::Vulkan
                        log )

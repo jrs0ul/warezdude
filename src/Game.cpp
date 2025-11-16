@@ -18,6 +18,7 @@
 #include "Consts.h"
 #include "SaveGame.h"
 #include "maplist.h"
+#include "audio/SoundSystem.h"
 #ifndef _WIN32
 #include <arpa/inet.h>
 #endif
@@ -69,18 +70,15 @@ Game::Game()
 //-------------------------------------
 void PlaySoundAt(SoundSystem* ss, float x, float y, int soundIndex)
 {
-#ifndef __ANDROID__
     ss->setSoundPos(soundIndex, Vector3D(x, 0, y).v);
     ss->playsound(soundIndex);
-#endif
 }
 //---------------------------------------
-void AdaptSoundPos(int soundIndex, float soundx,float soundy){
-#ifndef __ANDROID__
+void AdaptSoundPos(int soundIndex, float soundx,float soundy)
+{
     SoundSystem* ss = SoundSystem::getInstance();
     Vector3D v = Vector3D(soundx, 0, soundy);
     ss->setSoundPos(soundIndex, v.v);
-#endif
 }
 //-----------------------------------------------------------
 int Game::FPS()
@@ -110,9 +108,12 @@ void Game::DeleteAudio()
 //----------------------------------
 bool Game::InitAudio()
 {
-#ifndef __ANDROID__
+
     SoundSystem::getInstance()->init(0);
-    SoundSystem::getInstance()->loadFiles("sfx/", "list.txt");
+#ifdef __ANDROID__
+    SoundSystem::getInstance()->loadFiles("sfx/", "list.xml", AssetManager);
+#else
+    SoundSystem::getInstance()->loadFiles("sfx/", "list.xml");
 #endif
 
     return true;
@@ -304,9 +305,8 @@ void Game::KillPlayer(int index)
     player->shot = true;
     player->setFrame(PLAYER_MAX_SKIN_COUNT * 4);
     AdaptSoundPos(2, player->x, player->y);
-#ifndef __ANDROID__
+
     SoundSystem::getInstance()->playsound(2);
-#endif
 
     mapas.mons[index].stim = 0;
     mapas.mons[index].setHP(100);
@@ -329,9 +329,8 @@ void Game::KillEnemy(unsigned ID)
         mapas.mons[ID].shot = true;
 
         AdaptSoundPos(3,mapas.mons[ID].x,mapas.mons[ID].y);
-#ifndef __ANDROID__
+
         SoundSystem::getInstance()->playsound(3);
-#endif
 
         Decal decalas;
         decalas.x = round(mapas.mons[ID].x);
@@ -755,7 +754,7 @@ void Game::ItemPickup()
 
             if ((item != 0) && ((item != ITEM_MEDKIT) || (player->getHP() < ENTITY_INITIAL_HP)))
             {  //  the item will be taken
-#ifndef __ANDROID__
+
                 SoundSystem* ss = SoundSystem::getInstance();
 
 
@@ -767,7 +766,6 @@ void Game::ItemPickup()
                 {
                     PlaySoundAt(ss, player->x, player->y, 1);
                 }
-#endif
 
                 switch (netMode)
                 {
@@ -1001,9 +999,8 @@ void Game::DoorsInteraction()
 
         const int drx = round((player->x + vec.x) / 32.f);
         const int dry = round((player->y - vec.y) / 32.f);
-#ifndef __ANDROID__
+
         SoundSystem* ss = SoundSystem::getInstance();
-#endif
 
         if (Keys[ACTION_OPEN])
         {
@@ -1017,9 +1014,8 @@ void Game::DoorsInteraction()
                 mapas._colide[dry][drx] = false;
                 door_tim = 1;
                 AdaptSoundPos(8, player->x, player->y);
-#ifndef __ANDROID__
                 ss->playsound(8);
-#endif
+
             }
             else if ((mapas.tiles[dry][drx] == 68) ||  //  closing
                      (mapas.tiles[dry][drx] == 66) ||
@@ -1033,9 +1029,8 @@ void Game::DoorsInteraction()
                     mapas._colide[dry][drx] = true;
                     door_tim = 1;
                     AdaptSoundPos(9, player->x, player->y);
-#ifndef __ANDROID__
                     ss->playsound(9);
-#endif
+
                 }
             }
 
@@ -1355,9 +1350,8 @@ void Game::BeatEnemy(int aID, int damage)
 //-------------------------
 void Game::MonsterAI(int index)
 {
-#ifndef __ANDROID__
+
     SoundSystem * ss = SoundSystem::getInstance();
-#endif
 
     int linijosIlgis = 0;
 
@@ -1524,9 +1518,8 @@ void Game::MonsterAI(int index)
             if (!mapas.mons[index].hit)
             {
                 AdaptSoundPos(11,mapas.mons[index].x,mapas.mons[index].y);
-#ifndef __ANDROID__
+
                 ss->playsound(11);
-#endif
             }
         }
 
@@ -1542,9 +1535,8 @@ void Game::MonsterAI(int index)
                     {
                         mapas.mons[index].item = mapas.items[i].value;
                         AdaptSoundPos(5,mapas.items[i].x,mapas.items[i].y);
-#ifndef __ANDROID__
                         ss->playsound(5);
-#endif
+
 
                         if (netMode == NETMODE_SERVER)
                         {
@@ -1567,9 +1559,7 @@ void Game::MonsterAI(int index)
     if (bulbox.count()>tmpcnt)
     {
         AdaptSoundPos(0,mapas.mons[index].x,mapas.mons[index].y);
-#ifndef __ANDROID__
         ss->playsound(0);
-#endif
     }
 
 }
@@ -1688,14 +1678,14 @@ void Game::LoadFirstMap()
 //-------------------------------------
 void Game::ResetVolume()
 {
-#ifndef __ANDROID__
+
     SoundSystem* ss = SoundSystem::getInstance();
 
     for (unsigned i = 0; i < maxwavs; i++)
     {
         ss->setVolume(i, sys.soundFXVolume);
     }
-
+#ifndef __ANDROID__
     music.setVolume(sys.musicVolume);
 #endif
 }
@@ -2213,9 +2203,8 @@ void Game::HandlePlayerAttacks(Dude* player, int clientIndex)
     {
         return;
     }
-#ifndef __ANDROID__
+
     SoundSystem* ss = SoundSystem::getInstance();
-#endif
 
     bool stillHaveAmmo = false;
 
@@ -2235,12 +2224,10 @@ void Game::HandlePlayerAttacks(Dude* player, int clientIndex)
 
                     stillHaveAmmo = player->shoot(true, WEAPONTYPE_MINES, &bulbox);
 
-#ifndef __ANDROID__
                     if (stillHaveAmmo)
                     {
                         PlaySoundAt(ss, player->x, player->y, 12);
                     }
-#endif
 
                 }
                 else if (player->equipedGame == ITEM_GAME_DUKE_ATOMIC)
@@ -2248,24 +2235,20 @@ void Game::HandlePlayerAttacks(Dude* player, int clientIndex)
                     weaponType = WEAPONTYPE_SHRINKER;
                     stillHaveAmmo = player->shoot(true, WEAPONTYPE_SHRINKER, &bulbox);
 
-#ifndef __ANDROID__
                     if (stillHaveAmmo)
                     {
                         PlaySoundAt(ss, player->x, player->y, 13);
                     }
-#endif
-
                 }
                 else if (player->equipedGame == ITEM_GAME_CONTRABANDISTS)
                 {
                     weaponType = WEAPONTYPE_SPREAD;
                     stillHaveAmmo = player->shoot(true, weaponType, &bulbox);
-#ifndef __ANDROID__
+
                     if (stillHaveAmmo)
                     {
                         PlaySoundAt(ss, player->x, player->y, 0);
                     }
-#endif
 
                 }
                 else
@@ -2274,12 +2257,12 @@ void Game::HandlePlayerAttacks(Dude* player, int clientIndex)
                     weaponType = WEAPONTYPE_REGULAR;
 
                     stillHaveAmmo = player->shoot(true, WEAPONTYPE_REGULAR, &bulbox);
-#ifndef __ANDROID__
+
                     if (stillHaveAmmo)
                     {
                         PlaySoundAt(ss, player->x, player->y, 0);
                     }
-#endif
+
                 }
             } break;
 
@@ -2314,9 +2297,8 @@ void Game::HandlePlayerAttacks(Dude* player, int clientIndex)
             }
             else
             {
-#ifndef __ANDROID__
+
                 PlaySoundAt(ss, player->x, player->y, 4);
-#endif
 
                 if (!noAmmo)
                 {
@@ -2558,10 +2540,9 @@ void Game::CoreGameLogic()
             MoveDude();
         }
     }
-#ifndef __ANDROID__
+
     SoundSystem* ss = SoundSystem::getInstance();
     ss->setupListener(Vector3D(player->x, 0, player->y).v, Vector3D(player->x, 0, player->y).v);
-#endif
 
     ItemPickup();
 
@@ -2598,12 +2579,12 @@ void Game::CoreGameLogic()
             }
 
             mapas.mons[i].damageAnim();
-#ifndef __ANDROID__
+
             if (!mapas.mons[i].hit)
             {
                 PlaySoundAt(ss, mapas.mons[i].x, mapas.mons[i].y, 10);
             }
-#endif
+
         }
     }
 
@@ -4368,8 +4349,9 @@ void Game::destroy()
     SaveGame::save(DocumentPath, &stash);
 #ifndef __ANDROID__
     music.release();
-    SoundSystem::getInstance()->exit();
 #endif
+    SoundSystem::getInstance()->exit();
+
 
     mapas.destroy();
     mapai->Destroy();

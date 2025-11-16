@@ -1,5 +1,4 @@
-#ifndef SOUND_SYSTEM_H
-#define SOUND_SYSTEM_H
+#pragma once
 
 #ifdef _WIN32
     #ifdef _MSC_VER
@@ -18,11 +17,17 @@
 #endif
 
 
-#include "../DArray.h"
+#include <vector>
 
-struct SoundData{
+#ifdef __ANDROID__
+    class AAssetManager;
+#endif
+
+struct SoundData
+{
     char name[255];
 };
+
 
 //----------
 
@@ -33,10 +38,13 @@ class SoundSystem{
 
     ALuint* buffers;
     ALuint* sources;
-    DArray<SoundData> audioInfo;
+    std::vector<SoundData> audioInfo;
 
+#ifdef __ANDROID__
+    char* LoadOGG(char *fileName,  ALsizei & size, ALenum &format, ALsizei &freq, AAssetManager* assman);
+#else
     char* LoadOGG(char *fileName,  ALsizei & size, ALenum &format, ALsizei &freq);
-
+#endif
 
 public:
 
@@ -47,7 +55,11 @@ public:
     }
 
     bool init(ALCchar* dev);
+#ifdef __ANDROID__
+    void loadFiles(const char* BasePath, const char* list, AAssetManager* assman);
+#else
     void loadFiles(const char* BasePath, const char* list);
+#endif
     void setupListener(float * pos, float * orientation);
     void setSoundPos(unsigned int index, float * pos);
     void setVolume(unsigned int index, int volume);
@@ -63,8 +75,3 @@ private:
     SoundSystem(){}
     ~SoundSystem(){}
 };
-
-
-
-
-#endif //SOUND_SYSTEM_H

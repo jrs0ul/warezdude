@@ -92,9 +92,6 @@ void SoundSystem::stopMusic(){
     }
 }
 
-
-
-
 //---------------------------------------------------
 void SoundSystem::loadFiles(const char* BasePath, const char* list, AAssetManager * man){
 
@@ -219,8 +216,6 @@ void SoundSystem::playSound(unsigned int index, bool loop){
     }
 
 }
-
-
 
 
 //-----------------------------------------------

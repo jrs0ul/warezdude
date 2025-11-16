@@ -1284,10 +1284,7 @@ bool SpriteBatcher::initContainer(const char* list,
 #ifndef __ANDROID__
     bool result = pictureList.load(list);
 #else
-
-
     bool result = pictureList.load(list, assman);
-
 #endif
 
     if (result)

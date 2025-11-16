@@ -191,7 +191,7 @@ static void engine_draw_frame(struct engine* engine) {
                 engine->game->gamepadRAxis.x = diff.x;
                 engine->game->gamepadRAxis.y = diff.y;
 
-                
+
                 diff.normalize();
                 if (diff.y > 0.25f)
                 {

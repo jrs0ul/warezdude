@@ -1,0 +1,17 @@
+<xml>
+<Sounds>
+<sfx src="blast.ogg" />
+<sfx src="pickup.ogg" />
+<sfx src="death.ogg" />
+<sfx src="mdeath.ogg" />
+<sfx src="noammo.ogg" />
+<sfx src="crunch.ogg" />
+<sfx src="jee.ogg" />
+<sfx src="jee.ogg" />
+<sfx src="doormove.ogg" />
+<sfx src="doorstop.ogg" />
+<sfx src="pain.ogg" />
+<sfx src="mpain.ogg" />
+<sfx src="mine_deploy.ogg" />
+<sfx src="shrinker.ogg" />
+</Sounds>

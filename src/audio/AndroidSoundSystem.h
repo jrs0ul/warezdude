@@ -6,8 +6,8 @@
 #include <android/asset_manager.h>
 #include "../DArray.h"
 
-
-struct WAVHeader{
+struct WAVHeader
+{
     char                RIFF[4];
     unsigned long       ChunkSize;
     char                WAVE[4];
@@ -22,26 +22,26 @@ struct WAVHeader{
     char                Subchunk2ID[4];
     unsigned long       Subchunk2Size;
 };
-struct SoundBuffer{
+
+struct SoundBuffer
+{
     WAVHeader* header;
     char* buffer;
     int length;
 };
 
 
-struct SoundData{
+struct SoundData
+{
     char name[255];
 };
 
-
-struct ResourseDescriptor{
+struct ResourseDescriptor
+{
     int32_t decriptor;
     off_t start;
     off_t length;
 };
-
-
-
 
 //----------
 
