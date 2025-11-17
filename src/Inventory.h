@@ -5,6 +5,7 @@
 
 class SpriteBatcher;
 class GameData;
+struct TouchData;
 
 class Inventory : public BasicControl
 {
@@ -14,7 +15,10 @@ class Inventory : public BasicControl
 public:
     Inventory(){state = 0; canceled = false; selected = false;}
     void draw(SpriteBatcher& pics, DArray<int>& loot, GameData& gd);
-    void getInput(const unsigned char* keys, const unsigned char* oldKeys, DArray<int>& loot);
+    void getInput(const unsigned char* keys,
+                  const unsigned char* oldKeys,
+                  TouchData& touches,
+                  DArray<int>& loot);
     void reset(){canceled = false; selected = false;}
     unsigned getSelected(){return state;}
     bool isSelected(){return selected;}

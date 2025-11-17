@@ -45,8 +45,8 @@ Game::Game()
     noAmmo = false;
 
     frags = 0;
-    timeleft=0;
-    showdebugtext=false;
+    timeleft = 0;
+    showdebugtext = false;
     FirstTime = true;
     gameOver = false;
     ms=0;
@@ -1721,7 +1721,7 @@ void Game::TitleMenuLogic()
 
         if (!mainmenu.selected)
         {
-            mainmenu.getInput(Keys, OldKeys);
+            mainmenu.getInput(Keys, OldKeys, touches);
         }
         else
         {
@@ -1764,7 +1764,7 @@ void Game::TitleMenuLogic()
     {
         if (!netmenu.selected)
         {
-            netmenu.getInput(Keys, OldKeys);
+            netmenu.getInput(Keys, OldKeys, touches);
         }
         else{
             switch(netmenu.state)
@@ -1787,7 +1787,8 @@ void Game::TitleMenuLogic()
         }
 
 
-        if (netmenu.canceled){
+        if (netmenu.canceled)
+        {
             mainmenu.activate();
             netmenu.reset();
             netmenu.deactivate();
@@ -1823,7 +1824,7 @@ void Game::TitleMenuLogic()
         {
             if (!netgame.selected)
             {
-                netgame.getInput(Keys, OldKeys);
+                netgame.getInput(Keys, OldKeys, touches);
 
                 if (netgame.canceled)
                 {
@@ -1861,7 +1862,7 @@ void Game::TitleMenuLogic()
         {
             if (!mapmenu.selected)
             {
-                mapmenu.getInput(Keys, OldKeys);
+                mapmenu.getInput(Keys, OldKeys, touches);
 
                 if (mapmenu.canceled)
                 {
@@ -1887,7 +1888,7 @@ void Game::TitleMenuLogic()
         {
             if (!options.selected)
             {
-                options.getInput(Keys, OldKeys);
+                options.getInput(Keys, OldKeys, touches);
             }
             else
             {
@@ -1965,12 +1966,11 @@ void Game::TitleMenuLogic()
 
         }
 
-
 }
 //---------------------------------------------------------
 void Game::IntroScreenLogic()
 {
-    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!FirstTime))
+    if (((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])) || (!touches.up.empty()) || (!FirstTime))
     {
         state = GAMESTATE_HELP;
         intro.reset();
@@ -1994,7 +1994,7 @@ void Game::HelpScreenLogic()
         itmtim = 0;
     }
 
-    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])||(!FirstTime))
+    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!touches.up.empty()) ||(!FirstTime))
     {
 
         if (FirstTime)
@@ -2027,7 +2027,7 @@ void Game::EndingLogic()
     }
 
 
-    if (Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])
+    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!touches.up.empty()))
     {
         state = GAMESTATE_TITLE;
         intro.reset();
@@ -2067,11 +2067,6 @@ int Game::PlayerCount()
 
 void Game::logic()
 {
-
-    if (!touches.up.empty())
-    {
-        Keys[ACTION_OPEN] = 1;
-    }
 
     if ((mapas.timeToComplete) && (state == GAMESTATE_GAME))
     {
@@ -2328,7 +2323,7 @@ void Game::CoreGameLogic()
 
     if (inventory.active())
     {
-        inventory.getInput(Keys, OldKeys, loot);
+        inventory.getInput(Keys, OldKeys, touches, loot);
 
         if (inventory.isCanceled())
         {
@@ -2390,7 +2385,7 @@ void Game::CoreGameLogic()
 
     if (gameOver)
     {
-        if (Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])
+        if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!touches.up.empty()))
         {
             goToEnding();
             doFadein = true;
@@ -2546,8 +2541,11 @@ void Game::CoreGameLogic()
     ItemPickup();
 
 
-
-    if (!touches.up.empty())
+    if (!touches.up.empty()
+#ifdef __ANDROID__
+            && !touches.allfingersup
+#endif
+            )
     {
         Keys[ACTION_FIRE] = 1;
     }
@@ -2823,6 +2821,10 @@ void Game::renderToFBO(bool useVulkan)
         case GAMESTATE_GAME   : DrawGameplay();         break;
     }
 
+#ifndef __ANDROID__
+    pics.draw(18, MouseX, MouseY, (state == GAMESTATE_GAME) ? 0 : 1, (state == GAMESTATE_GAME) ? true : false);
+#endif
+
     pics.drawBatch(&colorShader, &defaultShader, 666, useVulkan, vkCmd, vulkanDevice);
 
     if (!useVulkan)
@@ -3013,7 +3015,6 @@ void Game::DrawGameplay()
     }
 
 
-    pics.draw(18, MouseX, MouseY, 0, true);
 
     if (showMiniMap)
     {

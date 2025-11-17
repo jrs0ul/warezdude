@@ -5,6 +5,8 @@
 #include "BasicUiControl.h"
 #include "../SpriteBatcher.h"
 
+struct TouchData;
+
 struct Smenu{
   char opt[20][30];
   unsigned char pics[20];
@@ -15,7 +17,7 @@ struct Smenu{
 
 //--------------------------------------
 
-
+class Vector3D;
 
 class SelectMenu : public BasicControl
 {
@@ -37,8 +39,10 @@ class SelectMenu : public BasicControl
         // resets the selection
         void reset();
         //changes the state depending on input keys
-        void getInput(const unsigned char* keys, const unsigned char* oldKeys);
+        void getInput(const unsigned char* keys, const unsigned char* oldKeys, TouchData& touches);
         void draw(SpriteBatcher& pics, unsigned rod,  unsigned font, unsigned icons = 0);
+    private:
+        bool isHittingOptions(Vector3D& v);
 
 };
 

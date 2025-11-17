@@ -1,11 +1,12 @@
 #include "Text.h"
 #include "SelectMenu.h"
+#include "../TouchData.h"
 
 
 
 
-
-void SelectMenu::init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel, unsigned char dst,unsigned int dheight)
+void SelectMenu::init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel,
+                      unsigned char dst, unsigned int dheight)
 {
     setpos(dx, dy);
     strcpy(title,dt);
@@ -19,18 +20,18 @@ void SelectMenu::init(unsigned int dx, unsigned int dy, const char* dt, Smenu& d
 
     if ((strlen(title)==0) || (strlen(selection.opt[0])>strlen(title)))
     {
-        width=(int)strlen(selection.opt[0])*11+70;
+        width = (int)strlen(selection.opt[0])*11+70;
     }
     else
     {
-        width=(int)strlen(title)*11+70;
+        width = (int)strlen(title)*11+70;
     }
 
     memcpy(selection.pics,dsel.pics,20);
 
     if (dheight == 0)
     {
-        height = selection.count*20+50;
+        height = selection.count * 20 + 50;
     }
     else
     {
@@ -51,9 +52,53 @@ void SelectMenu::reset()
     selected = false;
     canceled = false;
 }
-//--------------------------------------------
-void SelectMenu::getInput(const unsigned char* keys, const unsigned char* oldKeys)
+
+
+bool SelectMenu::isHittingOptions(Vector3D& v)
 {
+    return  v.x > (int)getX() && v.x < (int)(getX() + width) &&
+                    v.y >= (int)getY() + 26 && v.y < (int)(getY() + height);
+
+}
+
+//--------------------------------------------
+void SelectMenu::getInput(const unsigned char* keys, const unsigned char* oldKeys, TouchData& touches)
+{
+
+    if (!touches.allfingersup)
+    {
+        if (!touches.down.empty())
+        {
+            if (isHittingOptions(touches.down[0]))
+            {
+                state = (touches.down[0].y - getY() - 26) / 20;
+                state = (state >= selection.count) ? selection.count - 1 : state;
+            }
+        }
+
+        if (!touches.move.empty())
+        {
+            if (isHittingOptions(touches.move[0]))
+            {
+                state = (touches.move[0].y - getY() - 26) / 20;
+                state = (state >= selection.count) ? selection.count - 1 : state;
+            }
+        }
+    }
+
+
+    if (!touches.up.empty())
+    {
+        if (isHittingOptions(touches.up[0]))
+        {
+            state = (touches.up[0].y - getY() - 26) / 20;
+            state = (state >= selection.count) ? selection.count - 1 : state;
+            selected = true;
+            return;
+        }
+    }
+
+
 
     if (keys[4] && !oldKeys[4]) 
     {
@@ -65,7 +110,7 @@ void SelectMenu::getInput(const unsigned char* keys, const unsigned char* oldKey
 
     if (keys[5] && !oldKeys[5]) 
     {
-        canceled=true;      //esc
+        canceled = true;      //esc
     }
 
     if (selection.count)
@@ -73,24 +118,31 @@ void SelectMenu::getInput(const unsigned char* keys, const unsigned char* oldKey
 
         if (keys[0] && !oldKeys[0])
         {
-            if (state>0) //up{
+            if (state > 0)
+            {//up
                 state--;
+            }
             else
+            {
                 state = selection.count - 1;
+            }
         }
         else if (keys[1] && !oldKeys[1])
         {
 
-            if (state < selection.count - 1)  //down
+            if (state < selection.count - 1)
+            {//down
                 state++;
+            }
             else
+            {
                 state = 0;
-        }
-
-
+            }
         }
 
     }
+
+}
     //--------------------------------------------
     void SelectMenu::draw(SpriteBatcher& pics, unsigned rod,  unsigned font, unsigned icons)
     {

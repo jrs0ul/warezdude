@@ -5,6 +5,7 @@
 #include "Consts.h"
 #include "GameData.h"
 #include "gui/Text.h"
+#include "TouchData.h"
 
 void Inventory::draw(SpriteBatcher& pics, DArray<int>& loot, GameData& gd)
 {
@@ -50,8 +51,22 @@ void Inventory::draw(SpriteBatcher& pics, DArray<int>& loot, GameData& gd)
 
 }
 
-void Inventory::getInput(const unsigned char* keys, const unsigned char* oldKeys, DArray<int>& loot)
+void Inventory::getInput(const unsigned char* keys,
+                         const unsigned char* oldKeys,
+                         TouchData& touches,
+                         DArray<int>& loot)
 {
+
+    if (!touches.up.empty())
+    {
+        if (touches.up[0].x > 30 && touches.up[0].x < 30 + 6 * 34 && touches.up[0].y > 120 && touches.up[0].y < 120 + 34 * 3)
+        {
+            state = ((touches.up[0].y - 120 / 34) * 6) + (touches.up[0].x - 30) / 34;
+            state = (state >= (int)loot.count()) ? loot.count() - 1 : state;
+            selected = true;
+        }
+    }
+
     if (keys[ACTION_BACK] && !oldKeys[ACTION_BACK])
     {
         canceled = true;

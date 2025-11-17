@@ -160,8 +160,7 @@ static void engine_draw_frame(struct engine* engine) {
                 engine->game->Keys[5] = 1;
             }
 
-            const float widthFactor = (float)engine->game->ScreenWidth / (float)engine->game->getSysConfig()->ScreenWidth;
-            const float heightFactor = (float)engine->game->ScreenHeight / (float)engine->game->getSysConfig()->ScreenHeight;
+
 
             if (engine->game->touches.allfingersup)
             {
@@ -177,9 +176,13 @@ static void engine_draw_frame(struct engine* engine) {
                     engine->oldDown = engine->game->touches.down[0];
                     engine->resetMovement = false;
                 }
-              /*
-                engine->game->MouseX = engine->game->touches.down[mouseIdx].x / widthFactor;
-                engine->game->MouseY = engine->game->touches.down[mouseIdx].y / heightFactor;*/
+
+
+                //if (engine->game->state != GAMESTATE_GAME)
+                //{
+                //    engine->game->MouseX = engine->game->touches.down[0].x / widthFactor;
+                //    engine->game->MouseY = engine->game->touches.down[0].y / heightFactor;
+                //}
             }
 
             if (!engine->game->touches.move.empty()) {
@@ -191,31 +194,11 @@ static void engine_draw_frame(struct engine* engine) {
                 engine->game->gamepadRAxis.x = diff.x;
                 engine->game->gamepadRAxis.y = diff.y;
 
-
-                diff.normalize();
-                if (diff.y > 0.25f)
-                {
-                    engine->game->Keys[0] = 1;
-                }
-
-                if (diff.y < -0.25f)
-                {
-                    engine->game->Keys[1] = 1;
-                }
-
-                if (diff.x < -0.25f)
-                {
-                    engine->game->Keys[2] = 1;
-                }
-
-                if (diff.y > 0.25f)
-                {
-                    engine->game->Keys[3] = 1;
-                }
-
-/*
-                engine->game->MouseX = engine->game->touches.move[mouseIdx].x / widthFactor;
-                engine->game->MouseY = engine->game->touches.move[mouseIdx].y / heightFactor;*/
+                //if (engine->game->state != GAMESTATE_GAME)
+                //{
+                //    engine->game->MouseX = engine->game->touches.move[0].x / widthFactor;
+                //    engine->game->MouseY = engine->game->touches.move[0].y / heightFactor;
+                //}
             }
 
             engine->game->Accumulator += engine->game->DeltaTime;
@@ -278,6 +261,10 @@ static int32_t engine_handle_input(struct android_app* app) {
         for (int i = 0; i < ib->motionEventsCount; i++) {
             auto *event = &ib->motionEvents[i];
             int32_t ptrIdx = 0;
+
+            const float widthFactor = (float)engine->game->ScreenWidth / (float)engine->game->getSysConfig()->ScreenWidth;
+            const float heightFactor = (float)engine->game->ScreenHeight / (float)engine->game->getSysConfig()->ScreenHeight;
+
             switch (event->action & AMOTION_EVENT_ACTION_MASK) {
 
                 case AMOTION_EVENT_ACTION_POINTER_DOWN:
@@ -285,9 +272,11 @@ static int32_t engine_handle_input(struct android_app* app) {
                     ptrIdx = (event->action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >>
                             AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
                     Vector3D v = Vector3D(GameActivityPointerAxes_getAxisValue(
-                                                  &event->pointers[ptrIdx], AMOTION_EVENT_AXIS_X),
+                                                  &event->pointers[ptrIdx],
+                                                  AMOTION_EVENT_AXIS_X) / widthFactor,
                                           GameActivityPointerAxes_getAxisValue(
-                                                  &event->pointers[ptrIdx], AMOTION_EVENT_AXIS_Y),
+                                                  &event->pointers[ptrIdx],
+                                                  AMOTION_EVENT_AXIS_Y) / heightFactor,
                                           0);
                     engine->game->touches.down.push_back(v);
                 } break;
@@ -296,9 +285,11 @@ static int32_t engine_handle_input(struct android_app* app) {
                     ptrIdx = (event->action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >>
                             AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
                     Vector3D v = Vector3D(GameActivityPointerAxes_getAxisValue(
-                                                  &event->pointers[ptrIdx], AMOTION_EVENT_AXIS_X),
+                                                  &event->pointers[ptrIdx],
+                                                  AMOTION_EVENT_AXIS_X) / widthFactor,
                                           GameActivityPointerAxes_getAxisValue(
-                                                  &event->pointers[ptrIdx], AMOTION_EVENT_AXIS_Y),
+                                                  &event->pointers[ptrIdx],
+                                                  AMOTION_EVENT_AXIS_Y) / heightFactor,
                                           0);
                     engine->game->touches.up.push_back(v);
                 } break;
@@ -309,9 +300,11 @@ static int32_t engine_handle_input(struct android_app* app) {
                     engine->game->touches.allfingersup = true;
 
                     Vector3D v = Vector3D(GameActivityPointerAxes_getAxisValue(
-                                                  &event->pointers[ptrIdx], AMOTION_EVENT_AXIS_X),
+                                                  &event->pointers[ptrIdx],
+                                                  AMOTION_EVENT_AXIS_X) / widthFactor,
                                           GameActivityPointerAxes_getAxisValue(
-                                                  &event->pointers[ptrIdx], AMOTION_EVENT_AXIS_Y),
+                                                  &event->pointers[ptrIdx],
+                                                  AMOTION_EVENT_AXIS_Y) / heightFactor,
                                           0);
                     engine->game->touches.up.push_back(v);
                 }
@@ -319,9 +312,11 @@ static int32_t engine_handle_input(struct android_app* app) {
                 case AMOTION_EVENT_ACTION_DOWN : {
                     engine->game->touches.allfingersup = false;
                     Vector3D v = Vector3D(GameActivityPointerAxes_getAxisValue(
-                                                  &event->pointers[ptrIdx], AMOTION_EVENT_AXIS_X),
+                                                  &event->pointers[ptrIdx],
+                                                  AMOTION_EVENT_AXIS_X) / widthFactor,
                                           GameActivityPointerAxes_getAxisValue(
-                                                  &event->pointers[ptrIdx], AMOTION_EVENT_AXIS_Y),
+                                                  &event->pointers[ptrIdx],
+                                                  AMOTION_EVENT_AXIS_Y) / heightFactor,
                                           0);
                     engine->game->touches.down.push_back(v);
                 }
@@ -332,9 +327,11 @@ static int32_t engine_handle_input(struct android_app* app) {
                     for (int j = 0; j < event->pointerCount; ++j)
                     {
                         Vector3D v = Vector3D(GameActivityPointerAxes_getAxisValue(
-                                                      &event->pointers[j], AMOTION_EVENT_AXIS_X),
+                                                      &event->pointers[j],
+                                                      AMOTION_EVENT_AXIS_X) / widthFactor,
                                               GameActivityPointerAxes_getAxisValue(
-                                                      &event->pointers[j], AMOTION_EVENT_AXIS_Y),
+                                                      &event->pointers[j],
+                                                      AMOTION_EVENT_AXIS_Y) /heightFactor,
                                               0);
                         engine->game->touches.move.push_back(v);
                     }
