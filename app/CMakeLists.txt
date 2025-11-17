@@ -23,6 +23,7 @@ add_library(game SHARED
              ${SRCDIR}Game.cpp
              ${SRCDIR}SpriteBatcher.cpp
              ${SRCDIR}audio/SoundSystem.cpp
+             ${SRCDIR}audio/OggStream.cpp
              ${SRCDIR}Dude.cpp
              ${SRCDIR}MapGenerator.cpp
              ${SRCDIR}map.cpp

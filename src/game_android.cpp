@@ -469,5 +469,7 @@ void android_main(struct android_app* state) {
         if (engine.animating) {
             engine_draw_frame(&engine);
         }
+
+        engine.game->network();
     }
 }

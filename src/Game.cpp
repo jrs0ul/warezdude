@@ -98,12 +98,9 @@ int Game::FPS()
 
 void Game::DeleteAudio()
 {
-#ifndef __ANDROID__
     music.stop();
     music.release();
-#endif
 }
-
 
 //----------------------------------
 bool Game::InitAudio()
@@ -122,7 +119,7 @@ bool Game::InitAudio()
 //----------------------------------------
 void Game::PlayNewSong(const char* songName)
 {
-#ifndef __ANDROID__
+
     if (music.playing())
     {
         music.stop();
@@ -131,10 +128,14 @@ void Game::PlayNewSong(const char* songName)
 
     char buf[255];
     sprintf(buf,"music/%s",songName);
+#ifdef __ANDROID__
+    music.open(buf, AssetManager);
+#else
     music.open(buf);
+#endif
     //music.setVolume(sys.musicVolume);
     music.playback();
-#endif
+
 }
 
 
@@ -1685,9 +1686,9 @@ void Game::ResetVolume()
     {
         ss->setVolume(i, sys.soundFXVolume);
     }
-#ifndef __ANDROID__
+
     music.setVolume(sys.musicVolume);
-#endif
+
 }
 
 
@@ -2151,12 +2152,10 @@ void Game::logic()
         }
     }
 
-#ifndef __ANDROID__
     if (music.playing())
     {
         music.update();
     }
-#endif
 
     switch(state)
     {
@@ -4347,9 +4346,9 @@ void Game::destroy()
     }
 
     SaveGame::save(DocumentPath, &stash);
-#ifndef __ANDROID__
+
     music.release();
-#endif
+
     SoundSystem::getInstance()->exit();
 
 

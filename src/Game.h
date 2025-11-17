@@ -1,12 +1,10 @@
 #pragma once
 
-#ifndef __ANDROID__
-
-#include "audio/OggStream.h"
-#else
+#ifdef __ANDROID__
 #include <android/log.h>
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "native-activity", __VA_ARGS__))
 #endif
+#include "audio/OggStream.h"
 #include "ActionKeys.h"
 #include "Vectors.h"
 #include "TouchData.h"
@@ -93,9 +91,7 @@ class Game
     Server serveris;
 
     SystemConfig sys;
-#ifndef __ANDROID__
     OggStream music;
-#endif
     CBulletContainer bulbox;
     SpriteBatcher pics;
 

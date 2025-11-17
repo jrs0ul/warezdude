@@ -1,10 +1,23 @@
 #include "OggStream.h"
 
+#ifdef __ANDROID__
 
-bool OggStream::open(const char* path){
+#include "../AndroidFile.h"
+
+
+bool OggStream::open(const char* path, AAssetManager* assman)
+#else
+bool OggStream::open(const char* path)
+#endif
+{
     int result;
 
-    if(!(oggFile = fopen(path, "rb"))){
+#ifdef __ANDROID__
+    if(!(oggFile = android_fopen(assman, path, "rb")))
+#else
+    if(!(oggFile = fopen(path, "rb")))
+#endif
+    {
        printf("Could not open %s\n", path);
        return false;
     }

@@ -28,7 +28,9 @@
 #define BUFFERCOUNT 8
 
 
-
+#ifdef __ANDROID__
+    class AAssetManager;
+#endif
 
 class OggStream{
     
@@ -53,7 +55,12 @@ public:
             memset(buffers, 0 , sizeof(ALuint)*BUFFERCOUNT);
             volume = 0.2f;
         }
+
+#ifdef __ANDROID__
+        bool open(const char* path, AAssetManager* assman);
+#else
         bool open(const char* path);
+#endif
         void release();
         bool playback();
         bool playing();
