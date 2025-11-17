@@ -10,7 +10,7 @@
 #include "bullet.h"
 #include "gui/Slider.h"
 #include "gui/Text.h"
-#include "Usefull.h"
+#include "Useful.h"
 #include "SpriteBatcher.h"
 #include "Matrix.h"
 #include "Intro.h"

@@ -1,5 +1,5 @@
 #include <cmath>
-#include "Usefull.h"
+#include "Useful.h"
 #include "Matrix.h"
 
 

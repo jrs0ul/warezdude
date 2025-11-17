@@ -1,6 +1,6 @@
 #include <cmath>
 #include "bullet.h"
-#include "Usefull.h"
+#include "Useful.h"
 #include "Dude.h"
 #include "Consts.h"
 

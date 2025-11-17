@@ -1,7 +1,7 @@
 #include "Dude.h"
 
 #include <cmath>
-#include "Usefull.h"
+#include "Useful.h"
 #include "map.h"
 #include "gui/Text.h"
 #include "bullet.h"

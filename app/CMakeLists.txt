@@ -48,7 +48,8 @@ add_library(game SHARED
              ${SRCDIR}Vectors.cpp
              ${SRCDIR}Xml.cpp
              ${SRCDIR}Matrix.cpp
-             ${SRCDIR}Usefull.cpp
+             ${SRCDIR}Useful.cpp
+             ${SRCDIR}AndroidFile.cpp
              ${SRCDIR}SpriteBatcher.cpp
              ${SRCDIR}Image.cpp
              ${SRCDIR}RenderTexture.cpp

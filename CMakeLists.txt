@@ -38,7 +38,7 @@ add_executable(CartridgeQuest
                     src/Vectors.cpp
                     src/Xml.cpp
                     src/Matrix.cpp
-                    src/Usefull.cpp
+                    src/Useful.cpp
                     src/SpriteBatcher.cpp
                     src/Image.cpp
                     src/RenderTexture.cpp

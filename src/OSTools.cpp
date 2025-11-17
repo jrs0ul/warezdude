@@ -11,6 +11,7 @@
 #include <cstdlib>
 #ifdef __ANDROID__
     #include <android/log.h>
+    #include "AndroidFile.h"
     #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "native-activity", __VA_ARGS__))
 
 #endif
@@ -125,32 +126,25 @@ void      UTF8toWchar(char* utftext, wchar_t * wchartext){
         {
             return -1;
         }
-#ifndef __ANDROID__
+
         FILE * f = 0;
+
+#ifndef __ANDROID__
         f = fopen(path, "rb");
+#else
+        LOGI("Opening file: %s", path);
+        f = android_fopen(man, path, "rb");
+#endif
         if (!f)
         {
             return -1;
         }
-#else
-        LOGI("Opening file: %s", path);
-        AAsset * f = nullptr;
-        f = AAssetManager_open(man, path, AASSET_MODE_UNKNOWN );
-        if(!f)
-        {
-            return -1;
-        }
-#endif
+
         long fsize = 0;
-#ifndef __ANDROID__
 
         fseek (f, 0, SEEK_END);
         fsize = ftell(f);
         rewind(f);
-#else
-        fsize = AAsset_getLength(f);
-        //LOGI("file size %d", fsize);
-#endif
 
         if (fsize <= 0)
         {
@@ -160,34 +154,18 @@ void      UTF8toWchar(char* utftext, wchar_t * wchartext){
         (*data) = (char *)malloc(fsize + 10);
 
 
-#ifndef __ANDROID__
         if (!fread(*data, 1, fsize, f))
-#else
-        int res = AAsset_read(f, *data, fsize);
-        if (!res)
-
-#endif
         {
             free(*data);
             (*data) = 0;
 
-#ifndef __ANDROID__
             fclose(f);
-#else
-            AAsset_close(f);
-#endif
             return -1;
         }
-#ifndef __ANDROID__
+
         fclose(f);
-#else
-        AAsset_close(f);
-#endif
-        
 
         (*data)[fsize - 1] = '\0';
-
-        //LOGI("contents: %s", *data);
 
         return fsize;
 
