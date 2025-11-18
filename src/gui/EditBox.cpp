@@ -14,7 +14,7 @@
 #endif
 
 #include "Text.h"
-
+#include "../ActionKeys.h"
 
 
 
@@ -31,8 +31,16 @@ void EditBox::init(unsigned int dx, unsigned int dy, const char* dtitl, unsigned
 #endif
 }
 //------------------------------------
-void EditBox::getInput(const char* eventText, unsigned keydown)
+void EditBox::getInput(const char* eventText, unsigned keydown,
+                       const unsigned char* keys, const unsigned char* oldKeys)
 {
+
+    if (keys[ACTION_BACK] && !oldKeys[ACTION_BACK])
+    {
+        canceled = true;
+        return;
+    }
+
 #ifndef ANDROID
     if (pressedKey != keydown)
     {
@@ -51,15 +59,22 @@ void EditBox::getInput(const char* eventText, unsigned keydown)
                 text[strlen(text) - 1] = 0;
             }
         }
-        else if (strlen(text) < 39 && keydown != 0)
+        else if (strlen(text) < 20 && keydown != 0)
         {
             strcat(text, eventText);
         }
     }
 
     pressedKey = keydown;
+
 #endif
 }
+//----------------------------
+void EditBox::setText(const char* newText)
+{
+    strncpy(text, newText, 20);
+}
+
 //------------------------------------
 void EditBox::draw(SpriteBatcher& pics, unsigned font)
 {
@@ -74,7 +89,7 @@ void EditBox::draw(SpriteBatcher& pics, unsigned font)
     }
     else
     {
-        WriteShadedText(getX() + 5, getY() + 16, pics, font,text);
+        WriteShadedText(getX() + 5, getY() + 16, pics, font, text);
     }
 
 }

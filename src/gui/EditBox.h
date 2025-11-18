@@ -15,7 +15,9 @@ public:
         char title[20];
         unsigned char pressedKey;
         void init(unsigned int dx, unsigned int dy, const char* dtitl, unsigned char dmaxl);
-        void getInput(const char* eventText, unsigned keydown);
+        void getInput(const char* eventText, unsigned keydown, 
+                      const unsigned char* keys, const unsigned char* oldKeys);
+        void setText(const char* newText);
         void draw(SpriteBatcher& pics, unsigned font);
         void reset();
 };

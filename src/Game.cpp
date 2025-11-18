@@ -66,6 +66,7 @@ Game::Game()
     doFadein = true;
     godmode = false;
     slimeswap = false;
+    showTextInput = false;
 }
 //-------------------------------------
 void PlaySoundAt(SoundSystem* ss, float x, float y, int soundIndex)
@@ -1778,10 +1779,14 @@ void Game::TitleMenuLogic()
                 case 1:
                 {
                     if (netmenu.active())
+                    {
                         netmenu.deactivate();
+                    }
+
                     netmenu.reset();
                     ipedit.activate();
                     EditText[0] = 0;
+                    showTextInput = true;
                 }
             }
         }
@@ -1800,7 +1805,7 @@ void Game::TitleMenuLogic()
         {
             if (!ipedit.entered)
             {
-                ipedit.getInput(EditText, globalKEY);
+                ipedit.getInput(EditText, globalKEY, Keys, OldKeys);
             }
             else
             {
@@ -4323,7 +4328,7 @@ void Game::init(bool useVulkan)
     menu.push_back({"Sound fx Volume", 0, 1});
     options.init(0,sys.ScreenHeight-100,"Options:", menu, 0);
 
-    ipedit.init(0,sys.ScreenHeight-100,"Enter Server's IP",20);
+    ipedit.init(sys.ScreenWidth / 2 - 50, 10, "Enter Server's IP", 20);
 
     SfxVolumeC.init(20,sys.ScreenHeight-100,"Sfx Volume:",0,10000,100);
     MusicVolumeC.init(20, sys.ScreenHeight-100, "Music Volume:", (long)(sys.musicVolume * 1000), 1000, 10);

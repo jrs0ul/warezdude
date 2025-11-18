@@ -8,6 +8,7 @@
 #include <android/log.h>
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 
+
 #include "Game.h"
 
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "native-activity", __VA_ARGS__))
@@ -19,6 +20,7 @@ struct engine {
     struct android_app* app{};
 
 
+    char ip[40];
     int animating{};
     EGLDisplay display{};
     EGLSurface surface{};
@@ -352,10 +354,39 @@ static int32_t engine_handle_input(struct android_app* app) {
         for (int i = 0; i < ib->keyEventsCount; i++)
         {
             auto *event = &ib->keyEvents[i];
-            switch (event->keyCode)
+
+            if (event->keyCode == AKEYCODE_BACK)
             {
-                case AKEYCODE_BACK:{
-                    engine->backPressed = true;
+                engine->backPressed = true;
+            }
+
+            if (event->action == AKEY_EVENT_ACTION_UP)
+            {
+                switch (event->keyCode)
+                {
+
+                    case AKEYCODE_DEL: {
+                        int pos = strlen(engine->ip);
+                        engine->ip[pos - 1] = 0;
+                        engine->game->getIpEdit()->setText(engine->ip);
+                        break;
+                    }
+                    case AKEYCODE_ENTER: {
+                        GameActivity_hideSoftInput(engine->app->activity, 0);
+                        engine->game->getIpEdit()->entered = true;
+                        break;
+                    }
+
+                }
+
+                if (event->keyCode != AKEYCODE_ENTER &&
+                    event->keyCode != AKEYCODE_DEL &&
+                    event->keyCode != AKEYCODE_BACK)
+                {
+                    char tmp[2] = {0};
+                    tmp[0] = (char)event->unicodeChar;
+                    strncat(engine->ip, tmp, 39);
+                    engine->game->getIpEdit()->setText(engine->ip);
                 }
             }
         }
@@ -423,6 +454,18 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
     }
 }
 
+extern "C" void GameTextInputGetStateCB(void *ctx, const struct GameTextInputState *state) {
+    auto* engine = (struct engine*)ctx;
+    if (!engine || !state) return;
+
+    engine->game->getIpEdit()->setText(state->text_UTF8);
+
+
+    // Clear the text input flag.
+    engine->app->textInputState = 0;
+}
+
+
 //-------------------------------------------
 
 void android_main(struct android_app* state) {
@@ -440,6 +483,7 @@ void android_main(struct android_app* state) {
 
     ((struct engine*)(state->userData))->game = new Game();
     ((struct engine*)(state->userData))->loaded = false;
+
 
     // loop waiting for stuff to do.
     while (true) {
@@ -463,10 +507,29 @@ void android_main(struct android_app* state) {
 
         engine_handle_input(state);
 
-        if (engine.animating) {
+        if (state->textInputState)
+        {
+            GameActivity_getTextInputState(
+                    state->activity,
+                    GameTextInputGetStateCB,
+                    &engine
+            );
+
+        }
+
+
+
+        if (engine.animating)
+        {
             engine_draw_frame(&engine);
         }
 
         engine.game->network();
+
+        if (engine.game->showTextInput)
+        {
+            GameActivity_showSoftInput(engine.app->activity, 0);
+            engine.game->showTextInput = false;
+        }
     }
 }

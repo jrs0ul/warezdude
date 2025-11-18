@@ -197,6 +197,8 @@ public:
     float Accumulator;
     long tick;
 
+    bool showTextInput;
+
 public:
 
     Game();
@@ -210,6 +212,7 @@ public:
     void loadConfig();
     void onBack(){};
     SystemConfig* getSysConfig(){return &sys;}
+    EditBox* getIpEdit(){return &ipedit;}
 
 private:
     void DrawTitleScreen();
