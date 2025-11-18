@@ -2541,15 +2541,24 @@ void Game::CoreGameLogic()
     ItemPickup();
 
 
-    if (!touches.up.empty()
 #ifdef __ANDROID__
-            && !touches.allfingersup
-#endif
-            )
+    if (!touches.up.empty())
+    {
+        if (!touches.allfingersup)
+        {
+            Keys[ACTION_FIRE] = 1;
+        }
+        else if (!inventory.active())
+        {
+            Keys[ACTION_OPEN] = 1;
+        }
+    }
+#else
+    if (!touches.up.empty())
     {
         Keys[ACTION_FIRE] = 1;
     }
-
+#endif
 
     //shooting
     if ((Keys[ACTION_FIRE]) && (!player->shot) && (!player->spawn) && (!inventory.active()))
@@ -4277,37 +4286,42 @@ void Game::init(bool useVulkan)
     mapai = new MapList();
 #endif
 
-    Smenu menu;
-    strcpy(menu.opt[0], "Single Player");
-    strcpy(menu.opt[1], "Network Game");
-    strcpy(menu.opt[2], "Collection");
-    strcpy(menu.opt[3], "Options");
-    strcpy(menu.opt[4], "Exit");
-    menu.count = 5;
+    std::vector<MenuOption> menu;
+    //MenuOption o1 = {"Single Player", 0, 0};
+    menu.push_back({"Single Player", 0, 0});
+    menu.push_back({"Network Game", 0, 1});
+    menu.push_back({"Collection", 0, 2});
+    menu.push_back({"Options", 0, 3});
+#ifndef __ANDROID__
+    menu.push_back({"Exit", 0, 4});
+#endif
     mainmenu.init(0, sys.ScreenHeight - 150, "", menu, 0);
     mainmenu.activate();
-    strcpy(menu.opt[0],"Start server");
-    strcpy(menu.opt[1],"Join server");
-    menu.count=2;
-    netmenu.init(0,sys.ScreenHeight-100,"Network Game:",menu,0);
 
-    strcpy(menu.opt[0],"Coop");
-    strcpy(menu.opt[1],"DeathMatch");
-    menu.count=2;
-    netgame.init(0,sys.ScreenHeight-100,"Game Type:",menu,0);
+    menu.clear();
+    menu.push_back({"Start server", 0, 0});
+    menu.push_back({"Join server", 0, 1});
+    netmenu.init(0, sys.ScreenHeight-100, "Network Game:", menu, 0);
 
+    menu.clear();
+    menu.push_back({"Coop", 0, 0});
+    menu.push_back({"DeathMatch", 0, 1});
+    netgame.init(0, sys.ScreenHeight-100, "Game Type:", menu, 0);
+
+    menu.clear();
     for (int i = 0; i < mapai->count(); ++i)
     {
-        mapai->getMapName(i, menu.opt[i]);
+        MenuOption tmp;
+        mapai->getMapName(i, tmp.text);
+        menu.push_back(tmp);
     }
 
-    menu.count = mapai->count();
     mapmenu.init(0, sys.ScreenHeight - mapai->count() * 20 - 32, "Select map:", menu, 0);
 
-    strcpy(menu.opt[0],"Music Volume");
-    strcpy(menu.opt[1],"Sound fx Volume");
-    menu.count = 2;
-    options.init(0,sys.ScreenHeight-100,"Options:",menu,0);
+    menu.clear();
+    menu.push_back({"Music Volume", 0, 0});
+    menu.push_back({"Sound fx Volume", 0, 1});
+    options.init(0,sys.ScreenHeight-100,"Options:", menu, 0);
 
     ipedit.init(0,sys.ScreenHeight-100,"Enter Server's IP",20);
 

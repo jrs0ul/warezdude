@@ -7,13 +7,13 @@
 
 struct TouchData;
 
-struct Smenu{
-  char opt[20][30];
-  unsigned char pics[20];
-  unsigned char ids[20];
-  unsigned char count;
-  Smenu(){memset(pics,0,20); memset(ids,0,20);}
- };
+struct MenuOption
+{
+    char text[30];
+    int pic;
+    int id;
+};
+
 
 //--------------------------------------
 
@@ -23,7 +23,7 @@ class SelectMenu : public BasicControl
 {
     public:
         char title[30];
-        Smenu selection;
+        std::vector<MenuOption> options;
         unsigned pressedkey;
         unsigned int width;
         unsigned int height;
@@ -35,7 +35,12 @@ class SelectMenu : public BasicControl
 
         SelectMenu(){selected = false; canceled = false;}
 
-        void init(unsigned int dx, unsigned int dy, const char* dt, Smenu& dsel, unsigned char dst,unsigned int dheight = 0);
+        void init(unsigned int dx,
+                  unsigned int dy,
+                  const char* dtitle,
+                  std::vector<MenuOption>& dsel,
+                  unsigned char dstate,
+                  unsigned int dheight = 0);
         // resets the selection
         void reset();
         //changes the state depending on input keys
