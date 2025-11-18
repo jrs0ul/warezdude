@@ -130,7 +130,7 @@ static int engine_init_display(struct engine* engine) {
 
 
             engine->game->init(false);
-            engine->game->TimeTicks = getTicks();
+            engine->game->TimeTicks = (float)getTicks();
             engine->loaded = true;
             memset(engine->game->Keys, 0, Game::GameKeyCount);
         }
@@ -518,7 +518,6 @@ void android_main(struct android_app* state) {
         }
 
 
-
         if (engine.animating)
         {
             engine_draw_frame(&engine);
@@ -528,7 +527,7 @@ void android_main(struct android_app* state) {
 
         if (engine.game->showTextInput)
         {
-            GameActivity_showSoftInput(engine.app->activity, 0);
+            GameActivity_showSoftInput(engine.app->activity, 2);
             engine.game->showTextInput = false;
         }
     }

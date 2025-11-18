@@ -7,8 +7,8 @@
 
 
     public:
+        char postShader[255];
         float musicVolume;
-
         int ScreenWidth;
         int ScreenHeight;
         int screenScaleX;
@@ -18,7 +18,7 @@
         int renderIdx;
 
 
-        SystemConfig(){
+        SystemConfig() : postShader("filmGrain"){
             renderIdx = 0; //OPENGL
             musicVolume = 0.2f;
 

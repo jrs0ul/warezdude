@@ -98,6 +98,19 @@ add_custom_command(
     DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_filmGrain.frag
 )
 
+add_custom_command(
+    OUTPUT ${CMAKE_SOURCE_DIR}/shaders/scanlines_vert.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_scanlines.vert --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/scanlines_vert.spv
+    DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_scanlines.vert
+)
+
+add_custom_command(
+    OUTPUT ${CMAKE_SOURCE_DIR}/shaders/scanlines_frag.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_scanlines.frag --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/scanlines_frag.spv
+    DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_scanlines.frag
+)
+
+
 
 
 
@@ -108,6 +121,8 @@ add_custom_target(CompileShaders ALL DEPENDS
     ${CMAKE_SOURCE_DIR}/shaders/default_frag.spv
     ${CMAKE_SOURCE_DIR}/shaders/filmGrain_vert.spv
     ${CMAKE_SOURCE_DIR}/shaders/filmGrain_frag.spv
+    ${CMAKE_SOURCE_DIR}/shaders/scanlines_vert.spv
+    ${CMAKE_SOURCE_DIR}/shaders/scanlines_frag.spv
 )
 
 

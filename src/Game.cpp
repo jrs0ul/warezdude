@@ -2781,7 +2781,7 @@ void Game::renderToFBO(bool useVulkan)
     }
     else // VULKAN
     {
-#ifndef ANDROID
+#ifndef __ANDROID__
         vkCmdPushConstants(*vkCmd,
                            *defaultShader.getVkPipelineLayout(),
                            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(finalM.m), &finalM.m);
@@ -2796,13 +2796,14 @@ void Game::renderToFBO(bool useVulkan)
     }
     else //VULKAN
     {
-#ifndef ANDROID
+#ifndef __ANDROID__
         vkCmdPushConstants(*vkCmd,
                            *colorShader.getVkPipelineLayout(),
                            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(finalM.m), &finalM.m);
 #endif
     }
 
+#ifndef __ANDROID__
     coolShader.use(vkCmd);
     if (!useVulkan)
     {
@@ -2810,20 +2811,24 @@ void Game::renderToFBO(bool useVulkan)
         glUniformMatrix4fv(MatrixIDCool, 1, GL_FALSE, finalM.m);
         int timeID = coolShader.getUniformID("uTime");
         glUniform1f(timeID, TimeTicks / 1000.f);
+        int syID = coolShader.getUniformID("uScreenHeight");
+        float sy = (float)ScreenHeight;
+        glUniform1f(syID, sy);
     }
     else //VULKAN
     {
-#ifndef ANDROID
-        float buffer[17];
+        float buffer[18];
         float time = TimeTicks / 1000.f;
+        float screenH = (float)ScreenHeight;
         memcpy(buffer, finalM.m, sizeof(float) * 16);
         memcpy(&buffer[16], &time, sizeof(float));
+        memcpy(&buffer[17], &screenH, sizeof(float));
         vkCmdPushConstants(*vkCmd,
                 *coolShader.getVkPipelineLayout(),
-                VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(float) * 17, &buffer);
-#endif
+                VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(float) * 18, &buffer);
 
     }
+#endif
 
 
     switch(state)
@@ -2857,13 +2862,19 @@ void Game::renderFBO(bool useVulkan)
         glViewport(0, 0, ScreenWidth, ScreenHeight);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         pics.draw(fboTextureIndex, 0, 0, 0, false, sys.screenScaleX, sys.screenScaleY);
+#ifdef __ANDROID__
+        pics.drawBatch(&colorShader, &defaultShader, 666, false);
+#else
         pics.drawBatch(&colorShader, &coolShader, 666, false);
+#endif
         glEnable(GL_BLEND);
     }
     else
     {
+#ifndef __ANDROID__
         pics.draw(fboTextureIndex, 0, ScreenHeight, 0, false, sys.screenScaleX, -sys.screenScaleY);
         pics.drawBatch(&colorShader, &coolShader, 666, true, vkCmd, vulkanDevice);
+#endif
 
     }
 
@@ -4127,8 +4138,8 @@ void Game::LoadShader(ShaderProgram* shader, const char* name, bool useVulkan, b
         Shader vert;
         Shader frag;
 
-        printf("Loading vertex shader...\n");
         sprintf(buf, "shaders/%s.vert", name);
+        printf("Loading vertex shader %s...\n", buf);
 
 #ifdef __ANDROID__
         vert.loadGL(VERTEX_SHADER, buf, AssetManager);
@@ -4136,8 +4147,8 @@ void Game::LoadShader(ShaderProgram* shader, const char* name, bool useVulkan, b
         vert.loadGL(VERTEX_SHADER, buf);
 #endif
 
-        printf("Loading fragment shader...\n");
         sprintf(buf, "shaders/%s.frag", name);
+        printf("Loading fragment shader %s...\n", buf);
 #ifdef __ANDROID__
         frag.loadGL(FRAGMENT_SHADER, buf, AssetManager);
 #else
@@ -4228,8 +4239,9 @@ void Game::init(bool useVulkan)
 
         LoadShader(&defaultShader, "default", useVulkan, true, true);
         LoadShader(&colorShader, "justcolor", useVulkan, false, true);
-        LoadShader(&coolShader, "filmGrain", useVulkan, true, false);
-
+#ifndef __ANDROID__
+        LoadShader(&coolShader, sys.postShader, useVulkan, true, false);
+#endif
 
     if (!useVulkan)
     {

@@ -31,6 +31,14 @@
             }
 
             nod = 0;
+            nod = settings->getNode(L"PostShaderName");
+            if (nod)
+            {
+                wcscpy(tmp, nod->getValue());
+                wcstombs(postShader, tmp, 254);
+            }
+
+            nod = 0;
             nod = settings->getNode(L"Renderer");
             if (nod)
             {
@@ -155,7 +163,11 @@ bool SystemConfig::write(const char * config)
         _screenScaleY.setValue(wbuf);
         Settings.addChild(_screenScaleY);
 
-
+        XmlNode _postShader;
+        mbstowcs(wbuf, postShader, 255);
+        _postShader.setName(L"PostShaderName");
+        _postShader.setValue(wbuf);
+        Settings.addChild(_postShader);
 
 
        conf.root.addChild(Settings);

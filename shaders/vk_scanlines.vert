@@ -10,7 +10,7 @@ layout(location = 1) out vec4 vColor;
 layout(push_constant) uniform PushConstants {
     mat4 ModelViewProjection;
     float time;
-    float screenHeight;
+    float screenH;
 } pc;
 
 void main(void)
