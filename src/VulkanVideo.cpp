@@ -189,9 +189,6 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
     vkSurfaceFormat = chooseSwapSurfaceFormat(surfaceFormats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(presentModes);
 
-
-    //int width, height = 0;
-    //SDL_Vulkan_GetDrawableSize(mainWindow, &width, &height);
     width = CLAMP((uint32_t)width,
             vkSurfaceCapabilities.minImageExtent.width,
             vkSurfaceCapabilities.maxImageExtent.width);

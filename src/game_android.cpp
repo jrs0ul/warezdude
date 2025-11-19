@@ -146,6 +146,7 @@ static int engine_init_display(struct engine* engine) {
         engine->vk = new VulkanVideo();
         engine->game->vk = engine->vk;
 
+        engine->game->loadConfig();
 
         std::vector<const char *> extensions;
         extensions.push_back("VK_KHR_surface");
@@ -187,8 +188,10 @@ static int engine_init_display(struct engine* engine) {
 }
 //-----------------------------------------------------
 //
-static void engine_draw_frame(struct engine* engine) {
-    if (engine->display == NULL) {
+static void engine_draw_frame(struct engine* engine)
+{
+    if (USE_VULKAN == false && engine->display == NULL)
+    {
         return;
     }
 
@@ -253,17 +256,31 @@ static void engine_draw_frame(struct engine* engine) {
 
             while (engine->game->Accumulator >= engine->game->DT)
             {
-
-
                 engine->game->logic();
                 engine->game->Accumulator -= engine->game->DT;
             }
 
+            if (!USE_VULKAN) //opemgl
+            {
+                engine->game->renderToFBO(false);
+                engine->game->renderFBO(false);
+                eglSwapBuffers(engine->display, engine->surface);
+            }
+            else
+            {
+                engine->vk->getNextSwapImage();
+                engine->vk->resetCommandBuffer();
+                engine->vk->beginCommandBuffer();
 
-            engine->game->renderToFBO(false);
-            engine->game->renderFBO(false);
+                engine->game->renderToFBO(true);
+                engine->vk->beginRenderPass({0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0});
+                engine->game->renderFBO(true);
 
-            eglSwapBuffers(engine->display, engine->surface);
+                engine->vk->endRenderPass();
+                engine->vk->endCommandBuffer();
+                engine->vk->queueSubmit();
+                engine->vk->queuePresent();
+            }
 
             engine->game->tick = getTicks() + 1000/70;
         }
@@ -284,7 +301,7 @@ static void engine_term_display(struct engine* engine)
     {
         eglDestroySurface(engine->display, engine->surface);
     }
-    
+
     engine->surface = EGL_NO_SURFACE;
     engine->animating = 0;
 

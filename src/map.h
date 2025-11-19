@@ -77,7 +77,7 @@ public:
 
         void generate(int level);
 
-#ifdef ANDROID
+#ifdef __ANDROID__
         bool load(const char* path, AAssetManager* assman, bool createItems=true, int otherplayers=0);
 #else
         bool load(const char* path, bool createItems=true, int otherplayers=0);

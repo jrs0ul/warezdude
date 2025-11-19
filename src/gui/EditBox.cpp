@@ -8,7 +8,7 @@
         #include <SDL2/SDL_scancode.h>
     #endif
 #else
-    #ifndef ANDROID
+    #ifndef __ANDROID__
         #include <SDL2/SDL_scancode.h>
     #endif
 #endif
@@ -26,7 +26,7 @@ void EditBox::init(unsigned int dx, unsigned int dy, const char* dtitl, unsigned
     entered=false;
     canceled=false;
     strcpy(text,"");
-#ifndef ANDROID
+#ifndef __ANDROID__
     pressedKey = SDL_SCANCODE_RETURN;
 #endif
 }
@@ -41,7 +41,7 @@ void EditBox::getInput(const char* eventText, unsigned keydown,
         return;
     }
 
-#ifndef ANDROID
+#ifndef __ANDROID__
     if (pressedKey != keydown)
     {
         if ( keydown == SDL_SCANCODE_RETURN)
@@ -99,7 +99,7 @@ void EditBox::reset()
     strcpy(text,"");
     entered = false;
     canceled = false;
-#ifndef ANDROID
+#ifndef __ANDROID__
     pressedKey = SDL_SCANCODE_RETURN;
 #endif
 }

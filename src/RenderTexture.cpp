@@ -1,6 +1,10 @@
 #include "RenderTexture.h"
 #ifndef __ANDROID__
     #include "Extensions.h"
+#else
+    #include <android/log.h>
+    #include <android/log_macros.h>
+    #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #endif
 #include "VulkanVideo.h"
 
@@ -18,7 +22,12 @@ void RenderTexture::create(uint32_t width,
     _width = width;
     _height = height;
 
-    printf("creating render texture %ux%u\n", _width, _height);
+#ifdef __ANDROID__
+    LOGI(
+#else
+    printf(
+#endif
+            "creating render texture %ux%u\n", _width, _height);
 
     if (!isVulkan)
     {
@@ -35,7 +44,6 @@ void RenderTexture::create(uint32_t width,
     }
     else  // VULKAN
     {
-#ifndef ANDROID
         VulkanVideo::createImage(*device,
                               *physical,
                               _width,
@@ -114,7 +122,6 @@ void RenderTexture::create(uint32_t width,
 
             vkCreateFramebuffer(*device, &framebufferInfo, nullptr, &vkSwapChainFramebuffers[i]);
         }
-#endif
     }
 }
 
@@ -128,7 +135,6 @@ void RenderTexture::bind(VkCommandBuffer* vkCmd)
     }
     else //VULKAN
     {
-#ifndef ANDROID
         VkRenderPassBeginInfo render_pass_info = {};
         render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         render_pass_info.renderPass        = vkRenderPass;
@@ -144,7 +150,6 @@ void RenderTexture::bind(VkCommandBuffer* vkCmd)
         render_pass_info.pClearValues = clearValues.data();
 
         vkCmdBeginRenderPass(*vkCmd, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-#endif
     }
 
 }
@@ -157,9 +162,7 @@ void RenderTexture::unbind(VkCommandBuffer* vkCmd)
     }
     else //VULKAN
     {
-#ifndef ANDROID
         vkCmdEndRenderPass(*vkCmd);
-#endif
     }
 }
 

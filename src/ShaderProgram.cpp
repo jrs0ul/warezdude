@@ -351,13 +351,13 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
 
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = 1;
+    poolSize.descriptorCount = 2;
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = 1;
     poolInfo.pPoolSizes = &poolSize;
-    poolInfo.maxSets = 1;
+    poolInfo.maxSets = 2;
 
     if (vkCreateDescriptorPool(*device, &poolInfo, nullptr, &vkDescriptorPool) != VK_SUCCESS) 
     {

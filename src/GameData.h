@@ -30,7 +30,7 @@ class GameData
     DArray<GameDescription> games;
 
 public:
-#ifdef ANDROID
+#ifdef __ANDROID__
     bool load(const char* path, AAssetManager* assman);
 #else
     bool load(const char* path);

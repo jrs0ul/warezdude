@@ -5,14 +5,14 @@
 #include "Xml.h"
 
 //----------------------
-#ifdef ANDROID
+#ifdef __ANDROID__
 MapList::MapList(AAssetManager* assman)
 #else
 MapList::MapList()
 #endif
 {
     Xml mapList;
-#ifdef ANDROID
+#ifdef __ANDROID__
     bool res = mapList.load("maps/list.xml", assman);
 #else
     bool res = mapList.load("maps/list.xml");

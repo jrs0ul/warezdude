@@ -2,7 +2,7 @@
 #include <wchar.h>
 #include "Xml.h"
 
-#ifdef ANDROID
+#ifdef __ANDROID__
 bool GameData::load(const char* path, AAssetManager* assman)
 #else
 bool GameData::load(const char* path)
@@ -10,7 +10,7 @@ bool GameData::load(const char* path)
 {
     Xml datafile;
 
-#ifdef ANDROID
+#ifdef __ANDROID__
     if (!datafile.load(path, assman))
 #else
         if (!datafile.load(path))

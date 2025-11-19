@@ -25,7 +25,7 @@ public:
     void logic();
     void reset();
 
-#ifdef ANDROID
+#ifdef __ANDROID__
     void load(const char* filename, AAssetManager* assman);
 #else
     void load(const char* filename);

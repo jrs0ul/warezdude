@@ -162,21 +162,6 @@ void SDLVideo::quit(bool useVulkan)
     SDL_Quit();
 }
 
-void SDLVideo::beginRenderPass(bool useVulkan)
-{
-    if (!useVulkan)
-    {
-        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-    else
-    {
-        vk->getNextSwapImage();
-        vk->resetCommandBuffer();
-        vk->beginCommandBuffer();
-        vk->beginRenderPass({0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0});
-    }
-}
-
 void SDLVideo::swap(bool useVulkan)
 {
     if (!useVulkan)

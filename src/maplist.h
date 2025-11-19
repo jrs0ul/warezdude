@@ -12,7 +12,7 @@ public:
 
     int current;
 
-#ifdef ANDROID
+#ifdef __ANDROID__
     MapList(AAssetManager* assman);
 #else
     MapList();
