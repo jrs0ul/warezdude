@@ -28,6 +28,7 @@
 
 
 class MapList;
+class VulkanVideo;
 
 enum GameState
 {
@@ -165,13 +166,7 @@ public:
 
     bool doRumble;
 
-    VkDevice         * vulkanDevice;
-    VkPhysicalDevice * vkPhysicalDevice;
-    VkRenderPass     * vkRenderPass;
-    VkCommandBuffer  * vkCmd;
-    VkCommandPool    * vkCommandPool;
-    VkQueue          * vkGraphicsQueue;
-    size_t             vkSwapChainImageCount;
+    VulkanVideo* vk;
 
     float MouseX;
     float MouseY;

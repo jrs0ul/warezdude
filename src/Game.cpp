@@ -18,6 +18,7 @@
 #include "Consts.h"
 #include "SaveGame.h"
 #include "maplist.h"
+#include "VulkanVideo.h"
 #include "audio/SoundSystem.h"
 #ifndef _WIN32
 #include <arpa/inet.h>
@@ -2767,6 +2768,9 @@ void Game::DrawMissionObjectives()
 
 void Game::renderToFBO(bool useVulkan)
 {
+    VkCommandBuffer* vkCmd = vk->getCommandBuffer();
+    VkDevice* vulkanDevice = vk->getDevice();
+
     screenTexture.bind(vkCmd);
 
     FlatMatrix identity;
@@ -2868,6 +2872,8 @@ void Game::renderFBO(bool useVulkan)
     }
     else
     {
+        VkCommandBuffer* vkCmd = vk->getCommandBuffer();
+        VkDevice* vulkanDevice = vk->getDevice();
         pics.draw(fboTextureIndex, 0, ScreenHeight, 0, false, sys.screenScaleX, -sys.screenScaleY);
 #ifndef __ANDROID__
         pics.drawBatch(&colorShader, &coolShader, 666, true, vkCmd, vulkanDevice);
@@ -4175,6 +4181,10 @@ void Game::LoadShader(ShaderProgram* shader, const char* name, bool useVulkan, b
     }
     else //VULKAN
     {
+        VkDevice*         vulkanDevice = vk->getDevice();
+        VkPhysicalDevice* vkPhysicalDevice = vk->getPhysicalDevice();
+        VkRenderPass*     vkRenderPass = vk->getRenderPass();
+
         Shader vert;
         Shader frag;
 
@@ -4226,6 +4236,13 @@ void Game::init(bool useVulkan)
 {
 
    srand(time(0));
+
+   VkCommandBuffer*  vkCmd = vk->getCommandBuffer();
+   VkDevice*         vulkanDevice = vk->getDevice();
+   VkPhysicalDevice* vkPhysicalDevice = vk->getPhysicalDevice();
+   uint32_t          vkSwapChainImageCount = vk->getSwapChainImageCount();
+   VkCommandPool*    vkCommandPool = vk->getCommandPool();
+   VkQueue*          vkGraphicsQueue = vk->getGraphicsQueue();
 
 
    if (!useVulkan)
@@ -4369,6 +4386,8 @@ void Game::init(bool useVulkan)
 //--------------------------------
 void Game::destroy()
 {
+    VkDevice* vulkanDevice = vk->getDevice();
+
     switch(netMode)
     {
         case NETMODE_NONE: break;

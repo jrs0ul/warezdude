@@ -23,7 +23,63 @@
 class VulkanVideo
 {
 
+    std::vector<VkFence>         vkFences;
+    std::vector<VkCommandBuffer> vkCommandBuffers;
+    std::vector<VkImage>         vkSwapchainImages;
+    std::vector<VkImageView>     vkSwapchainImageViews;
+    std::vector<VkFramebuffer>   vkSwapchainFramebuffers;
+    VkDevice                     vkDevice;
+    VkPhysicalDevice             vkPhysicalDevice;
+    VkInstance                   vkInstance;
+    VkImage                      vkImage;
+
+    VkImage                      depthImage;
+    VkDeviceMemory               depthImageMemory;
+
+
+    VkSwapchainKHR               vkSwapchain;
+    VkCommandBuffer              vkCommandBuffer;
+    VkSurfaceFormatKHR           vkSurfaceFormat;
+    VkSurfaceCapabilitiesKHR     vkSurfaceCapabilities;
+    VkExtent2D                   vkSwapchainSize;
+    VkFormat                     vkDepthFormat;
+    VkRenderPass                 vkRenderPass;
+    VkCommandPool                vkCommandPool;
+    VkSemaphore                  vkImageAvailableSemaphore;
+    VkSemaphore                  vkRenderingFinishedSemaphore;
+    VkQueue                      vkGraphicsQueue;
+    VkQueue                      vkPresentQueue;
+    uint32_t                     vkFrameIndex;
+    uint32_t                     vkSwapchainImageCount;
+
+
 public:
+
+    VkInstance*       createInstance(uint32_t extensionCount, const char** extensionNames);
+    void              init(VkSurfaceKHR& surface, uint32_t width, uint32_t height);
+    void              getNextSwapImage();
+    void              beginCommandBuffer();
+    void              resetCommandBuffer();
+    void              endCommandBuffer();
+    void              beginRenderPass(VkClearColorValue clearColor, VkClearDepthStencilValue clearDepthStencil);
+    void              endRenderPass();
+
+    void              queueSubmit();
+    void              queuePresent();
+
+    void              destroy();
+
+    VkDevice*         getDevice()             {return &vkDevice;}
+    VkCommandBuffer*  getCommandBuffer()      {return &vkCommandBuffer;}
+    VkRenderPass*     getRenderPass()         {return &vkRenderPass;}
+    VkPhysicalDevice* getPhysicalDevice()     {return &vkPhysicalDevice;}
+    VkCommandPool*    getCommandPool()        {return &vkCommandPool;}
+    VkQueue*          getGraphicsQueue()      {return &vkGraphicsQueue;}
+    uint32_t          getSwapChainImageCount(){return vkSwapchainImageCount;}
+
+
+
+
     static uint32_t findMemoryType(VkPhysicalDevice& physical, uint32_t typeFilter, VkMemoryPropertyFlags properties);
     static void createImage(VkDevice& device,
                             VkPhysicalDevice& physical,
@@ -44,5 +100,13 @@ public:
                                        VkImage& image,
                                        VkFormat format,
                                        VkImageAspectFlags aspectFlags);
+private:
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+    VkPresentModeKHR   chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+    VkBool32           getSupportedDepthFormat(VkPhysicalDevice physicalDevice, VkFormat *depthFormat);
+    void createSemaphore(VkSemaphore *semaphore);
+
+
+
 
 };

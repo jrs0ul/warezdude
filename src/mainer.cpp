@@ -36,6 +36,7 @@
 #endif
 #include <string>
 #include <thread>
+#include "VulkanVideo.h"
 
 
 SDLVideo SDL;
@@ -66,18 +67,20 @@ void ConfigureGraphicsLib(bool useVulkan)
 //-----------------
 void RenderScreen(bool useVulkan)
 {
+    VulkanVideo* vk = SDL.getVkVideo();
+
     if (useVulkan)
     {
-        SDL.VkAcquireNextImage();
-        SDL.VkResetCommandBuffer();
-        SDL.VkBeginCommandBuffer();
+        vk->getNextSwapImage();
+        vk->resetCommandBuffer();
+        vk->beginCommandBuffer();
     }
 
     game.renderToFBO(useVulkan);
 
     if (useVulkan)
     {
-        SDL.VkBeginRenderPass({0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0});
+        vk->beginRenderPass({0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0});
     }
 
     game.renderFBO(useVulkan);
@@ -310,13 +313,7 @@ int main(int argc, char* argv[])
         game.Works = false;
     }
 
-    game.vulkanDevice     = SDL.getVkDevice();
-    game.vkPhysicalDevice = SDL.getVKPhysicalDevice();
-    game.vkCmd            = SDL.getVkCmd();
-    game.vkRenderPass     = SDL.getVkRenderPass();
-    game.vkCommandPool    = SDL.getVkCommandPool();
-    game.vkGraphicsQueue  = SDL.getVkGraphicsQueue();
-    game.vkSwapChainImageCount = SDL.getVkSwapChainImageCount();
+    game.vk = SDL.getVkVideo();
 
     SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 

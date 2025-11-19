@@ -14,12 +14,10 @@
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "native-activity", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "native-activity", __VA_ARGS__))
 
-
+const bool USE_VULKAN = true;
 
 struct engine {
     struct android_app* app{};
-
-
     char ip[40];
     int animating{};
     EGLDisplay display{};
@@ -29,7 +27,6 @@ struct engine {
     Vector3D oldDown;
     int32_t width{};
     int32_t height{};
-    int32_t fingersOnscreen{};
     Game* game{};
     bool loaded{};
     bool resetMovement{};
@@ -39,7 +36,8 @@ struct engine {
 
 
 //-------------------------------------------
-long getTicks() {
+long getTicks()
+{
     struct timespec now{};
     clock_gettime(CLOCK_MONOTONIC, &now);
     long msecs = now.tv_nsec / 1000000;
@@ -49,94 +47,117 @@ long getTicks() {
 static int engine_init_display(struct engine* engine) {
 
     LOGI("initializing the display\n");
-    const EGLint attribs[] = {
-            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-            EGL_BLUE_SIZE, 8,
-            EGL_GREEN_SIZE, 8,
-            EGL_RED_SIZE, 8,
-            EGL_DEPTH_SIZE, 24,
-            EGL_NONE
-    };
 
-    EGLint w, h, format;
-    EGLint numConfigs;
-    EGLConfig config;
-    EGLSurface surface;
-    EGLContext context;
-    EGLDisplay display;
-
-    if (!engine->loaded) {
-        LOGI("Let's make a new display\n");
-        display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-        eglInitialize(display, 0, 0);
-    }
-    else{
-        LOGI("Let's use an existing display\n");
-        display = engine->display;
-    }
-    eglChooseConfig(display, attribs, &config, 1, &numConfigs);
-    eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
-    ANativeWindow_setBuffersGeometry(engine->app->window, 0, 0, format);
-
-    surface = eglCreateWindowSurface(display, config, engine->app->window, NULL);
-    if (!engine->loaded) {
-        LOGI("Let's create a new context\n");
-        EGLint AttribList[] = {
-                EGL_CONTEXT_CLIENT_VERSION, 2,
+    if (!USE_VULKAN) {
+        const EGLint attribs[] = {
+                EGL_RENDERABLE_TYPE,
+                EGL_OPENGL_ES2_BIT,
+                EGL_SURFACE_TYPE,
+                EGL_WINDOW_BIT,
+                EGL_BLUE_SIZE, 8,
+                EGL_GREEN_SIZE, 8,
+                EGL_RED_SIZE, 8,
+                EGL_DEPTH_SIZE, 24,
                 EGL_NONE
         };
-        context = eglCreateContext(display, config, NULL, AttribList);
 
-    }
-    else {
-        LOGI("Let's use an existing context\n");
-        context = engine->context;
-    }
+        EGLint w, h, format;
+        EGLint numConfigs;
+        EGLConfig config;
+        EGLSurface surface;
+        EGLContext context;
+        EGLDisplay display;
 
-    if (eglMakeCurrent(display, surface, surface, context) == EGL_FALSE) {
-        LOGW("Unable to eglMakeCurrent");
-        return -1;
-    }
-
-    if (!engine->loaded) {
-        eglQuerySurface(display, surface, EGL_WIDTH, &w);
-        eglQuerySurface(display, surface, EGL_HEIGHT, &h);
-        engine->width = w;
-        engine->height = h;
-    }
-
-    engine->display = display;
-    engine->context = context;
-    engine->surface = surface;
-
-
-
-    glDisable(GL_DEPTH_TEST);
-
-
-    if (!engine->loaded) {
-        if (engine->game) {
-            engine->game->loadConfig();
-            auto* sys = engine->game->getSysConfig();
-            if (sys->ScreenWidth * sys->screenScaleX > engine->width)
-            {
-                sys->screenScaleX = engine->width / sys->ScreenWidth;
-                sys->screenScaleY = sys->screenScaleX;
-                engine->game->ScreenHeight = sys->ScreenHeight * sys->screenScaleY;
-                engine->game->ScreenWidth = sys->ScreenWidth * sys->screenScaleX;
-
-            }
-
-
-            engine->game->init(false);
-            engine->game->TimeTicks = (float)getTicks();
-            engine->loaded = true;
-            memset(engine->game->Keys, 0, Game::GameKeyCount);
+        if (!engine->loaded)
+        {
+            LOGI("Let's make a new display\n");
+            display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+            eglInitialize(display, 0, 0);
+        } else
+        {
+            LOGI("Let's use an existing display\n");
+            display = engine->display;
         }
-    }
+        eglChooseConfig(display, attribs, &config, 1, &numConfigs);
+        eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
+        ANativeWindow_setBuffersGeometry(engine->app->window, 0, 0, format);
 
-    engine->animating = 1;
+        surface = eglCreateWindowSurface(display, config, engine->app->window, NULL);
+        if (!engine->loaded)
+        {
+            LOGI("Let's create a new context\n");
+            EGLint AttribList[] = {
+                    EGL_CONTEXT_CLIENT_VERSION, 2,
+                    EGL_NONE
+            };
+            context = eglCreateContext(display, config, NULL, AttribList);
+
+        } else
+        {
+            LOGI("Let's use an existing context\n");
+            context = engine->context;
+        }
+
+        if (eglMakeCurrent(display, surface, surface, context) == EGL_FALSE)
+        {
+            LOGW("Unable to eglMakeCurrent");
+            return -1;
+        }
+
+        if (!engine->loaded)
+        {
+            eglQuerySurface(display, surface, EGL_WIDTH, &w);
+            eglQuerySurface(display, surface, EGL_HEIGHT, &h);
+            engine->width = w;
+            engine->height = h;
+        }
+
+        engine->display = display;
+        engine->context = context;
+        engine->surface = surface;
+
+        glDisable(GL_DEPTH_TEST);
+
+        if (!engine->loaded)
+        {
+            if (engine->game)
+            {
+                engine->game->loadConfig();
+                auto *sys = engine->game->getSysConfig();
+                if (sys->ScreenWidth * sys->screenScaleX > engine->width) {
+                    sys->screenScaleX = engine->width / sys->ScreenWidth;
+                    sys->screenScaleY = sys->screenScaleX;
+                    engine->game->ScreenHeight = sys->ScreenHeight * sys->screenScaleY;
+                    engine->game->ScreenWidth = sys->ScreenWidth * sys->screenScaleX;
+                }
+
+                engine->game->init(false);
+                engine->game->TimeTicks = (float) getTicks();
+                engine->loaded = true;
+                memset(engine->game->Keys, 0, Game::GameKeyCount);
+            }
+        }
+
+        engine->animating = 1;
+    }
+    else // VULKAN
+    {
+
+        engine->game->vulkanDevice          = SDL.getVkDevice();
+        engine->game->vkPhysicalDevice      = SDL.getVKPhysicalDevice();
+        engine->game->vkCmd                 = SDL.getVkCmd();
+        engine->game->vkRenderPass          = SDL.getVkRenderPass();
+        engine->game->vkCommandPool         = SDL.getVkCommandPool();
+        engine->game->vkGraphicsQueue       = SDL.getVkGraphicsQueue();
+        engine->game->vkSwapChainImageCount = SDL.getVkSwapChainImageCount();
+
+        engine->game->init(USE_VULKAN);
+        engine->game->TimeTicks = (float) getTicks();
+        engine->loaded = true;
+        memset(engine->game->Keys, 0, Game::GameKeyCount);
+
+        engine->animating = 1;
+    }
 
     return 0;
 }
