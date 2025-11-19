@@ -151,6 +151,7 @@ static int engine_init_display(struct engine* engine) {
         std::vector<const char *> extensions;
         extensions.push_back("VK_KHR_surface");
         extensions.push_back("VK_KHR_android_surface");
+        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
         VkInstance* instance = engine->vk->createInstance((uint32_t)extensions.size(), extensions.data());
 

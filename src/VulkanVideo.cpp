@@ -10,16 +10,50 @@
 
 VkInstance* VulkanVideo::createInstance(uint32_t extensionCount, const char** extensionNames)
 {
-    const VkInstanceCreateInfo instanceInfo = {
+    uint32_t layerCount;
+    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+    std::vector<VkLayerProperties> availableLayers(layerCount);
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+    bool layerFound = false;
+
+    for (const char *layerName : validationLayers) {
+        layerFound = false;
+        for (const auto &layerProperties: availableLayers) {
+            if (strcmp(layerName, layerProperties.layerName) == 0) {
+                layerFound = true;
+                break;
+            }
+        }
+    }
+
+
+    VkApplicationInfo appInfo{};
+    appInfo.pEngineName = "Dissarray";
+    appInfo.apiVersion = VK_API_VERSION_1_1;
+
+
+     VkInstanceCreateInfo instanceInfo = {
         VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, // sType
         nullptr,                                // pNext
         0,                                      // flags
-        nullptr,                                // pApplicationInfo
+        &appInfo,                               // pApplicationInfo
         0,                                      // enabledLayerCount
         nullptr,                                // ppEnabledLayerNames
         extensionCount,                         // enabledExtensionCount
         extensionNames,                         // ppEnabledExtensionNames
     };
+
+     if (layerFound)
+     {
+         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+         instanceInfo.enabledLayerCount =
+             static_cast<uint32_t>(validationLayers.size());
+         instanceInfo.ppEnabledLayerNames = validationLayers.data();
+         populateDebugMessengerCreateInfo(debugCreateInfo);
+         instanceInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *)&debugCreateInfo;
+     }
 
     VkResult res = vkCreateInstance(&instanceInfo, nullptr, &vkInstance);
 
@@ -232,12 +266,35 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
     }
 
     createInfo.preTransform   = vkSurfaceCapabilities.currentTransform;
+
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    //Let's find what kind of composite alpha the device supports
+    std::vector<VkCompositeAlphaFlagBitsKHR> compositeAlphaFlags = {
+        VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+        VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
+        VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,
+        VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
+    };
+
+    for (auto& flag : compositeAlphaFlags)
+    {
+        if (vkSurfaceCapabilities.supportedCompositeAlpha & flag)
+        {
+            createInfo.compositeAlpha = flag;
+            break;
+        }
+    }
+    //----
+
     createInfo.presentMode    = presentMode;
     createInfo.clipped        = VK_TRUE;
 
 
-    vkCreateSwapchainKHR(vkDevice, &createInfo, nullptr, &vkSwapchain);
+    if (vkCreateSwapchainKHR(vkDevice, &createInfo, nullptr, &vkSwapchain) != VK_SUCCESS)
+    {
+        return false;
+    }
+
     vkGetSwapchainImagesKHR(vkDevice, vkSwapchain, &vkSwapchainImageCount, nullptr);
     vkSwapchainImages.resize(vkSwapchainImageCount);
     vkGetSwapchainImagesKHR(vkDevice, vkSwapchain, &vkSwapchainImageCount, vkSwapchainImages.data());
@@ -259,7 +316,7 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
             vkPhysicalDevice,
             vkSwapchainSize.width,
             vkSwapchainSize.height,
-            VK_FORMAT_D32_SFLOAT_S8_UINT,
+            vkDepthFormat,
             VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -268,7 +325,7 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
 
     VkImageView depthImageView = VulkanVideo::createImageView(vkDevice,
                                                               depthImage,
-                                                              VK_FORMAT_D32_SFLOAT_S8_UINT,
+                                                              vkDepthFormat,
                                                               VK_IMAGE_ASPECT_DEPTH_BIT);
 
 
@@ -645,6 +702,15 @@ void VulkanVideo::createImage(VkDevice& device,
                            VkImage& image,
                            VkDeviceMemory& imageMemory)
 {
+
+    VkImageFormatProperties deviceProperties{};
+    auto res = vkGetPhysicalDeviceImageFormatProperties(physical, format, VK_IMAGE_TYPE_2D, tiling, usage, 0, &deviceProperties);
+
+    if (res != VK_SUCCESS)
+    {
+        throw std::runtime_error("bad image creation params!");
+    }
+
     VkImageCreateInfo imageInfo = {};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -659,6 +725,7 @@ void VulkanVideo::createImage(VkDevice& device,
     imageInfo.usage = usage;
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
 
     if (vkCreateImage(device, &imageInfo, nullptr, &image) != VK_SUCCESS)
     {

@@ -52,6 +52,8 @@ class VulkanVideo
     uint32_t                     vkFrameIndex;
     uint32_t                     vkSwapchainImageCount;
 
+    const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
+
 
 public:
 
@@ -105,6 +107,71 @@ private:
     VkPresentModeKHR   chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
     VkBool32           getSupportedDepthFormat(VkPhysicalDevice physicalDevice, VkFormat *depthFormat);
     void createSemaphore(VkSemaphore *semaphore);
+
+
+
+    static const char *toStringMessageSeverity(VkDebugUtilsMessageSeverityFlagBitsEXT s) {
+        switch (s) {
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+                return "VERBOSE";
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+                return "ERROR";
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+                return "WARNING";
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+                return "INFO";
+            default:
+                return "UNKNOWN";
+        }
+    }
+    static const char *toStringMessageType(VkDebugUtilsMessageTypeFlagsEXT s) {
+        if (s == (VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                  VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                  VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT))
+            return "General | Validation | Performance";
+        if (s == (VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                  VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT))
+            return "Validation | Performance";
+        if (s == (VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                  VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT))
+            return "General | Performance";
+        if (s == (VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT))
+            return "Performance";
+        if (s == (VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                  VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT))
+            return "General | Validation";
+        if (s == VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) return "Validation";
+        if (s == VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) return "General";
+        return "Unknown";
+    }
+
+
+    static VKAPI_ATTR VkBool32 VKAPI_CALL
+    debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                  VkDebugUtilsMessageTypeFlagsEXT messageType,
+                  const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+                  void * /* pUserData */) {
+        auto ms = toStringMessageSeverity(messageSeverity);
+        auto mt = toStringMessageType(messageType);
+        printf("[%s: %s]\n%s\n", ms, mt, pCallbackData->pMessage);
+
+        return VK_FALSE;
+    }
+
+
+
+    static void populateDebugMessengerCreateInfo(
+            VkDebugUtilsMessengerCreateInfoEXT &createInfo) {
+        createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+                                     VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                                     VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                                 VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                                 VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        createInfo.pfnUserCallback = debugCallback;
+    }
 
 
 
