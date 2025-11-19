@@ -1,6 +1,12 @@
 #include "VulkanVideo.h"
 #include "MathTools.h"
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#include <android/log_macros.h>
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#endif
 
 VkInstance* VulkanVideo::createInstance(uint32_t extensionCount, const char** extensionNames)
 {
@@ -20,7 +26,7 @@ VkInstance* VulkanVideo::createInstance(uint32_t extensionCount, const char** ex
     if (res != VK_SUCCESS)
     {
 #ifdef __ANDROID__
-    LOGI(
+    LOGE(
 #else
     printf(
 #endif
@@ -33,8 +39,11 @@ VkInstance* VulkanVideo::createInstance(uint32_t extensionCount, const char** ex
 
 //================
 
-void VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
+bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
 {
+#ifdef __ANDROID__
+    LOGI("Attempting to init %u x %u surface...", width, height);
+#endif
     uint32_t physicalDeviceCount;
     vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, nullptr);
     std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
@@ -49,7 +58,12 @@ void VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
 
         if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
         {
-            printf("We'll be using: %s!\n", properties.deviceName);
+#ifdef __ANDROID__
+            LOGI(
+#else
+            printf(
+#endif
+                    "We'll be using: %s!\n", properties.deviceName);
             vkPhysicalDevice = device;
             physicalDeviceAssigned = true;
             break;
@@ -66,12 +80,22 @@ void VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
 
             if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
             {
-                printf("We'll be using: %s!\n", properties.deviceName);
+#ifdef __ANDROID__
+                LOGI(
+#else
+                printf(
+#endif
+                "We'll be using: %s!\n", properties.deviceName);
                 vkPhysicalDevice = device;
                 physicalDeviceAssigned = true;
                 break;
             }
         }
+    }
+
+    if (!vkPhysicalDevice)
+    {
+        return false;
     }
 
     uint32_t queueFamilyCount;
@@ -368,6 +392,8 @@ void VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
         vkCreateFence(vkDevice, &createInfo, nullptr, &vkFences[i]);
     }
 
+    return true;
+
 }
 
 //=================
@@ -650,7 +676,7 @@ void VulkanVideo::createImage(VkDevice& device,
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = findMemoryType(physical, memRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) 
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to allocate image memory!");
     }

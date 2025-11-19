@@ -8,13 +8,13 @@
 #include <android/log.h>
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 
-
+#include "VulkanVideo.h"
 #include "Game.h"
 
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "native-activity", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "native-activity", __VA_ARGS__))
 
-const bool USE_VULKAN = true;
+static bool USE_VULKAN = true;
 
 struct engine {
     struct android_app* app{};
@@ -27,6 +27,7 @@ struct engine {
     Vector3D oldDown;
     int32_t width{};
     int32_t height{};
+    VulkanVideo* vk{};
     Game* game{};
     bool loaded{};
     bool resetMovement{};
@@ -142,14 +143,37 @@ static int engine_init_display(struct engine* engine) {
     }
     else // VULKAN
     {
+        engine->vk = new VulkanVideo();
+        engine->game->vk = engine->vk;
 
-        engine->game->vulkanDevice          = SDL.getVkDevice();
-        engine->game->vkPhysicalDevice      = SDL.getVKPhysicalDevice();
-        engine->game->vkCmd                 = SDL.getVkCmd();
-        engine->game->vkRenderPass          = SDL.getVkRenderPass();
-        engine->game->vkCommandPool         = SDL.getVkCommandPool();
-        engine->game->vkGraphicsQueue       = SDL.getVkGraphicsQueue();
-        engine->game->vkSwapChainImageCount = SDL.getVkSwapChainImageCount();
+
+        std::vector<const char *> extensions;
+        extensions.push_back("VK_KHR_surface");
+        extensions.push_back("VK_KHR_android_surface");
+
+        VkInstance* instance = engine->vk->createInstance((uint32_t)extensions.size(), extensions.data());
+
+        uint32_t width = ANativeWindow_getWidth(engine->app->window);
+        uint32_t height = ANativeWindow_getHeight(engine->app->window);
+        VkSurfaceKHR  surface;
+        const VkAndroidSurfaceCreateInfoKHR create_info{
+                .sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,
+                .pNext = nullptr,
+                .flags = 0,
+                .window = engine->app->window};
+
+        engine->width = (int32_t)width;
+        engine->height = (int32_t)height;
+
+        vkCreateAndroidSurfaceKHR(*instance, &create_info,
+                                           nullptr /* pAllocator */, &surface);
+
+        if (!engine->vk->init(surface, width, height))
+        {
+            vkDestroySurfaceKHR(*instance, surface, nullptr);
+            vkDestroyInstance(*instance, nullptr);
+            return -1;
+        }
 
         engine->game->init(USE_VULKAN);
         engine->game->TimeTicks = (float) getTicks();
@@ -252,21 +276,15 @@ static void engine_draw_frame(struct engine* engine) {
 /**
  * Tear down the EGL context currently associated with the display.
  */
-static void engine_term_display(struct engine* engine) {
-    //if (engine->display != EGL_NO_DISPLAY) {
-        eglMakeCurrent(engine->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        //if (engine->context != EGL_NO_CONTEXT) {
-        //    eglDestroyContext(engine->display, engine->context);
-        //}
-        if (engine->surface != EGL_NO_SURFACE) {
-            eglDestroySurface(engine->display, engine->surface);
-        }
-        //eglTerminate(engine->display);
+static void engine_term_display(struct engine* engine)
+{
+    eglMakeCurrent(engine->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
-
-    //}
-    //engine->display = EGL_NO_DISPLAY;
-    //engine->context = EGL_NO_CONTEXT;
+    if (engine->surface != EGL_NO_SURFACE)
+    {
+        eglDestroySurface(engine->display, engine->surface);
+    }
+    
     engine->surface = EGL_NO_SURFACE;
     engine->animating = 0;
 
@@ -433,7 +451,12 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             if (engine->app->window != NULL) {
 
                 engine->game->AssetManager = app->activity->assetManager;
-                engine_init_display(engine);
+                int res = engine_init_display(engine);
+                if (res == -1)
+                {
+                    USE_VULKAN = false;
+                    engine_init_display(engine);
+                }
                 engine_draw_frame(engine);
 
             }

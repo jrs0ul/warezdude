@@ -56,7 +56,7 @@ class VulkanVideo
 public:
 
     VkInstance*       createInstance(uint32_t extensionCount, const char** extensionNames);
-    void              init(VkSurfaceKHR& surface, uint32_t width, uint32_t height);
+    bool              init(VkSurfaceKHR& surface, uint32_t width, uint32_t height);
     void              getNextSwapImage();
     void              beginCommandBuffer();
     void              resetCommandBuffer();
