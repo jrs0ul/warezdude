@@ -8,9 +8,6 @@ void VulkanVideo::createBuffer(VkDevice& device,
                             VkBuffer& buffer, 
                             VkDeviceMemory& bufferMemory) 
 {
-#ifdef ANDROID
-    return;
-#endif
 
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -40,9 +37,6 @@ void VulkanVideo::createBuffer(VkDevice& device,
 
 uint32_t VulkanVideo::findMemoryType(VkPhysicalDevice& physical, uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
-#ifdef ANDROID
-    return 0;
-#endif
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(physical, &memProperties);
 
@@ -70,9 +64,6 @@ void VulkanVideo::createImage(VkDevice& device,
                            VkImage& image,
                            VkDeviceMemory& imageMemory)
 {
-#ifdef ANDROID
-    return;
-#endif
     VkImageCreateInfo imageInfo = {};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -112,9 +103,6 @@ void VulkanVideo::createImage(VkDevice& device,
 VkImageView VulkanVideo::createImageView(VkDevice& vkDevice, VkImage& image, VkFormat format, VkImageAspectFlags aspectFlags)
 {
     VkImageView imageView;
-#ifdef ANDROID
-    return imageView;
-#endif
     VkImageViewCreateInfo viewInfo = {};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     viewInfo.image = image;

@@ -471,7 +471,6 @@ extern "C" void GameTextInputGetStateCB(void *ctx, const struct GameTextInputSta
 void android_main(struct android_app* state) {
     struct engine engine;
 
-
     memset(&engine, 0, sizeof(engine));
     state->userData = &engine;
     state->onAppCmd = engine_handle_cmd;

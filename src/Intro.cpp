@@ -29,7 +29,7 @@ void Intro::logic()
             timer = 0;
             currentChar++;
 
-            if ((IntroText[currentLine][currentChar] == '\0'))
+            if (IntroText[currentLine][currentChar] == 0)
             {
                 currentLine++;
                 gline++;

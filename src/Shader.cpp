@@ -129,9 +129,6 @@ bool Shader::loadVK(ShaderType shaderType, const char* path, VkDevice* device, A
 bool Shader::loadVK(ShaderType shaderType, const char* path, VkDevice* device)
 #endif
 {
-#ifdef ANDROID
-    return false;
-#endif
     char* binShader = 0;
 #ifdef __ANDROID__
     long res = ReadFileData(path, &binShader, assman);

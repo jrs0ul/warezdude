@@ -24,6 +24,7 @@
 #endif
 
 
+
 Game::Game()
 : imgCount(0)
 {
@@ -2781,11 +2782,9 @@ void Game::renderToFBO(bool useVulkan)
     }
     else // VULKAN
     {
-#ifndef __ANDROID__
         vkCmdPushConstants(*vkCmd,
                            *defaultShader.getVkPipelineLayout(),
                            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(finalM.m), &finalM.m);
-#endif
     }
 
     colorShader.use(vkCmd);
@@ -2796,11 +2795,9 @@ void Game::renderToFBO(bool useVulkan)
     }
     else //VULKAN
     {
-#ifndef __ANDROID__
         vkCmdPushConstants(*vkCmd,
                            *colorShader.getVkPipelineLayout(),
                            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(finalM.m), &finalM.m);
-#endif
     }
 
 #ifndef __ANDROID__
@@ -2871,9 +2868,11 @@ void Game::renderFBO(bool useVulkan)
     }
     else
     {
-#ifndef __ANDROID__
         pics.draw(fboTextureIndex, 0, ScreenHeight, 0, false, sys.screenScaleX, -sys.screenScaleY);
+#ifndef __ANDROID__
         pics.drawBatch(&colorShader, &coolShader, 666, true, vkCmd, vulkanDevice);
+#else
+        pics.drawBatch(&colorShader, &defaultShader, 666, true, vkCmd, vulkanDevice);
 #endif
 
     }

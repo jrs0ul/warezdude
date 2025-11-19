@@ -5,6 +5,7 @@ project(CartridgeQuest LANGUAGES CXX)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVK_USE_PLATFORM_ANDROID_KHR")
 
 set(SRCDIR ../src/)
 find_package(game-activity REQUIRED CONFIG)
@@ -14,7 +15,6 @@ set(OGG_VORBIS_DIR "/home/jrs0ul/oggvorbis")
 include_directories("${OPENAL_DIR}/include")
 include_directories("${OGG_VORBIS_DIR}/inc")
 
-#find_package(Vulkan REQUIRED)
 
 add_library(game SHARED
 
@@ -78,14 +78,13 @@ set(CMAKE_SHARED_LINKER_FLAGS
     Java_com_google_androidgamesdk_GameActivity_initializeNativeCode")
 
 target_link_libraries(game PUBLIC
-
                        android
                        EGL
                        GLESv2
-                       OpenSLES
+                       #OpenSLES
                        openal-soft
                        ogg
                        vorbis
                        game-activity::game-activity_static
-                       #Vulkan::Vulkan
+                       vulkan
                        log )
