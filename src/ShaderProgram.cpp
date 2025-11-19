@@ -170,6 +170,13 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
     }
 
 
+    VkPushConstantRange pushConstantRange = {};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = 64;
+
+
+
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.pNext = nullptr;
@@ -178,8 +185,8 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
     pipelineLayoutInfo.setLayoutCount = 1;
     pipelineLayoutInfo.pSetLayouts = &vkDescriptorSetLayout;
 
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
-    pipelineLayoutInfo.pPushConstantRanges = nullptr;
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
+    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
     vkCreatePipelineLayout(*device, &pipelineLayoutInfo, nullptr, &vkPipelineLayout);
 
@@ -238,7 +245,7 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
     attributes.push_back(colorAttribute);
 
 
-    VkPipelineVertexInputStateCreateInfo   vertexInputInfo;
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputInfo.pNext = nullptr;
     vertexInputInfo.pVertexBindingDescriptions = bindings.data();
@@ -247,7 +254,7 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
     vertexInputInfo.vertexAttributeDescriptionCount = attributes.size();
 
 
-    VkPipelineInputAssemblyStateCreateInfo inputAssembly;
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     inputAssembly.pNext = nullptr;
     inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -322,6 +329,18 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
     colorBlending.attachmentCount = 1;
     colorBlending.pAttachments    = &colorBlendAttachment;
 
+    VkPipelineDepthStencilStateCreateInfo depthStencilInfo = {};
+    depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+
+    depthStencilInfo.depthTestEnable = VK_FALSE; // Enable depth testing
+    depthStencilInfo.depthWriteEnable = VK_FALSE; // Enable writing to depth buffer
+    depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS; // Use less comparison
+    depthStencilInfo.depthBoundsTestEnable = VK_FALSE; // Disable depth bounds testing
+    depthStencilInfo.stencilTestEnable = VK_FALSE; // Disable stencil testing
+    depthStencilInfo.minDepthBounds = 0.0f; // Optional
+    depthStencilInfo.maxDepthBounds = 1.0f; // Optional
+    
+
     VkGraphicsPipelineCreateInfo pipelineInfo = {};
     pipelineInfo.sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineInfo.pNext               = nullptr;
@@ -336,6 +355,7 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
     pipelineInfo.layout              = vkPipelineLayout;
     pipelineInfo.renderPass          = *pass;
     pipelineInfo.subpass = 0;
+    pipelineInfo.pDepthStencilState = &depthStencilInfo;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
     if (vkCreateGraphicsPipelines(*device,
@@ -350,7 +370,7 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
 
 
     VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     poolSize.descriptorCount = 2;
 
     VkDescriptorPoolCreateInfo poolInfo{};

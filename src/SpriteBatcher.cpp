@@ -499,9 +499,13 @@ void SpriteBatcher::drawVA(void * vertices,
         if (uvsCount)
         {
             vkCmdBindVertexBuffers(*vkCmd, 1, 1, &shader->vkVertexBuffers[1], &shader->vkBufferOffset[1]);
+            vkCmdBindVertexBuffers(*vkCmd, 2, 1, &shader->vkVertexBuffers[2], &shader->vkBufferOffset[2]);
+        }
+        else
+        {
+            vkCmdBindVertexBuffers(*vkCmd, 1, 1, &shader->vkVertexBuffers[2], &shader->vkBufferOffset[2]);
         }
 
-        vkCmdBindVertexBuffers(*vkCmd, 2, 1, &shader->vkVertexBuffers[2], &shader->vkBufferOffset[2]);
 
         vkCmdBindDescriptorSets(*vkCmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shader->vkPipelineLayout, 0, 1, &shader->vkDS, 0, nullptr);
 
