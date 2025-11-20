@@ -107,7 +107,6 @@ void ShaderProgram::link()
 void ShaderProgram::buildVkPipeline(VkDevice* device,
                                     VkPhysicalDevice* physical,
                                     VkRenderPass* pass,
-                                    SystemConfig& config,
                                     bool needUvs,
                                     bool needAlphaBlend)
 {
@@ -261,26 +260,13 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 
 
-    VkRect2D scissor;
-    scissor.offset = { 0, 0 };
-    scissor.extent = {(uint32_t)(config.ScreenWidth * config.screenScaleX),
-                      (uint32_t)(config.ScreenHeight * config.screenScaleY)};
-
-    VkViewport viewport;
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = config.ScreenWidth * config.screenScaleX;
-    viewport.height = config.ScreenHeight * config.screenScaleY;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-
     VkPipelineViewportStateCreateInfo viewportState = {};
     viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewportState.pNext = nullptr;
     viewportState.viewportCount = 1;
-    viewportState.pViewports = &viewport;
+    viewportState.pViewports = nullptr;
     viewportState.scissorCount = 1;
-    viewportState.pScissors = &scissor;
+    viewportState.pScissors = nullptr;
 
     VkPipelineRasterizationStateCreateInfo rasterizer = {};
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -339,7 +325,19 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
     depthStencilInfo.stencilTestEnable = VK_FALSE; // Disable stencil testing
     depthStencilInfo.minDepthBounds = 0.0f; // Optional
     depthStencilInfo.maxDepthBounds = 1.0f; // Optional
-    
+
+
+    const VkDynamicState dynamicStates[2] = {
+            VK_DYNAMIC_STATE_VIEWPORT,
+            VK_DYNAMIC_STATE_SCISSOR,
+    };
+    const VkPipelineDynamicStateCreateInfo dynamicInfo = {
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .dynamicStateCount = 2,
+            .pDynamicStates = dynamicStates,
+    };
 
     VkGraphicsPipelineCreateInfo pipelineInfo = {};
     pipelineInfo.sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -353,6 +351,7 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
     pipelineInfo.pMultisampleState   = &multisampling;
     pipelineInfo.pColorBlendState    = &colorBlending;
     pipelineInfo.layout              = vkPipelineLayout;
+    pipelineInfo.pDynamicState       = &dynamicInfo;
     pipelineInfo.renderPass          = *pass;
     pipelineInfo.subpass = 0;
     pipelineInfo.pDepthStencilState = &depthStencilInfo;

@@ -2887,7 +2887,7 @@ void Game::renderFBO(bool useVulkan)
 //-------------------------------------
 void Game::DrawTitleScreen()
 {
-    //pics.draw(-1, 320, 180, 0, true, 100, 100);
+    //pics.draw(-1, 320, 180, 0, true, 640, 360);
     pics.draw(0, 320, 180, 0, true);
     pics.draw(16, 0, 0, 0, false, 1.f, 1.f, 0.f, COLOR(1.f, 1, 1, 1.f), COLOR(1.f, 1.f, 1.f, 1.f));
 
@@ -4206,7 +4206,7 @@ void Game::LoadShader(ShaderProgram* shader, const char* name, bool useVulkan, b
 #endif
 
         shader->attach(frag);
-        shader->buildVkPipeline(vulkanDevice, vkPhysicalDevice, vkRenderPass, sys, useUVS, needAlphaBlend);
+        shader->buildVkPipeline(vulkanDevice, vkPhysicalDevice, vkRenderPass, useUVS, needAlphaBlend);
     }
 
 }

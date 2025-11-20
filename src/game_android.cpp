@@ -169,7 +169,7 @@ static int engine_init_display(struct engine* engine) {
 
         vkCreateAndroidSurfaceKHR(*instance, &create_info, nullptr, &surface);
 
-        if (!engine->vk->init(surface, width, height))
+        if (!engine->vk->init(surface))
         {
             vkDestroySurfaceKHR(*instance, surface, nullptr);
             vkDestroyInstance(*instance, nullptr);
@@ -273,6 +273,7 @@ static void engine_draw_frame(struct engine* engine)
                 engine->vk->beginCommandBuffer();
 
                 engine->game->renderToFBO(true);
+
                 engine->vk->beginRenderPass({0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0});
                 engine->game->renderFBO(true);
 

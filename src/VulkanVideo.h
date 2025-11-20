@@ -23,42 +23,12 @@
 class VulkanVideo
 {
 
-    std::vector<VkFence>         vkFences;
-    std::vector<VkCommandBuffer> vkCommandBuffers;
-    std::vector<VkImage>         vkSwapchainImages;
-    std::vector<VkImageView>     vkSwapchainImageViews;
-    std::vector<VkFramebuffer>   vkSwapchainFramebuffers;
-    VkDevice                     vkDevice;
-    VkPhysicalDevice             vkPhysicalDevice;
-    VkInstance                   vkInstance;
-    VkImage                      vkImage;
-
-    VkImage                      depthImage;
-    VkDeviceMemory               depthImageMemory;
-
-
-    VkSwapchainKHR               vkSwapchain;
-    VkCommandBuffer              vkCommandBuffer;
-    VkSurfaceFormatKHR           vkSurfaceFormat;
-    VkSurfaceCapabilitiesKHR     vkSurfaceCapabilities;
-    VkExtent2D                   vkSwapchainSize;
-    VkFormat                     vkDepthFormat;
-    VkRenderPass                 vkRenderPass;
-    VkCommandPool                vkCommandPool;
-    VkSemaphore                  vkImageAvailableSemaphore;
-    VkSemaphore                  vkRenderingFinishedSemaphore;
-    VkQueue                      vkGraphicsQueue;
-    VkQueue                      vkPresentQueue;
-    uint32_t                     vkFrameIndex;
-    uint32_t                     vkSwapchainImageCount;
-
-    const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
-
+    
 
 public:
 
     VkInstance*       createInstance(uint32_t extensionCount, const char** extensionNames);
-    bool              init(VkSurfaceKHR& surface, uint32_t width, uint32_t height);
+    bool              init(VkSurfaceKHR& surface);
     void              getNextSwapImage();
     void              beginCommandBuffer();
     void              resetCommandBuffer();
@@ -103,11 +73,51 @@ public:
                                        VkFormat format,
                                        VkImageAspectFlags aspectFlags);
 private:
+
+    bool               buildFrameBuffers();
+
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR   chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
     VkBool32           getSupportedDepthFormat(VkPhysicalDevice physicalDevice, VkFormat *depthFormat);
     void createSemaphore(VkSemaphore *semaphore);
 
+
+
+    
+    std::vector<VkFence>         vkFences;
+    std::vector<VkCommandBuffer> vkCommandBuffers;
+    std::vector<VkImage>         vkSwapchainImages;
+    std::vector<VkImageView>     vkSwapchainImageViews;
+    std::vector<VkFramebuffer>   vkSwapchainFramebuffers;
+    VkImageView                  vkDepthImageView;
+    VkDevice                     vkDevice;
+    VkPhysicalDevice             vkPhysicalDevice;
+    VkInstance                   vkInstance;
+
+    VkImage                      depthImage;
+    VkDeviceMemory               depthImageMemory;
+
+
+    VkSwapchainKHR               vkSwapchain;
+    VkCommandBuffer              vkCommandBuffer;
+    VkSurfaceFormatKHR           vkSurfaceFormat;
+    VkSurfaceCapabilitiesKHR     vkSurfaceCapabilities;
+    VkFormat                     vkDepthFormat;
+    VkRenderPass                 vkRenderPass;
+    VkCommandPool                vkCommandPool;
+    VkSemaphore                  vkImageAvailableSemaphore;
+    VkSemaphore                  vkRenderingFinishedSemaphore;
+    VkQueue                      vkGraphicsQueue;
+    VkQueue                      vkPresentQueue;
+    uint32_t                     vkFrameIndex;
+    uint32_t                     vkSwapchainImageCount;
+
+    uint32_t                     surfaceWidth;
+    uint32_t                     surfaceHeight;
+    uint32_t                     imageWidth;
+    uint32_t                     imageHeight;
+
+    const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
 
     static const char *toStringMessageSeverity(VkDebugUtilsMessageSeverityFlagBitsEXT s) {
@@ -172,7 +182,6 @@ private:
                                  VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
         createInfo.pfnUserCallback = debugCallback;
     }
-
 
 
 

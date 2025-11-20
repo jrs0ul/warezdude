@@ -73,11 +73,8 @@ VkInstance* VulkanVideo::createInstance(uint32_t extensionCount, const char** ex
 
 //================
 
-bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
+bool VulkanVideo::init(VkSurfaceKHR& surface/*, uint32_t width, uint32_t height*/)
 {
-#ifdef __ANDROID__
-    LOGI("Attempting to init %u x %u surface...", width, height);
-#endif
     uint32_t physicalDeviceCount;
     vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, nullptr);
     std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
@@ -200,6 +197,15 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
     //Let's create a swap chain
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vkPhysicalDevice, surface, &vkSurfaceCapabilities);
 
+    surfaceWidth  = imageWidth = vkSurfaceCapabilities.currentExtent.width;
+    surfaceHeight =  imageHeight = vkSurfaceCapabilities.currentExtent.height;
+
+    if (vkSurfaceCapabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
+        vkSurfaceCapabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR)
+    {
+        std::swap(imageWidth, imageHeight);
+    }
+
     std::vector<VkSurfaceFormatKHR> surfaceFormats;
     uint32_t formatCount;
     vkGetPhysicalDeviceSurfaceFormatsKHR(vkPhysicalDevice, surface, &formatCount, nullptr);
@@ -223,16 +229,8 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
     vkSurfaceFormat = chooseSwapSurfaceFormat(surfaceFormats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(presentModes);
 
-    width = CLAMP((uint32_t)width,
-            vkSurfaceCapabilities.minImageExtent.width,
-            vkSurfaceCapabilities.maxImageExtent.width);
 
-    height = CLAMP((uint32_t)height,
-                   vkSurfaceCapabilities.minImageExtent.height,
-                   vkSurfaceCapabilities.maxImageExtent.height);
 
-    vkSwapchainSize.width = width;
-    vkSwapchainSize.height = height;
 
     uint32_t imageCount = vkSurfaceCapabilities.minImageCount + 1;
 
@@ -240,7 +238,7 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
     {
         imageCount = vkSurfaceCapabilities.maxImageCount;
     }
-
+    
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType   = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface = surface;
@@ -248,9 +246,12 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
     createInfo.minImageCount    = vkSurfaceCapabilities.minImageCount;
     createInfo.imageFormat      = vkSurfaceFormat.format;
     createInfo.imageColorSpace  = vkSurfaceFormat.colorSpace;
-    createInfo.imageExtent      = vkSwapchainSize;
+    createInfo.imageExtent      = {.width = imageWidth, .height = imageHeight};
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+    createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+
 
     uint32_t queueFamilyIndices[] = {graphicsQueueIndex, presentQueueIndex};
 
@@ -265,7 +266,7 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     }
 
-    createInfo.preTransform   = vkSurfaceCapabilities.currentTransform;
+    createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     //Let's find what kind of composite alpha the device supports
@@ -285,10 +286,8 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
         }
     }
     //----
-
     createInfo.presentMode    = presentMode;
     createInfo.clipped        = VK_TRUE;
-
 
     if (vkCreateSwapchainKHR(vkDevice, &createInfo, nullptr, &vkSwapchain) != VK_SUCCESS)
     {
@@ -298,7 +297,6 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
     vkGetSwapchainImagesKHR(vkDevice, vkSwapchain, &vkSwapchainImageCount, nullptr);
     vkSwapchainImages.resize(vkSwapchainImageCount);
     vkGetSwapchainImagesKHR(vkDevice, vkSwapchain, &vkSwapchainImageCount, vkSwapchainImages.data());
-
 
     vkSwapchainImageViews.resize(vkSwapchainImages.size());
 
@@ -314,8 +312,8 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
 
     VulkanVideo::createImage(vkDevice,
             vkPhysicalDevice,
-            vkSwapchainSize.width,
-            vkSwapchainSize.height,
+            imageWidth,
+            imageHeight,
             vkDepthFormat,
             VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
@@ -323,11 +321,10 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
             depthImage,
             depthImageMemory);
 
-    VkImageView depthImageView = VulkanVideo::createImageView(vkDevice,
-                                                              depthImage,
-                                                              vkDepthFormat,
-                                                              VK_IMAGE_ASPECT_DEPTH_BIT);
-
+    vkDepthImageView = VulkanVideo::createImageView(vkDevice,
+                                                    depthImage,
+                                                    vkDepthFormat,
+                                                    VK_IMAGE_ASPECT_DEPTH_BIT);
 
     //render pass
 
@@ -393,30 +390,10 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
 
     vkCreateRenderPass(vkDevice, &renderPassInfo, nullptr, &vkRenderPass);
 
-    //framebuffers
-    vkSwapchainFramebuffers.resize(vkSwapchainImageViews.size());
-
-    for (size_t i = 0; i < vkSwapchainImageViews.size(); i++)
+    if (!buildFrameBuffers())
     {
-        std::vector<VkImageView> attachments(2);
-        attachments[0] = vkSwapchainImageViews[i];
-        attachments[1] = depthImageView;
-
-        VkFramebufferCreateInfo framebufferInfo = {};
-        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = vkRenderPass;
-        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-        framebufferInfo.pAttachments = attachments.data();
-        framebufferInfo.width = vkSwapchainSize.width;
-        framebufferInfo.height = vkSwapchainSize.height;
-        framebufferInfo.layers = 1;
-
-        if (vkCreateFramebuffer(vkDevice, &framebufferInfo, nullptr, &vkSwapchainFramebuffers[i]) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create framebuffer!");
-        }
+        return false;
     }
-
     //command pool
 
     VkCommandPoolCreateInfo poolCreateInfo = {};
@@ -442,10 +419,10 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
 
     for(uint32_t i = 0; i < vkSwapchainImageCount; i++)
     {
-        VkFenceCreateInfo createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-        vkCreateFence(vkDevice, &createInfo, nullptr, &vkFences[i]);
+        VkFenceCreateInfo fenceCreateInfo = {};
+        fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+        vkCreateFence(vkDevice, &fenceCreateInfo, nullptr, &vkFences[i]);
     }
 
     return true;
@@ -453,6 +430,36 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
 }
 
 //=================
+
+
+bool VulkanVideo::buildFrameBuffers()
+{
+
+    vkSwapchainFramebuffers.resize(vkSwapchainImageViews.size());
+
+    for (size_t i = 0; i < vkSwapchainImageViews.size(); i++)
+    {
+        std::vector<VkImageView> attachments = {vkSwapchainImageViews[i], vkDepthImageView};
+
+        VkFramebufferCreateInfo framebufferInfo = {};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = vkRenderPass;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.width = imageWidth;
+        framebufferInfo.height = imageHeight;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(vkDevice, &framebufferInfo, nullptr, &vkSwapchainFramebuffers[i]) != VK_SUCCESS)
+        {
+            return false;
+        }
+    }
+
+    return true;
+
+}
+
 
 void VulkanVideo::getNextSwapImage()
 {
@@ -467,7 +474,6 @@ void VulkanVideo::getNextSwapImage()
     vkResetFences(vkDevice, 1, &vkFences[vkFrameIndex]);
 
     vkCommandBuffer = vkCommandBuffers[vkFrameIndex];
-    vkImage = vkSwapchainImages[vkFrameIndex];
 
 }
 
@@ -501,7 +507,7 @@ void VulkanVideo::beginRenderPass(VkClearColorValue clearColor, VkClearDepthSten
     render_pass_info.renderPass        = vkRenderPass;
     render_pass_info.framebuffer       = vkSwapchainFramebuffers[vkFrameIndex];
     render_pass_info.renderArea.offset = {0, 0};
-    render_pass_info.renderArea.extent = vkSwapchainSize;
+    render_pass_info.renderArea.extent = {.width = imageWidth, .height = imageHeight};
 
     std::vector<VkClearValue> clearValues(2);
     clearValues[0].color = clearColor;
@@ -511,6 +517,23 @@ void VulkanVideo::beginRenderPass(VkClearColorValue clearColor, VkClearDepthSten
     render_pass_info.pClearValues = clearValues.data();
 
     vkCmdBeginRenderPass(vkCommandBuffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+    const VkViewport viewport = {
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = (float)imageWidth,
+            .height = (float)imageHeight,
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f
+    };
+    vkCmdSetViewport(vkCommandBuffer, 0, 1, &viewport);
+
+    const VkRect2D scissor = {
+            .offset = {.x = 0, .y = 0},
+            .extent = {.width = imageWidth,
+                       .height = imageHeight}
+    };
+    vkCmdSetScissor(vkCommandBuffer, 0, 1, &scissor);
 }
 
 

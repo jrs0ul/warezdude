@@ -11,7 +11,6 @@
 
 #include "Shader.h"
 
-#include "SysConfig.h"
 
 
 class ShaderProgram
@@ -48,7 +47,6 @@ public:
     void buildVkPipeline(VkDevice* device,
                          VkPhysicalDevice* physical,
                          VkRenderPass* pass,
-                         SystemConfig& config,
                          bool needUvs,
                          bool needAlphaBlend);
 

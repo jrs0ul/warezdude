@@ -146,6 +146,23 @@ void RenderTexture::bind(VkCommandBuffer* vkCmd)
         render_pass_info.pClearValues = clearValues.data();
 
         vkCmdBeginRenderPass(*vkCmd, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+        const VkViewport viewport = {
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = (float)_width,
+            .height = (float)_height,
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f
+        };
+        vkCmdSetViewport(*vkCmd, 0, 1, &viewport);
+
+        const VkRect2D scissor = {
+            .offset = {.x = 0, .y = 0},
+            .extent = {.width = _width,
+                .height = _height}
+        };
+        vkCmdSetScissor(*vkCmd, 0, 1, &scissor);
     }
 
 }
