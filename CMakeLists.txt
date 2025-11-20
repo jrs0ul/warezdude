@@ -4,6 +4,8 @@ project(CartridgeQuest LANGUAGES CXX)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR})
 
+set(VULKAN_VERSION "vulkan1.0")
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
@@ -64,49 +66,49 @@ add_executable(CartridgeQuest
 
 add_custom_command(
     OUTPUT ${CMAKE_SOURCE_DIR}/shaders/justcolor_vert.spv
-    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_justcolor.vert --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/justcolor_vert.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_justcolor.vert --target-env ${VULKAN_VERSION} -o ${CMAKE_SOURCE_DIR}/shaders/justcolor_vert.spv
     DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_justcolor.vert
 )
 
 add_custom_command(
     OUTPUT ${CMAKE_SOURCE_DIR}/shaders/justcolor_frag.spv
-    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_justcolor.frag --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/justcolor_frag.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_justcolor.frag --target-env ${VULKAN_VERSION} -o ${CMAKE_SOURCE_DIR}/shaders/justcolor_frag.spv
     DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_justcolor.frag
 )
 
 add_custom_command(
     OUTPUT ${CMAKE_SOURCE_DIR}/shaders/default_vert.spv
-    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_default.vert --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/default_vert.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_default.vert --target-env ${VULKAN_VERSION} -o ${CMAKE_SOURCE_DIR}/shaders/default_vert.spv
     DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_default.vert
 )
 
 add_custom_command(
     OUTPUT ${CMAKE_SOURCE_DIR}/shaders/default_frag.spv
-    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_default.frag --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/default_frag.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_default.frag --target-env ${VULKAN_VERSION} -o ${CMAKE_SOURCE_DIR}/shaders/default_frag.spv
     DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_default.frag
 )
 
 add_custom_command(
     OUTPUT ${CMAKE_SOURCE_DIR}/shaders/filmGrain_vert.spv
-    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_filmGrain.vert --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/filmGrain_vert.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_filmGrain.vert --target-env ${VULKAN_VERSION} -o ${CMAKE_SOURCE_DIR}/shaders/filmGrain_vert.spv
     DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_filmGrain.vert
 )
 
 add_custom_command(
     OUTPUT ${CMAKE_SOURCE_DIR}/shaders/filmGrain_frag.spv
-    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_filmGrain.frag --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/filmGrain_frag.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_filmGrain.frag --target-env ${VULKAN_VERSION} -o ${CMAKE_SOURCE_DIR}/shaders/filmGrain_frag.spv
     DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_filmGrain.frag
 )
 
 add_custom_command(
     OUTPUT ${CMAKE_SOURCE_DIR}/shaders/scanlines_vert.spv
-    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_scanlines.vert --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/scanlines_vert.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_scanlines.vert --target-env ${VULKAN_VERSION} -o ${CMAKE_SOURCE_DIR}/shaders/scanlines_vert.spv
     DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_scanlines.vert
 )
 
 add_custom_command(
     OUTPUT ${CMAKE_SOURCE_DIR}/shaders/scanlines_frag.spv
-    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_scanlines.frag --target-env vulkan1.1 -o ${CMAKE_SOURCE_DIR}/shaders/scanlines_frag.spv
+    COMMAND glslangValidator ${CMAKE_SOURCE_DIR}/shaders/vk_scanlines.frag --target-env ${VULKAN_VERSION} -o ${CMAKE_SOURCE_DIR}/shaders/scanlines_frag.spv
     DEPENDS ${CMAKE_SOURCE_DIR}/shaders/vk_scanlines.frag
 )
 

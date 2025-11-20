@@ -31,7 +31,7 @@ VkInstance* VulkanVideo::createInstance(uint32_t extensionCount, const char** ex
 
     VkApplicationInfo appInfo{};
     appInfo.pEngineName = "Dissarray";
-    appInfo.apiVersion = VK_API_VERSION_1_1;
+    appInfo.apiVersion = VK_API_VERSION_1_0;
 
 
      VkInstanceCreateInfo instanceInfo = {
@@ -341,6 +341,7 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
     attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     attachments[0].initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
     attachments[0].finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    attachments[0].flags = 0;
 
     attachments[1].format         = vkDepthFormat;
     attachments[1].samples        = VK_SAMPLE_COUNT_1_BIT;
@@ -350,6 +351,7 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
     attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     attachments[1].initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
     attachments[1].finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    attachments[1].flags = 0;
 
     VkAttachmentReference colorReference = {};
     colorReference.attachment = 0;

@@ -2887,6 +2887,7 @@ void Game::renderFBO(bool useVulkan)
 //-------------------------------------
 void Game::DrawTitleScreen()
 {
+    //pics.draw(-1, 320, 180, 0, true, 100, 100);
     pics.draw(0, 320, 180, 0, true);
     pics.draw(16, 0, 0, 0, false, 1.f, 1.f, 0.f, COLOR(1.f, 1, 1, 1.f), COLOR(1.f, 1.f, 1.f, 1.f));
 
@@ -4240,7 +4241,6 @@ void Game::init(bool useVulkan)
    VkCommandBuffer*  vkCmd = vk->getCommandBuffer();
    VkDevice*         vulkanDevice = vk->getDevice();
    VkPhysicalDevice* vkPhysicalDevice = vk->getPhysicalDevice();
-   uint32_t          vkSwapChainImageCount = vk->getSwapChainImageCount();
    VkCommandPool*    vkCommandPool = vk->getCommandPool();
    VkQueue*          vkGraphicsQueue = vk->getGraphicsQueue();
 
@@ -4276,8 +4276,7 @@ void Game::init(bool useVulkan)
                          0,
                          useVulkan,
                          vulkanDevice,
-                         vkPhysicalDevice,
-                         vkSwapChainImageCount);
+                         vkPhysicalDevice);
 
 
     MatrixOrtho(0.0, ScreenWidth, ScreenHeight, 0.0, -400, 400, OrthoMatrix);
@@ -4320,7 +4319,6 @@ void Game::init(bool useVulkan)
 #endif
 
     std::vector<MenuOption> menu;
-    //MenuOption o1 = {"Single Player", 0, 0};
     menu.push_back({"Single Player", 0, 0});
     menu.push_back({"Network Game", 0, 1});
     menu.push_back({"Collection", 0, 2});

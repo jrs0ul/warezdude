@@ -167,8 +167,7 @@ static int engine_init_display(struct engine* engine) {
         engine->width = (int32_t)width;
         engine->height = (int32_t)height;
 
-        vkCreateAndroidSurfaceKHR(*instance, &create_info,
-                                           nullptr /* pAllocator */, &surface);
+        vkCreateAndroidSurfaceKHR(*instance, &create_info, nullptr, &surface);
 
         if (!engine->vk->init(surface, width, height))
         {
@@ -296,14 +295,16 @@ static void engine_draw_frame(struct engine* engine)
  */
 static void engine_term_display(struct engine* engine)
 {
-    eglMakeCurrent(engine->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-
-    if (engine->surface != EGL_NO_SURFACE)
+    if (!USE_VULKAN)
     {
-        eglDestroySurface(engine->display, engine->surface);
-    }
+        eglMakeCurrent(engine->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
-    engine->surface = EGL_NO_SURFACE;
+        if (engine->surface != EGL_NO_SURFACE) {
+            eglDestroySurface(engine->display, engine->surface);
+        }
+
+        engine->surface = EGL_NO_SURFACE;
+    }
     engine->animating = 0;
 
 }

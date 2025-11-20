@@ -14,9 +14,7 @@ void RenderTexture::create(uint32_t width,
                            uint8_t filter,
                            bool isVulkan,
                            VkDevice* device,
-                           VkPhysicalDevice* physical,
-                           size_t vkSwapChainImageCount
-                           )
+                           VkPhysicalDevice* physical)
 {
     useVulkan = isVulkan;
     _width = width;
@@ -48,23 +46,24 @@ void RenderTexture::create(uint32_t width,
                               *physical,
                               _width,
                               _height,
-                              VK_FORMAT_R8G8B8A8_SRGB,
+                              VK_FORMAT_R8G8B8A8_UNORM,
                               VK_IMAGE_TILING_OPTIMAL,
-                              VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+
                               VK_IMAGE_USAGE_SAMPLED_BIT |
                               VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+
                               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                               vkImage,
                               vkTextureMemory);
 
         vkImageView = VulkanVideo::createImageView(*device,
                                                 vkImage,
-                                                VK_FORMAT_R8G8B8A8_SRGB,
+                                                VK_FORMAT_R8G8B8A8_UNORM,
                                                 VK_IMAGE_ASPECT_COLOR_BIT);
 
 
         VkAttachmentDescription colorAttachment{};
-        colorAttachment.format         = VK_FORMAT_R8G8B8A8_SRGB;
+        colorAttachment.format         = VK_FORMAT_R8G8B8A8_UNORM;
         colorAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
         colorAttachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
@@ -92,11 +91,11 @@ void RenderTexture::create(uint32_t width,
         VkSubpassDependency dependency{};
         dependency.srcSubpass    = VK_SUBPASS_EXTERNAL;
         dependency.dstSubpass    = 0;
-        dependency.srcStageMask  = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependency.srcStageMask  = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;//VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
         dependency.srcAccessMask = VK_ACCESS_NONE_KHR;
-        dependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+        dependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;/*VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
                                    VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;*/
 
         dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
                                    VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
@@ -105,23 +104,20 @@ void RenderTexture::create(uint32_t width,
 
         vkCreateRenderPass(*device, &renderPassInfo, nullptr, &vkRenderPass);
         //---
-        vkSwapChainFramebuffers.resize(vkSwapChainImageCount);
 
-        for (size_t i = 0; i < vkSwapChainImageCount; i++)
-        {
-            VkImageView attachments[] = {vkImageView};
+        VkImageView attachments[] = {vkImageView};
 
-            VkFramebufferCreateInfo framebufferInfo{};
-            framebufferInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass      = vkRenderPass;
-            framebufferInfo.attachmentCount = 1;
-            framebufferInfo.pAttachments    = attachments;
-            framebufferInfo.width           = _width;
-            framebufferInfo.height          = _height;
-            framebufferInfo.layers          = 1;
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass      = vkRenderPass;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments    = attachments;
+        framebufferInfo.width           = _width;
+        framebufferInfo.height          = _height;
+        framebufferInfo.layers          = 1;
 
-            vkCreateFramebuffer(*device, &framebufferInfo, nullptr, &vkSwapChainFramebuffers[i]);
-        }
+        vkCreateFramebuffer(*device, &framebufferInfo, nullptr, &vkFB);
+
     }
 }
 
@@ -138,7 +134,7 @@ void RenderTexture::bind(VkCommandBuffer* vkCmd)
         VkRenderPassBeginInfo render_pass_info = {};
         render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         render_pass_info.renderPass        = vkRenderPass;
-        render_pass_info.framebuffer       = vkSwapChainFramebuffers[0];
+        render_pass_info.framebuffer       = vkFB;
         render_pass_info.renderArea.offset = {0, 0};
         render_pass_info.renderArea.extent.width = _width;
         render_pass_info.renderArea.extent.height = _height;

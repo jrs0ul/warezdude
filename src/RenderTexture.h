@@ -33,8 +33,7 @@ public:
                 uint8_t filter,
                 bool isVulkan = false,
                 VkDevice* device = nullptr,
-                VkPhysicalDevice* physical = nullptr,
-                size_t vkSwapChainImageCount = 0);
+                VkPhysicalDevice* physical = nullptr);
 
     void bind(VkCommandBuffer* vkCmd = 0);
     void unbind(VkCommandBuffer* vkCmd = 0);
@@ -47,7 +46,7 @@ public:
 
 private:
 
-    std::vector<VkFramebuffer>   vkSwapChainFramebuffers;
+    VkFramebuffer                vkFB;
     VkRenderPass                 vkRenderPass;
     VkImage                      vkImage;
     VkImageView                  vkImageView;
