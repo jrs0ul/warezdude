@@ -400,7 +400,11 @@ bool VulkanVideo::init(VkSurfaceKHR& surface/*, uint32_t width, uint32_t height*
     poolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
     poolCreateInfo.queueFamilyIndex = graphicsQueueIndex;
-    vkCreateCommandPool(vkDevice, &poolCreateInfo, nullptr, &vkCommandPool);
+
+    if (vkCreateCommandPool(vkDevice, &poolCreateInfo, nullptr, &vkCommandPool) != VK_SUCCESS)
+    {
+        return false;
+    }
 
     //command buffers
     VkCommandBufferAllocateInfo allocateInfo = {};
@@ -410,8 +414,11 @@ bool VulkanVideo::init(VkSurfaceKHR& surface/*, uint32_t width, uint32_t height*
     allocateInfo.commandBufferCount = vkSwapchainImageCount;
 
     vkCommandBuffers.resize(vkSwapchainImageCount);
-    vkAllocateCommandBuffers(vkDevice, &allocateInfo, vkCommandBuffers.data());
-
+    if (vkAllocateCommandBuffers(vkDevice, &allocateInfo, vkCommandBuffers.data()) != VK_SUCCESS)
+    {
+        return false;
+    }
+    //---
     createSemaphore(&vkImageAvailableSemaphore);
     createSemaphore(&vkRenderingFinishedSemaphore);
 
@@ -463,6 +470,10 @@ bool VulkanVideo::buildFrameBuffers()
 
 void VulkanVideo::getNextSwapImage()
 {
+
+    vkWaitForFences(vkDevice, 1, &vkFences[vkFrameIndex], VK_TRUE, UINT64_MAX);
+    vkResetFences(vkDevice, 1, &vkFences[vkFrameIndex]);
+
     vkAcquireNextImageKHR(vkDevice,
                           vkSwapchain,
                           UINT64_MAX,
@@ -470,8 +481,6 @@ void VulkanVideo::getNextSwapImage()
                           VK_NULL_HANDLE,
                           &vkFrameIndex);
 
-    vkWaitForFences(vkDevice, 1, &vkFences[vkFrameIndex], VK_FALSE, UINT64_MAX);
-    vkResetFences(vkDevice, 1, &vkFences[vkFrameIndex]);
 
     vkCommandBuffer = vkCommandBuffers[vkFrameIndex];
 
