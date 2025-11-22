@@ -384,58 +384,35 @@ bool SpriteBatcher::load(const char* list, AAssetManager* assman,
         layoutInfo.bindingCount = 1;
         layoutInfo.pBindings = &uvsLayoutBinding;
 
-        if (vkCreateDescriptorSetLayout(*vkDevice, &layoutInfo, nullptr, &vkDescriptorSetLayout) != VK_SUCCESS) 
+        if (vkCreateDescriptorSetLayout(*vkDevice, &layoutInfo, nullptr, &vkDescriptorSetLayout) != VK_SUCCESS)
         {
-            throw std::runtime_error("failed to create descriptor set layout!");
+            printf("failed to create descriptor set layout!");
+            return false;
         }
 
         VkDescriptorPoolSize poolSize{};
         poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSize.descriptorCount = (vkTextures.size() + 1) * 6;
+        poolSize.descriptorCount = MAX_TEXTURES;
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = 1;
         poolInfo.pPoolSizes = &poolSize;
-        poolInfo.maxSets = vkTextures.size() + 1;
+        poolInfo.maxSets = MAX_TEXTURES;
 
         if (vkCreateDescriptorPool(*vkDevice, &poolInfo, nullptr, &vkDescriptorPool) != VK_SUCCESS) 
         {
-            throw std::runtime_error("failed to create descriptor pool!");
+            printf("failed to create descriptor pool!");
+            return false;
         }
 
 
         for (uint32_t i = 0; i < vkTextures.size() + 1; ++i)
         {
-            createVulkanDescriptorSet(vkDevice);
-
-            if (i >= vkTextures.size())
-            {
-                continue;
-            }
-
-            VkDescriptorImageInfo imageInfo{};
-            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = vkTextures[i].vkImageView;
-            imageInfo.sampler = vkTextures[i].vkSampler;
-
-            VkWriteDescriptorSet ds{};
-            ds.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            ds.dstSet = vkTextureDescriptorSets[i];
-            ds.dstBinding = 0;
-            ds.dstArrayElement = 0;
-            ds.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            ds.descriptorCount = 1;
-            ds.pImageInfo = &imageInfo;
-
-            vkUpdateDescriptorSets(*vkDevice, 1, &ds, 0, nullptr);
-
+            createVulkanDescriptorSet(vkDevice, i);
         }
 
-
     }
-
-
 
     return true;
 }
@@ -1249,28 +1226,18 @@ void SpriteBatcher::attachTexture(VulkanTexture& tex, unsigned long index,
 
     vkTextures.push_back(tex);
 
-    VkDescriptorImageInfo imageInfo{};
-    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageInfo.imageView = vkTextures[index].vkImageView;
-    imageInfo.sampler = vkTextures[index].vkSampler;
-
-    VkWriteDescriptorSet ds{};
-    ds.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    ds.dstSet = vkTextureDescriptorSets[index];
-    ds.dstBinding = 0;
-    ds.dstArrayElement = 0;
-    ds.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    ds.descriptorCount = 1;
-    ds.pImageInfo = &imageInfo;
-
-    vkUpdateDescriptorSets(*device, 1, &ds, 0, nullptr);
-
+    createVulkanDescriptorSet(device, index);
 
 
 }
 //--------------------------------
-void SpriteBatcher::createVulkanDescriptorSet(VkDevice* vkDevice)
+void SpriteBatcher::createVulkanDescriptorSet(VkDevice* vkDevice, uint32_t index)
 {
+    if (index >= vkTextures.size())
+    {
+        return;
+    }
+
 
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -1288,6 +1255,22 @@ void SpriteBatcher::createVulkanDescriptorSet(VkDevice* vkDevice)
     }
 
     vkTextureDescriptorSets.push_back(vkDS);
+
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfo.imageView = vkTextures[index].vkImageView;
+    imageInfo.sampler = vkTextures[index].vkSampler;
+
+    VkWriteDescriptorSet ds{};
+    ds.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    ds.dstSet = vkTextureDescriptorSets[index];
+    ds.dstBinding = 0;
+    ds.dstArrayElement = 0;
+    ds.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    ds.descriptorCount = 1;
+    ds.pImageInfo = &imageInfo;
+
+    vkUpdateDescriptorSets(*vkDevice, 1, &ds, 0, nullptr);
 
 }
 
@@ -1498,7 +1481,7 @@ bool SpriteBatcher::initContainer(const char* list,
         }
         else // VULKAN
         {
-                    }
+        }
 
     }
 

@@ -97,6 +97,8 @@ struct SpriteBatchItem{
 class SpriteBatcher
 {
 
+    const uint32_t MAX_TEXTURES = 255;
+
 
     std::vector<VulkanTexture>   vkTextures; // for vulkan
     std::vector<GLuint>          glTextures; // for opengl
@@ -107,14 +109,10 @@ class SpriteBatcher
     VkDescriptorPool             vkDescriptorPool;
     std::vector<VkDescriptorSet> vkTextureDescriptorSets;
 
-    bool isVulkan;
-public:
-    void drawVA(void * vertices, void * uvs, void *colors,
-                unsigned uvsCount, unsigned vertexCount,
-                ShaderProgram* shader,
-                bool useVulkan,
-                VkCommandBuffer* vkCmd = nullptr);
+    bool                         isVulkan;
 
+
+public:
     SpriteBatcher(){ isVulkan = false; }
 #ifndef __ANDROID__
     bool initContainer(const char* list,
@@ -204,13 +202,19 @@ public:
     VkDescriptorSetLayout* getVkDSL(){return &vkDescriptorSetLayout;}
 
 private:
+
+    void drawVA(void * vertices, void * uvs, void *colors,
+                unsigned uvsCount, unsigned vertexCount,
+                ShaderProgram* shader,
+                bool useVulkan,
+                VkCommandBuffer* vkCmd = nullptr);
     void resizeContainer(unsigned long index,
                          int twidth, int theight, int filter,
                          const char * name,
                          bool createTextures = true,
                          GLuint texname = 0);
 
-    void createVulkanDescriptorSet(VkDevice* vkDevice);
+    void createVulkanDescriptorSet(VkDevice* vkDevice, uint32_t index);
 
 };
 

@@ -1,9 +1,8 @@
 /*
  The Disarray 
- by jrs0ul(jrs0ul ^at^ gmail ^dot^ com) 2010
+ by jrs0ul(jrs0ul ^at^ gmail ^dot^ com) 2025
  -------------------------------------------
  some useful stuff
- mod. 2025.10.12
  */
 #ifndef _UTILS_H
 #define _UTILS_H
@@ -57,11 +56,10 @@ long      ReadFileData(const char* path, char ** data);
 #endif
 
 //Multiplatform function gets user home path.
-void GetHomePath(char * _homePath);
+void    GetHomePath(char * _homePath);
 
 //Multiplatform directory creation
 void    MakeDir(const char * path);
-
 
 void    GetFileList(const char * path, Lines& l);
 void    GetDirectoryList(const char* path, Lines& l);
