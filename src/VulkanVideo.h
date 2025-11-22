@@ -23,12 +23,12 @@
 class VulkanVideo
 {
 
-    
 
 public:
+    static const bool USE_VALIDATION_LAYER = false;
 
     VkInstance*       createInstance(uint32_t extensionCount, const char** extensionNames);
-    bool              init(VkSurfaceKHR& surface);
+    bool              init(VkSurfaceKHR& surface, bool useDepth = false);
     void              getNextSwapImage();
     void              beginCommandBuffer();
     void              resetCommandBuffer();
@@ -83,7 +83,7 @@ private:
 
 
 
-    
+
     std::vector<VkFence>         vkFences;
     std::vector<VkCommandBuffer> vkCommandBuffers;
     std::vector<VkImage>         vkSwapchainImages;
@@ -116,6 +116,7 @@ private:
     uint32_t                     surfaceHeight;
     uint32_t                     imageWidth;
     uint32_t                     imageHeight;
+    bool                         _useDepth;
 
     const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 

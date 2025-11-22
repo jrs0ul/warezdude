@@ -161,7 +161,7 @@ void Game::DrawSomeText()
         WriteText(20, 60, pics, 10,buf, 0.8f, 1);
     }
 
-    for (unsigned i = 0; i < mapas.mons.count(); ++i)
+    /*for (unsigned i = 0; i < mapas.mons.count(); ++i)
     {
         sprintf(buf, "mons[%d] id=%d x=%.2f hp=%d shot=%d", 
                 i, mapas.mons[i].id, mapas.mons[i].x, mapas.mons[i].getHP(), mapas.mons[i].shot);
@@ -173,7 +173,7 @@ void Game::DrawSomeText()
         sprintf(buf, "%d. %d frags", i, fragTable[i]);
         WriteText(20, (sys.ScreenHeight - 100) + 20 * i, pics, 10, buf, 0.8f, 0.8f);
 
-    }
+    }*/
 
 
 }

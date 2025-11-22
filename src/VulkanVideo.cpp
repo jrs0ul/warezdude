@@ -10,20 +10,24 @@
 
 VkInstance* VulkanVideo::createInstance(uint32_t extensionCount, const char** extensionNames)
 {
-    uint32_t layerCount;
-    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-
-    std::vector<VkLayerProperties> availableLayers(layerCount);
-    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-
     bool layerFound = false;
 
-    for (const char *layerName : validationLayers) {
-        layerFound = false;
-        for (const auto &layerProperties: availableLayers) {
-            if (strcmp(layerName, layerProperties.layerName) == 0) {
-                layerFound = true;
-                break;
+    if (USE_VALIDATION_LAYER)
+    {
+        uint32_t layerCount;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+        std::vector<VkLayerProperties> availableLayers(layerCount);
+        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+
+        for (const char *layerName : validationLayers) {
+            layerFound = false;
+            for (const auto &layerProperties: availableLayers) {
+                if (strcmp(layerName, layerProperties.layerName) == 0) {
+                    layerFound = true;
+                    break;
+                }
             }
         }
     }
@@ -73,8 +77,10 @@ VkInstance* VulkanVideo::createInstance(uint32_t extensionCount, const char** ex
 
 //================
 
-bool VulkanVideo::init(VkSurfaceKHR& surface/*, uint32_t width, uint32_t height*/)
+bool VulkanVideo::init(VkSurfaceKHR& surface, bool useDepth)
 {
+
+    _useDepth = useDepth;
     uint32_t physicalDeviceCount;
     vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, nullptr);
     std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
@@ -309,66 +315,82 @@ bool VulkanVideo::init(VkSurfaceKHR& surface/*, uint32_t width, uint32_t height*
                                                                 VK_IMAGE_ASPECT_COLOR_BIT);
     }
 
-    getSupportedDepthFormat(vkPhysicalDevice, &vkDepthFormat);
+    if (useDepth)
+    {
+        getSupportedDepthFormat(vkPhysicalDevice, &vkDepthFormat);
 
-    VulkanVideo::createImage(vkDevice,
-            vkPhysicalDevice,
-            imageWidth,
-            imageHeight,
-            vkDepthFormat,
-            VK_IMAGE_TILING_OPTIMAL,
-            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            depthImage,
-            depthImageMemory);
+        VulkanVideo::createImage(vkDevice,
+                                 vkPhysicalDevice,
+                                 imageWidth,
+                                 imageHeight,
+                                 vkDepthFormat,
+                                 VK_IMAGE_TILING_OPTIMAL,
+                                 VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                                 depthImage,
+                                 depthImageMemory);
 
-    vkDepthImageView = VulkanVideo::createImageView(vkDevice,
-                                                    depthImage,
-                                                    vkDepthFormat,
-                                                    VK_IMAGE_ASPECT_DEPTH_BIT);
+        vkDepthImageView = VulkanVideo::createImageView(vkDevice,
+                                                        depthImage,
+                                                        vkDepthFormat,
+                                                        VK_IMAGE_ASPECT_DEPTH_BIT);
+    }
 
     //render pass
 
-    std::vector<VkAttachmentDescription> attachments(2);
+    std::vector<VkAttachmentDescription> attachments;
 
-    attachments[0].format         = vkSurfaceFormat.format;
-    attachments[0].samples        = VK_SAMPLE_COUNT_1_BIT;
-    attachments[0].loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attachments[0].storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
-    attachments[0].stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachments[0].initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-    attachments[0].finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    attachments[0].flags = 0;
+    VkAttachmentDescription desc = {
+        .flags          = 0,
+        .format         = vkSurfaceFormat.format,
+        .samples        = VK_SAMPLE_COUNT_1_BIT,
+        .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+        .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
+        .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+        .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+    };
 
-    attachments[1].format         = vkDepthFormat;
-    attachments[1].samples        = VK_SAMPLE_COUNT_1_BIT;
-    attachments[1].loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attachments[1].storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
-    attachments[1].stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachments[1].initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-    attachments[1].finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    attachments[1].flags = 0;
+    attachments.push_back(desc);
+
+    if (useDepth)
+    {
+
+        VkAttachmentDescription depthDesc = {
+            .flags          = 0,
+            .format         = vkDepthFormat,
+            .samples        = VK_SAMPLE_COUNT_1_BIT,
+            .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+            .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
+            .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR,
+            .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+            .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        };
+
+        attachments.push_back(depthDesc);
+    }
 
     VkAttachmentReference colorReference = {};
     colorReference.attachment = 0;
     colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-    VkAttachmentReference depthReference = {};
-    depthReference.attachment = 1;
-    depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
     VkSubpassDescription subpassDescription = {};
     subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpassDescription.colorAttachmentCount = 1;
     subpassDescription.pColorAttachments = &colorReference;
-    subpassDescription.pDepthStencilAttachment = &depthReference;
-    subpassDescription.inputAttachmentCount = 0;
-    subpassDescription.pInputAttachments = nullptr;
-    subpassDescription.preserveAttachmentCount = 0;
-    subpassDescription.pPreserveAttachments = nullptr;
-    subpassDescription.pResolveAttachments = nullptr;
+
+    if (useDepth)
+    {
+        VkAttachmentReference depthReference = {};
+        depthReference.attachment = 0;
+        depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        subpassDescription.pDepthStencilAttachment = &depthReference;
+
+    }
 
     std::vector<VkSubpassDependency> dependencies(1);
 
@@ -447,7 +469,13 @@ bool VulkanVideo::buildFrameBuffers()
 
     for (size_t i = 0; i < vkSwapchainImageViews.size(); i++)
     {
-        std::vector<VkImageView> attachments = {vkSwapchainImageViews[i], vkDepthImageView};
+
+        std::vector<VkImageView> attachments = {vkSwapchainImageViews[i]};
+
+        if (_useDepth)
+        {
+            attachments.push_back(vkDepthImageView);
+        }
 
         VkFramebufferCreateInfo framebufferInfo = {};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -472,8 +500,7 @@ bool VulkanVideo::buildFrameBuffers()
 void VulkanVideo::getNextSwapImage()
 {
 
-    vkWaitForFences(vkDevice, 1, &vkFences[vkFrameIndex], VK_TRUE, UINT64_MAX);
-    vkResetFences(vkDevice, 1, &vkFences[vkFrameIndex]);
+
 
     vkAcquireNextImageKHR(vkDevice,
                           vkSwapchain,
@@ -481,6 +508,9 @@ void VulkanVideo::getNextSwapImage()
                           vkImageAvailableSemaphore,
                           VK_NULL_HANDLE,
                           &vkFrameIndex);
+
+    vkWaitForFences(vkDevice, 1, &vkFences[vkFrameIndex], VK_FALSE, UINT64_MAX);
+    vkResetFences(vkDevice, 1, &vkFences[vkFrameIndex]);
 
 
     vkCommandBuffer = vkCommandBuffers[vkFrameIndex];
