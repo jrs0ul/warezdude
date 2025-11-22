@@ -200,6 +200,7 @@ bool VulkanVideo::init(VkSurfaceKHR& surface/*, uint32_t width, uint32_t height*
     surfaceWidth  = imageWidth = vkSurfaceCapabilities.currentExtent.width;
     surfaceHeight =  imageHeight = vkSurfaceCapabilities.currentExtent.height;
 
+    //needed for android to rotate the view
     if (vkSurfaceCapabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
         vkSurfaceCapabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR)
     {

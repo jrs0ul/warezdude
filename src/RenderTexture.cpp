@@ -89,16 +89,13 @@ void RenderTexture::create(uint32_t width,
         renderPassInfo.pSubpasses      = &subpass;
 
         VkSubpassDependency dependency{};
-        dependency.srcSubpass    = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass    = 0;
-        dependency.srcStageMask  = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;//VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        dependency.srcAccessMask = VK_ACCESS_NONE_KHR;
-        dependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;/*VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-                                   VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;*/
-
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
-                                   VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependency.srcSubpass          = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass          = 0;
+        dependency.srcStageMask        = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dependency.srcAccessMask       = VK_ACCESS_NONE_KHR;
+        dependency.dstStageMask        = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstAccessMask       = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
+                                         VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies   = &dependency;
 
@@ -173,7 +170,7 @@ void RenderTexture::bind(VkCommandBuffer* vkCmd)
         const VkRect2D scissor = {
             .offset = {.x = 0, .y = 0},
             .extent = {.width = _width,
-                .height = _height}
+                       .height = _height}
         };
         vkCmdSetScissor(*vkCmd, 0, 1, &scissor);
     }

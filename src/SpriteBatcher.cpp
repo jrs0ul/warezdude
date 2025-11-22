@@ -286,12 +286,17 @@ bool SpriteBatcher::load(const char* list, AAssetManager* assman,
 
 
             VulkanTexture t{};
+#ifdef __ANDROID__
+            VkFormat textureFormat = newImg.bits > 24 ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R8G8B8_UNORM;
+#else
+            VkFormat textureFormat = newImg.bits > 24 ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8_SRGB;
+#endif
 
             VulkanVideo::createImage(*vkDevice,
                                   *physical,
                                   static_cast<uint32_t>(newImg.width),
                                   static_cast<uint32_t>(newImg.height),
-                                  newImg.bits > 24 ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8_SRGB,
+                                  textureFormat,
                                   VK_IMAGE_TILING_OPTIMAL,
                                   VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -328,7 +333,7 @@ bool SpriteBatcher::load(const char* list, AAssetManager* assman,
             viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             viewInfo.image = t.vkImage;
             viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            viewInfo.format = newImg.bits > 24 ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8_SRGB;
+            viewInfo.format = textureFormat;
             viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             viewInfo.subresourceRange.baseMipLevel = 0;
             viewInfo.subresourceRange.levelCount = 1;
