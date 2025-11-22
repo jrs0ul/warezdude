@@ -1,6 +1,9 @@
-/*    Copyright (C) 2025 by jrs0ul                                          *
- *   jrs0ul@gmail.com                                                      *
-*/
+/*
+ The Disarray 
+ by jrs0ul(jrs0ul ^at^ gmail ^dot^ com) 2025
+ -------------------------------------------
+ Shader program
+ */
 
 #include "ShaderProgram.h"
 #include <cstdio>
@@ -33,10 +36,8 @@ void ShaderProgram::destroy(VkDevice* vkDevice)
     {
         printf("Deleting vulkan pipeline, shaders and buffers...\n");
 
-        vkDestroyDescriptorPool(*vkDevice, vkDescriptorPool, nullptr);
         vkDestroyPipeline(*vkDevice, vkPipeline, nullptr);
         vkDestroyPipelineLayout(*vkDevice, vkPipelineLayout, nullptr);
-        vkDestroyDescriptorSetLayout(*vkDevice, vkDescriptorSetLayout, nullptr);
 
         for (uint32_t i = 0; i < vkShaderStages.size(); ++i)
         {
@@ -107,6 +108,7 @@ void ShaderProgram::link()
 void ShaderProgram::buildVkPipeline(VkDevice* device,
                                     VkPhysicalDevice* physical,
                                     VkRenderPass* pass,
+                                    VkDescriptorSetLayout* dsl,
                                     bool needUvs,
                                     bool needAlphaBlend)
 {
@@ -151,24 +153,6 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
     }
 
 
-
-    VkDescriptorSetLayoutBinding uvsLayoutBinding{};
-    uvsLayoutBinding.binding = 0;
-    uvsLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    uvsLayoutBinding.descriptorCount = 1;
-    uvsLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &uvsLayoutBinding;
-
-    if (vkCreateDescriptorSetLayout(*device, &layoutInfo, nullptr, &vkDescriptorSetLayout) != VK_SUCCESS) 
-    {
-        throw std::runtime_error("failed to create descriptor set layout!");
-    }
-
-
     VkPushConstantRange pushConstantRange = {};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushConstantRange.offset = 0;
@@ -181,8 +165,12 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
     pipelineLayoutInfo.pNext = nullptr;
     pipelineLayoutInfo.flags = 0;
 
-    pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &vkDescriptorSetLayout;
+    if (dsl)
+    {
+        pipelineLayoutInfo.pSetLayouts = dsl;
+    }
+
+    pipelineLayoutInfo.setLayoutCount = (dsl) ? 1 : 0;
 
     pipelineLayoutInfo.pushConstantRangeCount = 1;
     pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
@@ -365,36 +353,6 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
                                   &vkPipeline) != VK_SUCCESS)
     {
         printf("Failed to create a pipeline\n");
-    }
-
-
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSize.descriptorCount = 2;
-
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes = &poolSize;
-    poolInfo.maxSets = 2;
-
-    if (vkCreateDescriptorPool(*device, &poolInfo, nullptr, &vkDescriptorPool) != VK_SUCCESS) 
-    {
-        throw std::runtime_error("failed to create descriptor pool!");
-    }
-
-
-    VkDescriptorSetAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = vkDescriptorPool;
-    allocInfo.descriptorSetCount = 1;
-    allocInfo.pSetLayouts = &vkDescriptorSetLayout;
-
-    auto res = vkAllocateDescriptorSets(*device, &allocInfo, &vkDS);
-
-    if (res != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to allocate descriptor sets!");
     }
 
 

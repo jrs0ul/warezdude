@@ -118,6 +118,19 @@ void RenderTexture::create(uint32_t width,
 
         vkCreateFramebuffer(*device, &framebufferInfo, nullptr, &vkFB);
 
+        VkSamplerCreateInfo samplerInfo{};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+
+        VkFilter vkfilter = VK_FILTER_NEAREST;
+
+        samplerInfo.magFilter = vkfilter;
+        samplerInfo.minFilter = vkfilter;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+        vkCreateSampler(*device, &samplerInfo, nullptr, &vkSampler);
+
     }
 }
 
@@ -182,9 +195,10 @@ void RenderTexture::unbind(VkCommandBuffer* vkCmd)
 
 void RenderTexture::getVulkanTexture(VulkanTexture& tex)
 {
-    tex.vkImage = vkImage;
-    tex.vkImageView = vkImageView;
+    tex.vkImage         = vkImage;
+    tex.vkImageView     = vkImageView;
     tex.vkTextureMemory = vkTextureMemory;
+    tex.vkSampler       = vkSampler;
 }
 
 

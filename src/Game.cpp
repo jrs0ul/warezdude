@@ -2769,7 +2769,6 @@ void Game::DrawMissionObjectives()
 void Game::renderToFBO(bool useVulkan)
 {
     VkCommandBuffer* vkCmd = vk->getCommandBuffer();
-    VkDevice* vulkanDevice = vk->getDevice();
 
     screenTexture.bind(vkCmd);
 
@@ -2845,7 +2844,7 @@ void Game::renderToFBO(bool useVulkan)
     pics.draw(18, MouseX, MouseY, (state == GAMESTATE_GAME) ? 0 : 1, (state == GAMESTATE_GAME) ? true : false);
 #endif
 
-    pics.drawBatch(&colorShader, &defaultShader, 666, useVulkan, vkCmd, vulkanDevice);
+    pics.drawBatch(&colorShader, &defaultShader, 666, useVulkan, vkCmd);
 
     if (!useVulkan)
     {
@@ -2873,13 +2872,8 @@ void Game::renderFBO(bool useVulkan)
     else
     {
         VkCommandBuffer* vkCmd = vk->getCommandBuffer();
-        VkDevice* vulkanDevice = vk->getDevice();
         pics.draw(fboTextureIndex, 0, ScreenHeight, 0, false, sys.screenScaleX, -sys.screenScaleY);
-#ifndef __ANDROID__
-        pics.drawBatch(&colorShader, &coolShader, 666, true, vkCmd, vulkanDevice);
-#else
-        pics.drawBatch(&colorShader, &defaultShader, 666, true, vkCmd, vulkanDevice);
-#endif
+        pics.drawBatch(&colorShader, &coolShader, 666, true, vkCmd);
 
     }
 
@@ -4132,7 +4126,12 @@ void Game::ParseMessagesClientGot()
 
 
 //---------------------------------------
-void Game::LoadShader(ShaderProgram* shader, const char* name, bool useVulkan, bool useUVS, bool needAlphaBlend)
+void Game::LoadShader(ShaderProgram* shader,
+                      const char* name,
+                      bool useVulkan,
+                      bool useUVS,
+                      SpriteBatcher* pics,
+                      bool needAlphaBlend)
 {
     shader->create(useVulkan);
 
@@ -4206,7 +4205,12 @@ void Game::LoadShader(ShaderProgram* shader, const char* name, bool useVulkan, b
 #endif
 
         shader->attach(frag);
-        shader->buildVkPipeline(vulkanDevice, vkPhysicalDevice, vkRenderPass, useUVS, needAlphaBlend);
+        shader->buildVkPipeline(vulkanDevice,
+                                vkPhysicalDevice,
+                                vkRenderPass,
+                                (pics) ? pics->getVkDSL() : nullptr,
+                                useUVS,
+                                needAlphaBlend);
     }
 
 }
@@ -4250,26 +4254,9 @@ void Game::init(bool useVulkan)
 #ifndef __ANDROID__
         LoadExtensions();
 #endif
-   }
-        printf("Creating shaders...\n");
-
-        LoadShader(&defaultShader, "default", useVulkan, true, true);
-        LoadShader(&colorShader, "justcolor", useVulkan, false, true);
-#ifndef __ANDROID__
-        LoadShader(&coolShader, sys.postShader, useVulkan, true, false);
-#endif
-
-    if (!useVulkan)
-    {
-        colorShader.use(vkCmd);
-        glDepthFunc(GL_LEQUAL);
-
-        glEnable (GL_BLEND);
-        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
-    else  //  Vulkan
-    {
-    }
+
+
 
     screenTexture.create(ScreenWidth,
                          ScreenHeight,
@@ -4277,9 +4264,6 @@ void Game::init(bool useVulkan)
                          useVulkan,
                          vulkanDevice,
                          vkPhysicalDevice);
-
-
-    MatrixOrtho(0.0, ScreenWidth, ScreenHeight, 0.0, -400, 400, OrthoMatrix);
 
 #ifdef __ANDROID__
     pics.load("pics/imagesToLoad.xml", AssetManager, useVulkan, vulkanDevice, vkPhysicalDevice, vkCommandPool, vkGraphicsQueue);
@@ -4310,8 +4294,34 @@ void Game::init(bool useVulkan)
                            ScreenWidth,
                            ScreenHeight,
                            vulkanDevice);
-
     }
+
+
+
+
+    LoadShader(&defaultShader, "default", useVulkan, true, &pics, true);
+    LoadShader(&colorShader, "justcolor", useVulkan, false, nullptr, true);
+#ifdef __ANDROID__
+    LoadShader(&coolShader, "default", useVulkan, true, &pics, false);
+#else
+    LoadShader(&coolShader, sys.postShader, useVulkan, true, &pics, false);
+#endif
+
+    if (!useVulkan)
+    {
+        colorShader.use(vkCmd);
+        glDepthFunc(GL_LEQUAL);
+
+        glEnable (GL_BLEND);
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+
+
+
+    MatrixOrtho(0.0, ScreenWidth, ScreenHeight, 0.0, -400, 400, OrthoMatrix);
+
+
+    
 #ifdef __ANDROID__
     mapai = new MapList(AssetManager);
 #else

@@ -293,7 +293,7 @@ private:
     void HelpScreenLogic();
     void EndingLogic();
     int PlayerCount();
-    void LoadShader(ShaderProgram* shader, const char* name, bool useVulkan, bool useUVS, bool needAlphaBlend);
+    void LoadShader(ShaderProgram* shader, const char* name, bool useVulkan, bool useUVS, SpriteBatcher* pics, bool needAlphaBlend);
     void IntroScreenLogic();
     void PlayNewSong(const char* songName);
 

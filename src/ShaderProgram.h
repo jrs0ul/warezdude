@@ -20,8 +20,6 @@ class ShaderProgram
 
     std::vector<VkPipelineShaderStageCreateInfo> vkShaderStages;
     VkPipeline                                   vkPipeline;
-    VkDescriptorSetLayout                        vkDescriptorSetLayout;
-    VkDescriptorPool                             vkDescriptorPool;
     //opengl
     GLuint program;
     bool isVulkanShader;
@@ -35,7 +33,6 @@ public:
 
     VkPipelineLayout vkPipelineLayout;
 
-    VkDescriptorSet  vkDS;
 
     void create(bool useVulkan);
     void destroy(VkDevice* vkDevice = nullptr);
@@ -47,6 +44,7 @@ public:
     void buildVkPipeline(VkDevice* device,
                          VkPhysicalDevice* physical,
                          VkRenderPass* pass,
+                         VkDescriptorSetLayout* dsl,
                          bool needUvs,
                          bool needAlphaBlend);
 

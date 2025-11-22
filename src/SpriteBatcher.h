@@ -13,7 +13,7 @@
         #include <SDL2/SDL_opengl.h>
     #endif
 #else
-    #ifdef __APPLE__    
+    #ifdef __APPLE__
         #include <TargetConditionals.h>
         #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
             #include <OpenGLES/ES1/gl.h>
@@ -103,6 +103,9 @@ class SpriteBatcher
     std::vector<PicData>         picInfo;
     std::vector<SpriteBatchItem> batch;
 
+    VkDescriptorSetLayout        vkDescriptorSetLayout;
+    VkDescriptorPool             vkDescriptorPool;
+    std::vector<VkDescriptorSet> vkTextureDescriptorSets;
 
     bool isVulkan;
 public:
@@ -111,14 +114,7 @@ public:
                 ShaderProgram* shader,
                 bool useVulkan,
                 VkCommandBuffer* vkCmd = nullptr);
-private:
-    void resizeContainer(unsigned long index,
-                         int twidth, int theight, int filter,
-                         const char * name,
-                         bool createTextures = true,
-                         GLuint texname = 0);
 
-public:
     SpriteBatcher(){ isVulkan = false; }
 #ifndef __ANDROID__
     bool initContainer(const char* list,
@@ -149,10 +145,10 @@ public:
 
     void destroy(VkDevice* vkDevice = nullptr);
 
-    void bindTexture(unsigned long index, 
-                     ShaderProgram* shader, 
-                     bool useVulkan = false, 
-                     VkDevice* vkDevice = nullptr);
+    void bindTexture(unsigned long index,
+                     ShaderProgram* shader,
+                     bool useVulkan = false,
+                     VkCommandBuffer* vkCmd = nullptr);
 
     //adds sprite to batch
     void draw( long textureIndex,
@@ -170,8 +166,7 @@ public:
                    ShaderProgram * uvColor,
                    int method = 0,
                    bool useVulkan = false,
-                   VkCommandBuffer* vkCmd = nullptr,
-                   VkDevice* vkDevice = nullptr);
+                   VkCommandBuffer* vkCmd = nullptr);
 
     GLuint        getGLName(unsigned long index);
     unsigned      getTextureCount(){return isVulkan ? vkTextures.size() : glTextures.size();}
@@ -205,6 +200,17 @@ public:
                        int twidth, int theight,
                        VkDevice* device, int filter = 0);
     void remove(unsigned long index);
+
+    VkDescriptorSetLayout* getVkDSL(){return &vkDescriptorSetLayout;}
+
+private:
+    void resizeContainer(unsigned long index,
+                         int twidth, int theight, int filter,
+                         const char * name,
+                         bool createTextures = true,
+                         GLuint texname = 0);
+
+    void createVulkanDescriptorSet(VkDevice* vkDevice);
 
 };
 

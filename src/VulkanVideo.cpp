@@ -30,7 +30,7 @@ VkInstance* VulkanVideo::createInstance(uint32_t extensionCount, const char** ex
 
 
     VkApplicationInfo appInfo{};
-    appInfo.pEngineName = "Dissarray";
+    appInfo.pEngineName = "Disarray";
     appInfo.apiVersion = VK_API_VERSION_1_0;
 
 

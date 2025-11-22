@@ -51,6 +51,7 @@ private:
     VkImage                      vkImage;
     VkImageView                  vkImageView;
     VkDeviceMemory               vkTextureMemory;
+    VkSampler                    vkSampler;
 
     uint32_t _width;
     uint32_t _height;
