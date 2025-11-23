@@ -4,9 +4,9 @@
 src/*.swp
 src/data/*.swp
 
+editor/build/*
 
-editor/obj/.gitignore
-editor/*.dblite
+*.hprof
 
 *.dblite
 
