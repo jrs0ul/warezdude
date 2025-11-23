@@ -319,13 +319,14 @@ void ShaderProgram::buildVkPipeline(VkDevice* device,
             VK_DYNAMIC_STATE_VIEWPORT,
             VK_DYNAMIC_STATE_SCISSOR,
     };
-    const VkPipelineDynamicStateCreateInfo dynamicInfo = {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = 0,
-            .dynamicStateCount = 2,
-            .pDynamicStates = dynamicStates,
-    };
+
+    VkPipelineDynamicStateCreateInfo dynamicInfo;
+    dynamicInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicInfo.pNext = nullptr;
+    dynamicInfo.flags = 0;
+    dynamicInfo.dynamicStateCount = 2;
+    dynamicInfo.pDynamicStates = dynamicStates;
+    
 
     VkGraphicsPipelineCreateInfo pipelineInfo = {};
     pipelineInfo.sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

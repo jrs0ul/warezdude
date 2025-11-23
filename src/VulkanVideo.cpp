@@ -247,7 +247,7 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, bool useDepth)
     createInfo.minImageCount    = vkSurfaceCapabilities.minImageCount;
     createInfo.imageFormat      = vkSurfaceFormat.format;
     createInfo.imageColorSpace  = vkSurfaceFormat.colorSpace;
-    createInfo.imageExtent      = {.width = imageWidth, .height = imageHeight};
+    createInfo.imageExtent      = {imageWidth, imageHeight};
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
@@ -334,34 +334,32 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, bool useDepth)
 
     std::vector<VkAttachmentDescription> attachments;
 
-    VkAttachmentDescription desc = {
-        .flags          = 0,
-        .format         = vkSurfaceFormat.format,
-        .samples        = VK_SAMPLE_COUNT_1_BIT,
-        .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
-        .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
-        .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-        .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-        .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
-        .finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-    };
+    VkAttachmentDescription desc{};
+    desc.flags = 0;
+    desc.format = vkSurfaceFormat.format;
+    desc.samples = VK_SAMPLE_COUNT_1_BIT;
+    desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     attachments.push_back(desc);
 
     if (useDepth)
     {
 
-        VkAttachmentDescription depthDesc = {
-            .flags          = 0,
-            .format         = vkDepthFormat,
-            .samples        = VK_SAMPLE_COUNT_1_BIT,
-            .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
-            .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
-            .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR,
-            .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-            .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
-            .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-        };
+        VkAttachmentDescription depthDesc{};
+        depthDesc.flags = 0;
+        depthDesc.format = vkDepthFormat;
+        depthDesc.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthDesc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthDesc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        depthDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthDesc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         attachments.push_back(depthDesc);
     }
@@ -541,7 +539,7 @@ void VulkanVideo::beginRenderPass(VkClearColorValue clearColor, VkClearDepthSten
     render_pass_info.renderPass        = vkRenderPass;
     render_pass_info.framebuffer       = vkSwapchainFramebuffers[vkFrameIndex];
     render_pass_info.renderArea.offset = {0, 0};
-    render_pass_info.renderArea.extent = {.width = imageWidth, .height = imageHeight};
+    render_pass_info.renderArea.extent = {imageWidth, imageHeight};
 
     std::vector<VkClearValue> clearValues(2);
     clearValues[0].color = clearColor;
@@ -557,21 +555,18 @@ void VulkanVideo::beginRenderPass(VkClearColorValue clearColor, VkClearDepthSten
 
 void VulkanVideo::setViewportAndScissor(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
-    const VkViewport viewport = {
-            .x     = (float)x,
-            .y     = (float)y,
-            .width = (float)width,
-            .height = (float)height,
-            .minDepth = 0.0f,
-            .maxDepth = 1.0f
-    };
+    VkViewport viewport{};
+    viewport.x = (float)x;
+    viewport.y = (float)y;
+    viewport.width = (float)width;
+    viewport.height = (float)height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
     vkCmdSetViewport(vkCommandBuffer, 0, 1, &viewport);
 
-    const VkRect2D scissor = {
-            .offset = {.x = (int)x, .y = (int)y},
-            .extent = {.width = width,
-                       .height = height}
-    };
+    VkRect2D scissor = { {(int)x,(int)y},
+                         {width, height}};
 
     vkCmdSetScissor(vkCommandBuffer, 0, 1, &scissor);
 

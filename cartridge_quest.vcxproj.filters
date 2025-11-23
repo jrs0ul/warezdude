@@ -155,9 +155,6 @@
     <ClCompile Include="src\SysConfig.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Usefull.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Vectors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -216,6 +213,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\RenderTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Useful.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VulkanVideo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

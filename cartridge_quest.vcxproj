@@ -218,8 +218,9 @@
     <ClCompile Include="src\ShaderProgram.cpp" />
     <ClCompile Include="src\SpriteBatcher.cpp" />
     <ClCompile Include="src\SysConfig.cpp" />
-    <ClCompile Include="src\Usefull.cpp" />
+    <ClCompile Include="src\Useful.cpp" />
     <ClCompile Include="src\Vectors.cpp" />
+    <ClCompile Include="src\VulkanVideo.cpp" />
     <ClCompile Include="src\Xml.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

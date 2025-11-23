@@ -158,21 +158,17 @@ void RenderTexture::bind(VkCommandBuffer* vkCmd)
 
         vkCmdBeginRenderPass(*vkCmd, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-        const VkViewport viewport = {
-            .x = 0.0f,
-            .y = 0.0f,
-            .width = (float)_width,
-            .height = (float)_height,
-            .minDepth = 0.0f,
-            .maxDepth = 1.0f
-        };
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = (float)_width;
+        viewport.height = (float)_height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+       
         vkCmdSetViewport(*vkCmd, 0, 1, &viewport);
 
-        const VkRect2D scissor = {
-            .offset = {.x = 0, .y = 0},
-            .extent = {.width = _width,
-                       .height = _height}
-        };
+        const VkRect2D scissor = {{0, 0}, {_width, _height}};
         vkCmdSetScissor(*vkCmd, 0, 1, &scissor);
     }
 
