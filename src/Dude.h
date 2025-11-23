@@ -1,10 +1,10 @@
 #ifndef DUDE_H
 #define DUDE_H
 
-#include "DArray.h"
-#include "Vectors.h"
+#include <DArray.h>
+#include <Vectors.h>
+#include <Particles2D.h>
 #include "Consts.h"
-#include "Particles2D.h"
 #include "WeaponTypes.h"
 
 class CBulletContainer;

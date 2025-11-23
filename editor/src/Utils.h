@@ -3,7 +3,7 @@
 #define _UTILS_H
 
 
-#include "../../src/SpriteBatcher.h"
+#include <SpriteBatcher.h>
 
 
 

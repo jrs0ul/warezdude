@@ -10,61 +10,71 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
+include_directories(CartridgeQuest PRIVATE "src/disarray/")
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-add_subdirectory(editor)
 
 add_executable(CartridgeQuest
-                    src/Dude.cpp
-                    src/MapGenerator.cpp
-                    src/map.cpp
-                    src/bullet.cpp
-                    src/Decal.cpp
-                    src/Intro.cpp
-                    src/BulletContainer.cpp
-                    src/maplist.cpp
-                    src/gui/SelectMenu.cpp
-                    src/OSTools.cpp
                     src/Inventory.cpp
-                    src/Particles2D.cpp
-                    src/gui/Text.cpp
-                    src/gui/Slider.cpp
-                    src/gui/EditBox.cpp
-                    src/Collection.cpp
-                    src/GameData.cpp
+                    src/Intro.cpp
                     src/SaveGame.cpp
-                    src/SysConfig.cpp
-                    src/network/Socket.cpp
-                    src/network/Client.cpp
-                    src/network/Server.cpp
-                    src/Vectors.cpp
-                    src/Xml.cpp
-                    src/Matrix.cpp
-                    src/Useful.cpp
-                    src/SpriteBatcher.cpp
-                    src/Image.cpp
-                    src/RenderTexture.cpp
-                    src/VulkanVideo.cpp
-                    src/SDLVideo.cpp
-                    src/Extensions.cpp
-                    src/ShaderProgram.cpp
-                    src/Shader.cpp
-                    src/audio/OggStream.cpp
-                    src/audio/SoundSystem.cpp
+                    src/bullet.cpp
+                    src/BulletContainer.cpp
+                    src/GameData.cpp
+                    src/Collection.cpp
+                    src/map.cpp
+                    src/maplist.cpp
+                    src/Decal.cpp
+                    src/MapGenerator.cpp
+                    src/Dude.cpp
                     src/Game.cpp
                     src/mainer.cpp
                     )
 
-                target_link_libraries(CartridgeQuest 
+                add_library(disarray
+                    src/disarray/gui/SelectMenu.cpp
+                    src/disarray/OSTools.cpp
+                    src/disarray/Particles2D.cpp
+                    src/disarray/gui/Text.cpp
+                    src/disarray/gui/Slider.cpp
+                    src/disarray/gui/EditBox.cpp
+                    src/disarray/SysConfig.cpp
+                    src/disarray/network/Socket.cpp
+                    src/disarray/network/Client.cpp
+                    src/disarray/network/Server.cpp
+                    src/disarray/Vectors.cpp
+                    src/disarray/Xml.cpp
+                    src/disarray/Matrix.cpp
+                    src/disarray/Useful.cpp
+                    src/disarray/SpriteBatcher.cpp
+                    src/disarray/Image.cpp
+                    src/disarray/RenderTexture.cpp
+                    src/disarray/VulkanVideo.cpp
+                    src/disarray/SDLVideo.cpp
+                    src/disarray/Extensions.cpp
+                    src/disarray/ShaderProgram.cpp
+                    src/disarray/Shader.cpp
+                    src/disarray/audio/OggStream.cpp
+                    src/disarray/audio/SoundSystem.cpp
+
+                    )
+
+                target_link_libraries(disarray
                         SDL2
                         GL
                         openal
                         vorbisfile
-                        vulkan
                         ogg
+                        vulkan
+                    )
+
+                target_link_libraries(CartridgeQuest
+                        disarray
                      )
+
+add_subdirectory(editor)
 
 add_custom_command(
     OUTPUT ${CMAKE_SOURCE_DIR}/shaders/justcolor_vert.spv

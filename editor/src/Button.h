@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../src/SpriteBatcher.h"
+#include "../../src/disarray/SpriteBatcher.h"
 
 class Button
 {

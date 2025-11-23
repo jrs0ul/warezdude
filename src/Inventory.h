@@ -1,7 +1,7 @@
 #pragma once
 
-#include "gui/BasicUiControl.h"
-#include "DArray.h"
+#include <gui/BasicUiControl.h>
+#include <DArray.h>
 
 class SpriteBatcher;
 class GameData;

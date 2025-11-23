@@ -16,13 +16,13 @@
 #include <cmath>
 #include <cassert>
 
-#include "../../src/SDLVideo.h"
+#include <SDLVideo.h>
+#include <Image.h>
+#include <Matrix.h>
+#include <ShaderProgram.h>
+#include <SpriteBatcher.h>
 #include "../../src/Consts.h"
-#include "../../src/Image.h"
-#include "../../src/SpriteBatcher.h"
 #include "../../src/map.h"
-#include "../../src/ShaderProgram.h"
-#include "../../src/Matrix.h"
 #include "Utils.h"
 #include "Button.h"
 #include "CIniFile.h"
@@ -826,6 +826,10 @@ void CheckKeys()
 //-----------------------------------------------------------------
 int main ( int argc, char* argv[] )
 {
+    if (argc > 1)
+    {
+        strcpy(MapTiles, argv[1]);
+    }
 
     srand ( time ( 0 ) );
 
@@ -851,9 +855,12 @@ int main ( int argc, char* argv[] )
     }
 
 
-    INI.get ( L"mapTiles",buf );
-    wcstombs ( MapTiles, buf, 255 );
-  
+    if (strlen(MapTiles) <= 0)
+    {
+        INI.get ( L"mapTiles",buf );
+        wcstombs ( MapTiles, buf, 255 );
+    }
+
     mygtai[0].init ( 10,20,32,32 );
     mygtai[1].init ( 46,20,32,32 );
     mygtai[BUTTON_SHOW_GRID].init ( 130,55,32,32 );
