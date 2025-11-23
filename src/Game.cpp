@@ -2891,6 +2891,9 @@ void Game::DrawTitleScreen()
     sprintf(buf,"%d",2025);
     WriteText(sys.ScreenWidth - 40, 25, pics, 10, buf, 0.5f, 0.5f);
 
+    sprintf(buf, "%s", (hasVulkan) ? "VULKAN" : "OPENGL");
+    WriteText(sys.ScreenWidth - 60, 40, pics, 10, buf, 0.8, 0.8);
+
     if (mainmenu.active())
     {
         mainmenu.draw(pics,
@@ -4240,6 +4243,8 @@ void Game::init(bool useVulkan)
 {
 
    srand(time(0));
+
+   hasVulkan = useVulkan;
 
    VkCommandBuffer*  vkCmd = vk->getCommandBuffer();
    VkDevice*         vulkanDevice = vk->getDevice();

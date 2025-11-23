@@ -81,6 +81,7 @@ void RenderScreen(bool useVulkan)
     if (useVulkan)
     {
         vk->beginRenderPass({0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0});
+        vk->setViewportAndScissor(0, 0, game.ScreenWidth, game.ScreenHeight);
     }
 
     game.renderFBO(useVulkan);

@@ -35,7 +35,7 @@ public:
     void              endCommandBuffer();
     void              beginRenderPass(VkClearColorValue clearColor, VkClearDepthStencilValue clearDepthStencil);
     void              endRenderPass();
-
+    void              setViewportAndScissor(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
     void              queueSubmit();
     void              queuePresent();
 
@@ -72,6 +72,7 @@ public:
                                        VkImage& image,
                                        VkFormat format,
                                        VkImageAspectFlags aspectFlags);
+
 private:
 
     bool               buildFrameBuffers();

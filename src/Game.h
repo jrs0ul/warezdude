@@ -139,6 +139,7 @@ class Game
     bool doFadein;
     bool godmode;
     bool slimeswap;
+    bool hasVulkan;
 
 
 public:

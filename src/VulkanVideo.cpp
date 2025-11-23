@@ -206,12 +206,6 @@ bool VulkanVideo::init(VkSurfaceKHR& surface, bool useDepth)
     surfaceWidth  = imageWidth = vkSurfaceCapabilities.currentExtent.width;
     surfaceHeight =  imageHeight = vkSurfaceCapabilities.currentExtent.height;
 
-    //needed for android to rotate the view
-    if (vkSurfaceCapabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
-        vkSurfaceCapabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR)
-    {
-        std::swap(imageWidth, imageHeight);
-    }
 
     std::vector<VkSurfaceFormatKHR> surfaceFormats;
     uint32_t formatCount;
@@ -558,22 +552,29 @@ void VulkanVideo::beginRenderPass(VkClearColorValue clearColor, VkClearDepthSten
 
     vkCmdBeginRenderPass(vkCommandBuffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
+}
+
+
+void VulkanVideo::setViewportAndScissor(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+{
     const VkViewport viewport = {
-            .x = 0.0f,
-            .y = 0.0f,
-            .width = (float)imageWidth,
-            .height = (float)imageHeight,
+            .x     = (float)x,
+            .y     = (float)y,
+            .width = (float)width,
+            .height = (float)height,
             .minDepth = 0.0f,
             .maxDepth = 1.0f
     };
     vkCmdSetViewport(vkCommandBuffer, 0, 1, &viewport);
 
     const VkRect2D scissor = {
-            .offset = {.x = 0, .y = 0},
-            .extent = {.width = imageWidth,
-                       .height = imageHeight}
+            .offset = {.x = (int)x, .y = (int)y},
+            .extent = {.width = width,
+                       .height = height}
     };
+
     vkCmdSetScissor(vkCommandBuffer, 0, 1, &scissor);
+
 }
 
 

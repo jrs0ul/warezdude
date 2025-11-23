@@ -27,6 +27,7 @@ struct engine {
     Vector3D oldDown;
     int32_t width{};
     int32_t height{};
+    int32_t gamePosX{};
     VulkanVideo* vk{};
     Game* game{};
     bool loaded{};
@@ -125,11 +126,16 @@ static int engine_init_display(struct engine* engine) {
             {
                 engine->game->loadConfig();
                 auto *sys = engine->game->getSysConfig();
+                engine->gamePosX = 0;
                 if (sys->ScreenWidth * sys->screenScaleX > engine->width) {
                     sys->screenScaleX = engine->width / sys->ScreenWidth;
                     sys->screenScaleY = sys->screenScaleX;
                     engine->game->ScreenHeight = sys->ScreenHeight * sys->screenScaleY;
                     engine->game->ScreenWidth = sys->ScreenWidth * sys->screenScaleX;
+                }
+                else
+                {
+                    engine->gamePosX = (int32_t)(engine->width / 2 - engine->game->ScreenWidth / 2);
                 }
 
                 engine->game->init(false);
@@ -171,6 +177,8 @@ static int engine_init_display(struct engine* engine) {
         engine->height = (int32_t)height;
 
         vkCreateAndroidSurfaceKHR(*instance, &create_info, nullptr, &surface);
+
+        engine->gamePosX = (int32_t)(engine->width / 2 - engine->game->ScreenWidth / 2);
 
         if (!engine->vk->init(surface))
         {
@@ -278,6 +286,10 @@ static void engine_draw_frame(struct engine* engine)
                 engine->game->renderToFBO(true);
 
                 engine->vk->beginRenderPass({0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0});
+
+                engine->vk->setViewportAndScissor(engine->gamePosX, 0,
+                                                  engine->game->ScreenWidth,
+                                                  engine->game->ScreenHeight);
                 engine->game->renderFBO(true);
 
 
@@ -339,9 +351,9 @@ static int32_t engine_handle_input(struct android_app* app) {
                 {
                     ptrIdx = (event->action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >>
                             AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
-                    Vector3D v = Vector3D(GameActivityPointerAxes_getAxisValue(
+                    Vector3D v = Vector3D((GameActivityPointerAxes_getAxisValue(
                                                   &event->pointers[ptrIdx],
-                                                  AMOTION_EVENT_AXIS_X) / widthFactor,
+                                                  AMOTION_EVENT_AXIS_X)- engine->gamePosX) / widthFactor ,
                                           GameActivityPointerAxes_getAxisValue(
                                                   &event->pointers[ptrIdx],
                                                   AMOTION_EVENT_AXIS_Y) / heightFactor,
@@ -352,9 +364,9 @@ static int32_t engine_handle_input(struct android_app* app) {
                 {
                     ptrIdx = (event->action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >>
                             AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
-                    Vector3D v = Vector3D(GameActivityPointerAxes_getAxisValue(
+                    Vector3D v = Vector3D((GameActivityPointerAxes_getAxisValue(
                                                   &event->pointers[ptrIdx],
-                                                  AMOTION_EVENT_AXIS_X) / widthFactor,
+                                                  AMOTION_EVENT_AXIS_X) - engine->gamePosX)/ widthFactor,
                                           GameActivityPointerAxes_getAxisValue(
                                                   &event->pointers[ptrIdx],
                                                   AMOTION_EVENT_AXIS_Y) / heightFactor,
@@ -367,9 +379,9 @@ static int32_t engine_handle_input(struct android_app* app) {
                 {
                     engine->game->touches.allfingersup = true;
 
-                    Vector3D v = Vector3D(GameActivityPointerAxes_getAxisValue(
+                    Vector3D v = Vector3D((GameActivityPointerAxes_getAxisValue(
                                                   &event->pointers[ptrIdx],
-                                                  AMOTION_EVENT_AXIS_X) / widthFactor,
+                                                  AMOTION_EVENT_AXIS_X) - engine->gamePosX) / widthFactor,
                                           GameActivityPointerAxes_getAxisValue(
                                                   &event->pointers[ptrIdx],
                                                   AMOTION_EVENT_AXIS_Y) / heightFactor,
@@ -379,9 +391,9 @@ static int32_t engine_handle_input(struct android_app* app) {
                     break;
                 case AMOTION_EVENT_ACTION_DOWN : {
                     engine->game->touches.allfingersup = false;
-                    Vector3D v = Vector3D(GameActivityPointerAxes_getAxisValue(
+                    Vector3D v = Vector3D((GameActivityPointerAxes_getAxisValue(
                                                   &event->pointers[ptrIdx],
-                                                  AMOTION_EVENT_AXIS_X) / widthFactor,
+                                                  AMOTION_EVENT_AXIS_X) - engine->gamePosX) / widthFactor,
                                           GameActivityPointerAxes_getAxisValue(
                                                   &event->pointers[ptrIdx],
                                                   AMOTION_EVENT_AXIS_Y) / heightFactor,
@@ -394,9 +406,9 @@ static int32_t engine_handle_input(struct android_app* app) {
                     engine->game->touches.allfingersup = false;
                     for (int j = 0; j < event->pointerCount; ++j)
                     {
-                        Vector3D v = Vector3D(GameActivityPointerAxes_getAxisValue(
+                        Vector3D v = Vector3D((GameActivityPointerAxes_getAxisValue(
                                                       &event->pointers[j],
-                                                      AMOTION_EVENT_AXIS_X) / widthFactor,
+                                                      AMOTION_EVENT_AXIS_X) - engine->gamePosX)/ widthFactor,
                                               GameActivityPointerAxes_getAxisValue(
                                                       &event->pointers[j],
                                                       AMOTION_EVENT_AXIS_Y) /heightFactor,
