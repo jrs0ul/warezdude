@@ -1,0 +1,3 @@
+[submodule "src/disarray"]
+	path = src/disarray
+	url = https://github.com/jrs0ul/disarray.git
