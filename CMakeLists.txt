@@ -33,42 +33,7 @@ add_executable(CartridgeQuest
                     src/mainer.cpp
                     )
 
-                add_library(disarray
-                    src/disarray/gui/SelectMenu.cpp
-                    src/disarray/OSTools.cpp
-                    src/disarray/Particles2D.cpp
-                    src/disarray/gui/Text.cpp
-                    src/disarray/gui/Slider.cpp
-                    src/disarray/gui/EditBox.cpp
-                    src/disarray/SysConfig.cpp
-                    src/disarray/network/Socket.cpp
-                    src/disarray/network/Client.cpp
-                    src/disarray/network/Server.cpp
-                    src/disarray/Vectors.cpp
-                    src/disarray/Xml.cpp
-                    src/disarray/Matrix.cpp
-                    src/disarray/Useful.cpp
-                    src/disarray/SpriteBatcher.cpp
-                    src/disarray/Image.cpp
-                    src/disarray/RenderTexture.cpp
-                    src/disarray/VulkanVideo.cpp
-                    src/disarray/SDLVideo.cpp
-                    src/disarray/Extensions.cpp
-                    src/disarray/ShaderProgram.cpp
-                    src/disarray/Shader.cpp
-                    src/disarray/audio/OggStream.cpp
-                    src/disarray/audio/SoundSystem.cpp
-
-                    )
-
-                target_link_libraries(disarray
-                        SDL2
-                        GL
-                        openal
-                        vorbisfile
-                        ogg
-                        vulkan
-                    )
+add_subdirectory(../disarray)
 
                 target_link_libraries(CartridgeQuest
                         disarray
