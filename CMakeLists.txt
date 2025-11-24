@@ -10,7 +10,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-include_directories(CartridgeQuest PRIVATE "src/disarray/")
+include_directories(CartridgeQuest PRIVATE "src/disarray/include")
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
@@ -33,7 +33,7 @@ add_executable(CartridgeQuest
                     src/mainer.cpp
                     )
 
-add_subdirectory(../disarray)
+add_subdirectory(src/disarray)
 
                 target_link_libraries(CartridgeQuest
                         disarray

@@ -1,4 +1,4 @@
-#include "disarray/SpriteBatcher.h"
+#include <SpriteBatcher.h>
 #include <SysConfig.h>
 #include <gui/Text.h>
 #include "Intro.h"
