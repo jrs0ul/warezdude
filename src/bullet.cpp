@@ -1,6 +1,6 @@
 #include <cmath>
 #include "bullet.h"
-#include "Useful.h"
+#include <disarray/Useful.h>
 #include "Dude.h"
 #include "Consts.h"
 
@@ -79,7 +79,7 @@ void Bullet::update(const bool** map, int width, int height)
     }
 }
 
-bool Bullet::onHit(DArray<Dude>& dudes)
+bool Bullet::onHit(std::vector<Dude>& dudes)
 {
     int dmg = PROJECTILE_BULLET_DAMAGE;
 
@@ -92,7 +92,7 @@ bool Bullet::onHit(DArray<Dude>& dudes)
     int tmpID = 0;
 
 
-    for (unsigned i = 0; i < dudes.count(); i++)
+    for (unsigned i = 0; i < dudes.size(); i++)
     {
         if (CirclesColide(dudes[i].x, dudes[i].y, 8, x, y, 8))
         {

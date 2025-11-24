@@ -11,7 +11,7 @@ add_executable(CQEditor
                src/CIniFile.cpp
                src/Button.cpp
                src/Utils.cpp
-               ../src/map.cpp
+               ../src/GameMap.cpp
                ../src/bullet.cpp
                ../src/Dude.cpp
                ../src/MapGenerator.cpp

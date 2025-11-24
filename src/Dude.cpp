@@ -1,9 +1,9 @@
 #include "Dude.h"
 
 #include <cmath>
-#include "Useful.h"
-#include "map.h"
-#include "gui/Text.h"
+#include <disarray/Useful.h>
+#include <disarray/gui/Text.h>
+#include "GameMap.h"
 #include "bullet.h"
 #include "Item.h"
 #include "BulletContainer.h"
@@ -37,10 +37,10 @@ bool Dude::damage(int dmg)
     return hp <= 0;
 }
 //-------------------------------------
-bool Dude::isColideWithOthers( DArray<Dude>& chars, float newx, float newy, bool coop, unsigned monsterCount)
+bool Dude::isColideWithOthers( std::vector<Dude>& chars, float newx, float newy, bool coop, unsigned monsterCount)
 {
 
-    for (unsigned i = 0; i < chars.count(); ++i)
+    for (unsigned i = 0; i < chars.size(); ++i)
     {
         if (chars[i].id == id)
         {
@@ -142,7 +142,7 @@ void Dude::rotate(float ang)
 bool Dude::move(float walkSpeed,
                 float strifeSpeed,
                 float radius,
-                CMap& map,
+                GameMap& map,
                 bool isCoop)
 {
 
@@ -152,7 +152,7 @@ bool Dude::move(float walkSpeed,
 //-----------------------------------------------------
 bool Dude::moveGamePad(const Vector3D& movementDir,
                         float radius,
-                        CMap& map,
+                        GameMap& map,
                         bool isCoop)
 {
     return movement(movementDir, radius, (const bool**)map._colide, map.width(), map.height(), map.mons, isCoop, map.enemyCount);
@@ -165,7 +165,7 @@ bool Dude::movement(Vector3D dir,
                     const bool** map,
                     int mapsizex,
                     int mapsizey,
-                    DArray<Dude>& chars,
+                    std::vector<Dude>& chars,
                     bool coop,
                     unsigned monsterCount)
 {
@@ -593,7 +593,7 @@ void Dude::setupToxicParticles()
     ps.start();
 }
 //---------------------------------
-void Dude::killShrinked(DArray<Dude>& dudes, unsigned yourIndex)
+void Dude::killShrinked(std::vector<Dude>& dudes, unsigned yourIndex)
 {
 
     if (shrinked)
@@ -601,7 +601,7 @@ void Dude::killShrinked(DArray<Dude>& dudes, unsigned yourIndex)
         return;
     }
 
-    for (unsigned i = 0; i < dudes.count(); ++i)
+    for (unsigned i = 0; i < dudes.size(); ++i)
     {
         if (i != yourIndex && !dudes[i].shot && !dudes[i].spawn && dudes[i].shrinked)
         {

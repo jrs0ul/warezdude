@@ -1,37 +1,37 @@
-#include "map.h"
+#include "GameMap.h"
 
 #include <cstdio>
 #include <wchar.h>
 #include <cassert>
-#include "Xml.h"
+#include <disarray/Xml.h>
 #include "MapGenerator.h"
 #include "Item.h"
 
 
 
 
-Dude* CMap::getPlayer(unsigned clientIdx)
+Dude* GameMap::getPlayer(unsigned clientIdx)
 {
-    assert(enemyCount + clientIdx < mons.count());
+    assert(enemyCount + clientIdx < mons.size());
     return &mons[enemyCount + clientIdx];
 }
 //-----------------------------------------
-void CMap::addMonster(Dude &newmonster){
-    mons.add(newmonster);
+void GameMap::addMonster(Dude &newmonster){
+    mons.push_back(newmonster);
 }
 //-------------------------------------------
-void CMap::removeMonster(int index){
-    mons.remove(index);
+void GameMap::removeMonster(int index){
+    mons.erase(mons.begin() + index);
 }
 //-------------------------------
-void CMap::move(Vector3D v, float size)
+void GameMap::move(Vector3D v, float size)
 {
     mapPos = mapPos + Vector3D(v.x * size, v.y * size , v.z * size);
 }
 
 
 //-----------------------------------------
-void CMap::arrangeItemsInPremadeMap()
+void GameMap::arrangeItemsInPremadeMap()
 {
     int ix;
     int iy;
@@ -80,7 +80,7 @@ void CMap::arrangeItemsInPremadeMap()
 
 
 //----------------------------------
-Items CMap::pickRandomGameCartridge()
+Items GameMap::pickRandomGameCartridge()
 {
     int dice = rand() % 1000;
 
@@ -112,7 +112,7 @@ Items CMap::pickRandomGameCartridge()
 
 
 //-------------------------------------
-void CMap::generate(int level)
+void GameMap::generate(int level)
 {
 
     if (!tiles)
@@ -191,7 +191,7 @@ void CMap::generate(int level)
             m.y = room->starty + room->roomPosY + (1 + rand() % (room->roomHeight - 3));
             m.x *= TILE_WIDTH;
             m.y *= TILE_WIDTH;
-            mons.add(m);
+            mons.push_back(m);
 
             while (mons[enemyCount - 1].isColideWithOthers(mons, 
                                                            mons[enemyCount - 1].x, 
@@ -228,9 +228,9 @@ void CMap::generate(int level)
 
 //-------------------------------------
 #ifdef __ANDROID__
-bool CMap::load(const char* path, AAssetManager* assman, bool createItems, int otherplayers)
+bool GameMap::load(const char* path, AAssetManager* assman, bool createItems, int otherplayers)
 #else
-bool CMap::load(const char* path, bool createItems, int otherplayers)
+bool GameMap::load(const char* path, bool createItems, int otherplayers)
 #endif
 {
     char buf[255];
@@ -461,9 +461,9 @@ bool CMap::load(const char* path, bool createItems, int otherplayers)
                                 naujas.startY = sy*32;
                                 naujas.x=(float)naujas.startX;
                                 naujas.y=(float)naujas.startY;
-                                naujas.race=rand() % MONSTER_MAX_RACE + 1;
+                                naujas.race = rand() % MONSTER_MAX_RACE + 1;
                                 naujas.initMonsterHP();
-                                mons.add(naujas);
+                                mons.push_back(naujas);
 
                             }
 
@@ -492,13 +492,13 @@ bool CMap::load(const char* path, bool createItems, int otherplayers)
         playeris.setWeaponCount(PLAYER_SIMULTANEOUS_WEAPONS);
         playeris.setSkinCount(PLAYER_MAX_SKIN_COUNT);
         playeris.setFrame((playeris.activeSkin[playeris.getCurrentWeapon()] + 1) * 4 - 2);
-        mons.add(playeris);
+        mons.push_back(playeris);
 
         for (int i = 0; i < otherplayers; ++i)
         {
             playeris.id++;
             playeris.appearInRandomPlace(_colide, width(), height());
-            mons.add(playeris);
+            mons.push_back(playeris);
         }
     }
 
@@ -513,7 +513,7 @@ bool CMap::load(const char* path, bool createItems, int otherplayers)
     return true;
 }
 //------------------------------------
-void CMap::buildCollisionmap()
+void GameMap::buildCollisionmap()
 {
 
     if (!_colide)
@@ -537,7 +537,7 @@ void CMap::buildCollisionmap()
 }
 
 //--------------------------------------
-bool CMap::save(const char* path)
+bool GameMap::save(const char* path)
 {
     printf("SAVING %s...\n", path);
 
@@ -641,7 +641,7 @@ bool CMap::save(const char* path)
 }
 
 //--------------------------------------
-void CMap::draw(SpriteBatcher& pics, float r, float g, float b, int ScreenWidth, int ScreenHeight)
+void GameMap::draw(SpriteBatcher& pics, float r, float g, float b, int ScreenWidth, int ScreenHeight)
 {
 
     unsigned tileset = pics.findByName("pics/tileset.tga");
@@ -712,10 +712,10 @@ void CMap::draw(SpriteBatcher& pics, float r, float g, float b, int ScreenWidth,
 
 }
 //--------------------------------------
-void CMap::drawEntities(SpriteBatcher& pics, int ScreenWidth, int ScreenHeight)
+void GameMap::drawEntities(SpriteBatcher& pics, int ScreenWidth, int ScreenHeight)
 {
 
-    for (unsigned i = 0; i < mons.count(); i++)
+    for (unsigned i = 0; i < mons.size(); i++)
     {
         if (mons[i].shrinked)
         {
@@ -724,7 +724,7 @@ void CMap::drawEntities(SpriteBatcher& pics, int ScreenWidth, int ScreenHeight)
     }
 
 
-    for (unsigned i = 0; i < mons.count(); i++)
+    for (unsigned i = 0; i < mons.size(); i++)
     {
         if (!mons[i].shrinked)
         {
@@ -734,10 +734,10 @@ void CMap::drawEntities(SpriteBatcher& pics, int ScreenWidth, int ScreenHeight)
 }
 
 //--------------------------------------
-void CMap::destroy()
+void GameMap::destroy()
 {
 
-    mons.destroy();
+    mons.clear();
 
     if (tiles)
     {
@@ -767,7 +767,7 @@ void CMap::destroy()
 
 }
 //-------------------------------------------
-bool CMap::colide(unsigned x, unsigned y)
+bool GameMap::colide(unsigned x, unsigned y)
 {
 
     if (!_colide)
@@ -782,7 +782,7 @@ bool CMap::colide(unsigned x, unsigned y)
 //-------------------------------------------
 
 
-void CMap::ReplaceTiles(unsigned char old, unsigned char fresh){
+void GameMap::ReplaceTiles(unsigned char old, unsigned char fresh){
  for (unsigned a = 0; a < _height; a++)
   for (unsigned i=0;i < _width;i++)
   {
@@ -794,7 +794,7 @@ void CMap::ReplaceTiles(unsigned char old, unsigned char fresh){
 }
 
 //-------------------------------------------
-void CMap::addItem(float nx, float ny, int nvalue)
+void GameMap::addItem(float nx, float ny, int nvalue)
 {
     Item newitem;
     newitem.x = nx;
@@ -806,13 +806,13 @@ void CMap::addItem(float nx, float ny, int nvalue)
 }
 
 //-------------------------------------------
-void CMap::removeItem(int ID){
+void GameMap::removeItem(int ID){
     items.remove(ID);
 
 }
 
 //-------------------------------------
-void CMap::fadeDecals()
+void GameMap::fadeDecals()
 {
     for (unsigned int i = 0; i < decals.count(); i++)
     {
@@ -826,9 +826,9 @@ void CMap::fadeDecals()
 }
 //------------------------
 
-int CMap::findCreatureById(int id)
+int GameMap::findCreatureById(int id)
 {
-    for (unsigned i = 0; i < mons.count(); ++i)
+    for (unsigned i = 0; i < mons.size(); ++i)
     {
         if (mons[i].id == id)
         {
@@ -840,7 +840,7 @@ int CMap::findCreatureById(int id)
 }
 
 //----------------------
-void CMap::placeAmmoAndMedkits()
+void GameMap::placeAmmoAndMedkits()
 {
     int ix = 0;
     int iy = 0;
@@ -885,7 +885,7 @@ void CMap::placeAmmoAndMedkits()
 
 }
 //--------------------------------
-void CMap::putSlimeCircle()
+void GameMap::putSlimeCircle()
 {
     float circleX = 0;
     float circleY = 0;

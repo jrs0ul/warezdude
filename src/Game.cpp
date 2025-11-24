@@ -6,20 +6,19 @@
 
 #include "Dude.h"
 #include "BulletContainer.h"
-#include "SpriteBatcher.h"
+#include <disarray/SpriteBatcher.h>
 #include "bullet.h"
-#include "gui/Slider.h"
-#include "gui/Text.h"
-#include "Useful.h"
-#include "SpriteBatcher.h"
-#include "Matrix.h"
+#include <disarray/gui/Slider.h>
+#include <disarray/gui/Text.h>
+#include <disarray/Useful.h>
+#include <disarray/Matrix.h>
 #include "Intro.h"
 #include "Item.h"
 #include "Consts.h"
 #include "SaveGame.h"
 #include "maplist.h"
-#include "VulkanVideo.h"
-#include "audio/SoundSystem.h"
+#include <disarray/VulkanVideo.h>
+#include <disarray/audio/SoundSystem.h>
 #ifndef _WIN32
 #include <arpa/inet.h>
 #endif
@@ -189,7 +188,7 @@ void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 
     mapas.drawEntities(pics, sys.ScreenWidth, sys.ScreenHeight);
 
-    for (unsigned i = 0; i < mapas.mons.count(); ++i)
+    for (unsigned i = 0; i < mapas.mons.size(); ++i)
     {
         mapas.mons[i].drawParticles(pics, mapas.getPos().x, mapas.getPos().y, sys.ScreenWidth, sys.ScreenHeight);
     }
@@ -301,7 +300,7 @@ void Game::SendItemCreation(float x, float y, int value, unsigned int clientInde
 //---------------------------
 void Game::KillPlayer(int index)
 {
-    assert((unsigned)index < mapas.mons.count());
+    assert((unsigned)index < mapas.mons.size());
     printf("PLAYER KILLED BY %d\n", mapas.mons[index].lastDamagedBy);
 
     Dude* player = &mapas.mons[index];
@@ -621,7 +620,7 @@ void Game::SendItemSRemove(int ItemIndex, int clientIndex, bool playerTaked)
 }
 
 //-------------------------------------
-void Game::SendMapInfo(int clientIndex, CMap& map)
+void Game::SendMapInfo(int clientIndex, GameMap& map)
 {
     char bufer[MAX_MESSAGE_DATA_SIZE];
     int index = 0;
@@ -660,7 +659,7 @@ void Game::SendMapInfo(int clientIndex, CMap& map)
 
 }
 //------------------------------------------------
-void Game::SendMapData(int clientIndex, CMap& map)
+void Game::SendMapData(int clientIndex, GameMap& map)
 {
 
     char bufer[MAX_MESSAGE_DATA_SIZE];
@@ -789,7 +788,7 @@ void Game::ItemPickup()
                 if ((item > ITEM_MEDKIT) && (item > 0))
                 {
                     printf("LOOTING ITEM %d\n", item);
-                    loot.add(item);
+                    loot.push_back(item);
 #ifdef __ANDROID__
                     inventory.activate();
 #endif
@@ -1082,7 +1081,7 @@ void Game::HandleInteractionsWithDeadPlayers()
 
             Vector3D interactionCenter(player->x + playerDirection.x, player->y + playerDirection.x, 0);
 
-            for (unsigned i = mapas.enemyCount; i < mapas.mons.count(); ++i)
+            for (unsigned i = mapas.enemyCount; i < mapas.mons.size(); ++i)
             {
 
                 if (i != (unsigned)mapas.enemyCount + clientIdx)
@@ -1321,7 +1320,7 @@ void Game::BeatEnemy(int aID, int damage)
         mapas.mons[aID].shoot(false, WEAPONTYPE_REGULAR, &bulbox);
         Vector3D vec = MakeVector(16.0f, 0, mapas.mons[aID].angle);
 
-        for (unsigned long i = 0; i < mapas.mons.count(); ++i)
+        for (unsigned long i = 0; i < mapas.mons.size(); ++i)
         {
 
             if (mapas.mons[aID].hitIt(mapas.mons[i], vec.x, vec.y, damage) > -1)
@@ -1368,7 +1367,7 @@ void Game::MonsterAI(int index)
         //kill entity if you spawn on it
         if (!mapas.mons[index].spawn)
         {
-            for (unsigned i=0; i< mapas.mons.count(); i++)
+            for (unsigned i=0; i< mapas.mons.size(); i++)
             {
                 if (i != (unsigned)index)
                 {
@@ -1620,8 +1619,8 @@ void Game::GenerateTheMap(int level, int currentHp, int currentAmmo)
         Dude p;
         p.race = MONSTER_RACE_PLAYER;
         p.appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
-        p.id = mapas.mons[mapas.mons.count() - 1].id + 1;
-        mapas.mons.add(p);
+        p.id = mapas.mons[mapas.mons.size() - 1].id + 1;
+        mapas.mons.push_back(p);
 
     }
 
@@ -2039,12 +2038,12 @@ void Game::EndingLogic()
         state = GAMESTATE_TITLE;
         intro.reset();
 
-        for (unsigned i = 0; i < loot.count(); ++i)
+        for (unsigned i = 0; i < loot.size(); ++i)
         {
-            stash.add(loot[i]);
+            stash.push_back(loot[i]);
         }
 
-        loot.destroy();
+        loot.clear();
 
         mapai->current = 0;
         FirstTime = true;
@@ -2338,13 +2337,13 @@ void Game::CoreGameLogic()
             inventory.reset();
         }
 
-        if (inventory.isSelected() && loot.count())
+        if (inventory.isSelected() && loot.size())
         {
             inventory.deactivate();
             inventory.reset();
             if (player->equipedGame)
             {
-                loot.add(player->equipedGame);
+                loot.push_back(player->equipedGame);
             }
 
 
@@ -2359,7 +2358,7 @@ void Game::CoreGameLogic()
 
             equipCartridge(player, loot[inventory.getSelected()]);
 
-            loot.remove(inventory.getSelected());
+            loot.erase(loot.begin() + inventory.getSelected());
         }
     }
 
@@ -2604,7 +2603,7 @@ void Game::CoreGameLogic()
 
     if (netMode == NETMODE_NONE || netMode == NETMODE_SERVER)
     {
-        for (unsigned i = mapas.enemyCount; i < mapas.mons.count(); ++i)
+        for (unsigned i = mapas.enemyCount; i < mapas.mons.size(); ++i)
         {
             const int dmg = slimeReaction(i); // hero reaction to slime
 
@@ -2635,14 +2634,14 @@ void Game::CoreGameLogic()
 
         //let's kill players with 0 hp
 
-        for (unsigned i = 0; i < mapas.mons.count(); ++i)
+        for (unsigned i = 0; i < mapas.mons.size(); ++i)
         {
             mapas.mons[i].killShrinked(mapas.mons, i);
 
             if (mapas.mons[i].equipedGame == ITEM_GAME_FART_NIGHT)
             {
 
-                for (unsigned a = 0; a < mapas.mons.count(); ++a)
+                for (unsigned a = 0; a < mapas.mons.size(); ++a)
                 {
                     if (i != a && !mapas.mons[a].shot && !mapas.mons[a].spawn && !mapas.mons[a].hit)
                     {
@@ -2983,7 +2982,7 @@ void Game::DrawEndScreen()
         int itemY = 100;
         int itemX = 20;
 
-        for (unsigned i = 0; i < loot.count(); ++i)
+        for (unsigned i = 0; i < loot.size(); ++i)
         {
             pics.draw(11, itemX, itemY, loot[i] - ITEM_GAME_NINJA_MAN, false);
 
@@ -3031,7 +3030,7 @@ void Game::DrawGameplay()
         DrawMissionObjectives();
     }
 
-    if (mapas.mons.count())
+    if (mapas.mons.size())
     {
         DrawStats();
     }
@@ -3296,8 +3295,8 @@ void Game::populateClientDudes(int oldClientCount)
     {
         Dude n;
         n.race = MONSTER_RACE_PLAYER;
-        mapas.mons.add(n);
-        mapas.mons[mapas.mons.count()-1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+        mapas.mons.push_back(n);
+        mapas.mons[mapas.mons.size() - 1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
     }
 
     for (int i = 0; i < otherClientCount; ++i)
@@ -3353,7 +3352,7 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
     memcpy(&moncount, &bufer[*index], sizeof(int));
     *index += sizeof(int);
 
-    if (!mapas.mons.count()) //  No monsters in the map ? Must be coop map
+    if (!mapas.mons.size()) //  No monsters in the map ? Must be coop map
     {
         mapas.enemyCount = moncount;
 
@@ -3372,7 +3371,7 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
         d.setWeaponCount(PLAYER_SIMULTANEOUS_WEAPONS);
         d.setSkinCount(PLAYER_MAX_SKIN_COUNT);
         mapas.addMonster(d);
-        mapas.mons[mapas.mons.count()-1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+        mapas.mons[mapas.mons.size() - 1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
 
         for (int i = 0; i < otherClientCount; i++)
         {
@@ -3383,8 +3382,8 @@ void Game::GetMapData(const unsigned char* bufer, int* index)
 
             n.id = clientIds[i];
             n.race = MONSTER_RACE_PLAYER;
-            mapas.mons.add(n);
-            mapas.mons[mapas.mons.count() - 1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+            mapas.mons.push_back(n);
+            mapas.mons[mapas.mons.size() - 1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
         }
 
         AdaptMapView();
@@ -3530,7 +3529,7 @@ void Game::ServerParseClientResurrect(unsigned* bufferindex, int clientIndex)
 
     Vector3D ic(thatClient->x + dir.x, thatClient->y + dir.x, 0);
 
-    for (unsigned i = mapas.enemyCount; i < mapas.mons.count(); ++i)
+    for (unsigned i = mapas.enemyCount; i < mapas.mons.size(); ++i)
     {
 
         if (i != (unsigned)mapas.enemyCount + clientIndex + 1)
@@ -3717,20 +3716,20 @@ void Game::ParseMessagesServerGot()
 
                         Dude newclient;
                         newclient.race = MONSTER_RACE_PLAYER;
-                        mapas.mons.add(newclient);
-                        mapas.mons[mapas.mons.count() - 1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
+                        mapas.mons.push_back(newclient);
+                        mapas.mons[mapas.mons.size() - 1].appearInRandomPlace(mapas._colide, mapas.width(), mapas.height());
                         int zeroFrags = 0;
                         fragTable.add(zeroFrags);
 
                         ClientLoot lt;
-                        clientLoot.add(lt);
+                        clientLoot.push_back(lt);
 
 
                         ClientFootprint fp;
                         fp.address = msg->senderAddress;
                         serveris.addClient(fp);
 
-                        mapas.mons[mapas.mons.count()-1].id = mapas.mons[mapas.mons.count()-2].id + 1;
+                        mapas.mons[mapas.mons.size() - 1].id = mapas.mons[mapas.mons.size() - 2].id + 1;
 
                         for (int i =0; i < (int)serveris.clientCount(); i++)
                         {
@@ -3836,8 +3835,8 @@ void Game::ParseMessagesServerGot()
                         }
 
                         serveris.removeClient(clientIdx);
-                        clientLoot.remove(clientIdx);
-                        mapas.mons.remove(mapas.enemyCount + clientIdx + 1);
+                        clientLoot.erase(clientLoot.begin() + clientIdx);
+                        mapas.mons.erase(mapas.mons.begin() + (mapas.enemyCount + clientIdx + 1));
                     } break;
 
                 case NET_CLIENT_MSG_PONG:
@@ -3931,7 +3930,7 @@ void Game::GetServerEquipedGame(const unsigned char* buffer, int * bufferindex)
     memcpy(&game, &buffer[*bufferindex], sizeof(int));
     *bufferindex += sizeof(int);
 
-    assert(idx < mapas.mons.count());
+    assert(idx < mapas.mons.size());
 
     Dude* dude = &mapas.mons[idx];
     equipCartridge(dude, game);

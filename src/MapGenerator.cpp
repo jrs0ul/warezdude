@@ -1,8 +1,8 @@
 #include "MapGenerator.h"
 #include <cstdio>
 #include <cstdlib>
-#include "Vectors.h"
-#include "map.h"
+#include <disarray/Vectors.h>
+#include "GameMap.h"
 
 MapGenerator::~MapGenerator()
 {
@@ -12,7 +12,7 @@ MapGenerator::~MapGenerator()
 }
 
 
-void MapGenerator::generate(CMap* map)
+void MapGenerator::generate(GameMap* map)
 {
     divide(&root);
     int depth = getDepth(&root);
@@ -112,7 +112,7 @@ void MapGenerator::divide(BSPTreeNode* parent)
 
 }
 
-void MapGenerator::makeRoom(BSPTreeNode* node, CMap* map)
+void MapGenerator::makeRoom(BSPTreeNode* node, GameMap* map)
 {
 
     const int MIN_ROOM_WIDTH = 5;
@@ -190,7 +190,7 @@ void MapGenerator::makeRoom(BSPTreeNode* node, CMap* map)
 
 }
 
-void PutWall(CMap* map, int x, int y, unsigned char wallTile)
+void PutWall(GameMap* map, int x, int y, unsigned char wallTile)
 {
     if (y >= 0 && y < (int)map->height() &&
         x >= 0 && x < (int)map->width() && map->tiles[y][x] != TILE_CONCRETE_FLOOR)
@@ -199,7 +199,7 @@ void PutWall(CMap* map, int x, int y, unsigned char wallTile)
     }
 }
 
-bool IsTileSet(CMap* map, int x, int y, unsigned char tile)
+bool IsTileSet(GameMap* map, int x, int y, unsigned char tile)
 {
     if (y >= 0 && y < (int)map->height() &&
         x >= 0 && x < (int)map->width() && map->tiles[y][x] == tile)
@@ -211,7 +211,7 @@ bool IsTileSet(CMap* map, int x, int y, unsigned char tile)
 
 }
 
-void MapGenerator::connectRooms(BSPTreeNode* node, CMap* map)
+void MapGenerator::connectRooms(BSPTreeNode* node, GameMap* map)
 {
     BSPTreeNode* l = node->left;
     BSPTreeNode* r = node->right;
@@ -352,7 +352,7 @@ bool IsWallTile(unsigned char tile)
     return false;
 }
 
-void MapGenerator::makeWallsPretty(CMap* map)
+void MapGenerator::makeWallsPretty(GameMap* map)
 {
     for (unsigned i = 0; i < map->height(); ++i)
     {
@@ -519,7 +519,7 @@ void MapGenerator::makeWallsPretty(CMap* map)
     }
 }
 
-void MapGenerator::putDoorsToOutside(CMap* map)
+void MapGenerator::putDoorsToOutside(GameMap* map)
 {
     for (unsigned i = 0; i < roomList.count(); ++i)
     {

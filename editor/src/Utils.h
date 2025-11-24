@@ -3,7 +3,7 @@
 #define _UTILS_H
 
 
-#include <SpriteBatcher.h>
+#include <disarray/SpriteBatcher.h>
 
 
 

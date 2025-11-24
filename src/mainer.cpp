@@ -27,8 +27,8 @@
 
 #include <ctime>
 #include "Game.h"
-#include "SDLVideo.h"
-#include "OSTools.h"
+#include <disarray/SDLVideo.h>
+#include <disarray/OSTools.h>
 #ifdef __APPLE__
 #include <limits.h>
 #include <unistd.h>
@@ -36,7 +36,7 @@
 #endif
 #include <string>
 #include <thread>
-#include "VulkanVideo.h"
+#include <disarray/VulkanVideo.h>
 
 
 SDLVideo SDL;

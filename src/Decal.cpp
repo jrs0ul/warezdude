@@ -1,6 +1,6 @@
 #include "Decal.h"
-#include "Useful.h"
-#include "SpriteBatcher.h"
+#include <disarray/Useful.h>
+#include <disarray/SpriteBatcher.h>
 #include "Consts.h"
 
 void Decal::draw(SpriteBatcher& pics,

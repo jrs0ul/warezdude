@@ -16,13 +16,13 @@
 #include <cmath>
 #include <cassert>
 
-#include <SDLVideo.h>
-#include <Image.h>
-#include <Matrix.h>
-#include <ShaderProgram.h>
-#include <SpriteBatcher.h>
+#include <disarray/SDLVideo.h>
+#include <disarray/Image.h>
+#include <disarray/Matrix.h>
+#include <disarray/ShaderProgram.h>
+#include <disarray/SpriteBatcher.h>
 #include "../../src/Consts.h"
-#include "../../src/map.h"
+#include "../../src/GameMap.h"
 #include "Utils.h"
 #include "Button.h"
 #include "CIniFile.h"
@@ -78,7 +78,7 @@ ShaderProgram        defaultShader;
 ShaderProgram        colorShader;
 
 
-CMap map;
+GameMap map;
 
 
 SDLVideo video;
@@ -402,7 +402,7 @@ void DrawPanel(){
 
 //---------------------------------------------
 
-void DrawGrid2D(CMap& GMap, int shiftX, int shiftY)
+void DrawGrid2D(GameMap& GMap, int shiftX, int shiftY)
 {
          glDisable(GL_TEXTURE_2D);
          glLineWidth(1.f);

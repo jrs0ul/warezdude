@@ -4,25 +4,25 @@
 #include <android/log.h>
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "native-activity", __VA_ARGS__))
 #endif
-#include "audio/OggStream.h"
-#include "ActionKeys.h"
-#include "Vectors.h"
-#include "TouchData.h"
-#include "SysConfig.h"
-#include "ShaderProgram.h"
-#include "gui/SelectMenu.h"
-#include "gui/Slider.h"
-#include "gui/EditBox.h"
+#include <disarray/audio/OggStream.h>
+#include <disarray/ActionKeys.h>
+#include <disarray/Vectors.h>
+#include <disarray/TouchData.h>
+#include <disarray/SysConfig.h>
+#include <disarray/ShaderProgram.h>
+#include <disarray/gui/SelectMenu.h>
+#include <disarray/gui/Slider.h>
+#include <disarray/gui/EditBox.h>
 #include "Intro.h"
-#include "network/Server.h"
-#include "network/Client.h"
+#include <disarray/network/Server.h>
+#include <disarray/network/Client.h>
 #include "BulletContainer.h"
 #include "NetworkCommands.h"
-#include "RenderTexture.h"
+#include <disarray/RenderTexture.h>
 #include "Inventory.h"
 #include "Collection.h"
 #include "GameData.h"
-#include "map.h"
+#include "GameMap.h"
 
 
 
@@ -69,7 +69,7 @@ class Game
     ShaderProgram        colorShader;
 
     MapList* mapai;
-    CMap mapas;
+    GameMap mapas;
 
     ScroollControl SfxVolumeC;
     ScroollControl MusicVolumeC;
@@ -77,11 +77,11 @@ class Game
 
     Intro intro;
 
-    DArray<int> loot;
+    std::vector<int> loot;
 
-    DArray<ClientLoot> clientLoot; // for server
+    std::vector<ClientLoot> clientLoot; // for server
 
-    DArray<int> stash;
+    std::vector<int> stash;
     Inventory inventory;
 
     Collection cartridgeCollection;
@@ -222,9 +222,9 @@ private:
     void GoToLevel(int currentHp, int currentAmmo, int level, int otherplayer);
     void SendItemSRemove(int ItemIndex, int clientIndex, bool playerTaked);
     //mapo pavadinimas, klientu skaicius
-    void SendMapInfo(int clientIndex, CMap& map);
+    void SendMapInfo(int clientIndex, GameMap& map);
     //monster races amd item positions
-    void SendMapData(int clientIndex, CMap& map);
+    void SendMapData(int clientIndex, GameMap& map);
     void InitServer();
     void StopServer();
     bool JoinServer(const char* ip, unsigned port);

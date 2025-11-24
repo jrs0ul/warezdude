@@ -1,8 +1,6 @@
-#ifndef MAP_H
-#define MAP_H
+#pragma once
 
-
-#include <DArray.h>
+#include <disarray/DArray.h>
 #include "Dude.h"
 #include "Decal.h"
 #include "Item.h"
@@ -26,13 +24,13 @@ const int ColidingTiles[256] = {
                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
                                 };
 
-class CMap 
+class GameMap 
 {
 
         Vector3D mapPos; //map starting position on the screen
 public:
         DArray<Item> items;
-        DArray<Dude> mons;
+        std::vector<Dude> mons;
         DArray<Decal> decals;
         unsigned char** tiles;
         bool** _colide;
@@ -50,7 +48,7 @@ public:
 
 
 
-        CMap() : 
+        GameMap() : 
         _width(0),
         _height(0),
         itmframe(0)
@@ -109,7 +107,3 @@ public:
 
 };
 
-
-
-
-#endif //MAP_H

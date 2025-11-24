@@ -2,26 +2,26 @@
 #include <cstring>
 #include "Consts.h"
 #include "bullet.h"
-#include "SpriteBatcher.h"
+#include <disarray/SpriteBatcher.h>
 
 void CBulletContainer::add(Bullet& newbulet)
 {
-    buls.add(newbulet);
+    buls.push_back(newbulet);
 }
 //---------------------------
 void CBulletContainer::removeDead()
 {
-    if (!buls.count())
+    if (!buls.size())
     {
         return;
     }
 
-    for (int i = buls.count() - 1; i >= 0; --i)
+    for (int i = buls.size() - 1; i >= 0; --i)
     {
 
         if (!buls[i].exists)
         {
-            buls.remove(i);
+            buls.erase(buls.begin() + i);
         }
     }
 }
@@ -29,7 +29,7 @@ void CBulletContainer::removeDead()
 
 void CBulletContainer::draw(SpriteBatcher& pics, float posx, float posy, int ScreenWidth, int ScreenHeight)
 {
-    for (unsigned z = 0; z < buls.count(); z++)
+    for (unsigned z = 0; z < buls.size(); z++)
     {
         const float bulletX = buls[z].x + posx;
         const float bulletY = buls[z].y + posy;
@@ -54,9 +54,9 @@ void CBulletContainer::draw(SpriteBatcher& pics, float posx, float posy, int Scr
 
 }
 //---------------------------
-void CBulletContainer::update(const bool** colisionGrid, DArray<Dude>& dudes, int mapWidth, int mapHeight)
+void CBulletContainer::update(const bool** colisionGrid, std::vector<Dude>& dudes, int mapWidth, int mapHeight)
 {
-    for (unsigned i = 0; i < buls.count(); i++)
+    for (unsigned i = 0; i < buls.size(); i++)
     {
         buls[i].update(colisionGrid, mapWidth, mapHeight);
 
@@ -77,5 +77,5 @@ void CBulletContainer::update(const bool** colisionGrid, DArray<Dude>& dudes, in
 
 void CBulletContainer::destroy()
 {
-    buls.destroy();
+    buls.clear();
 }

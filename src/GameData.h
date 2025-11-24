@@ -1,6 +1,6 @@
 #pragma once
 
-#include <DArray.h>
+#include <vector>
 
 class AAssetManager;
 
@@ -27,7 +27,7 @@ struct GameDescription
 class GameData
 {
 
-    DArray<GameDescription> games;
+    std::vector<GameDescription> games;
 
 public:
 #ifdef __ANDROID__
@@ -36,5 +36,5 @@ public:
     bool load(const char* path);
 #endif
     GameDescription* getGame(unsigned index);
-    ~GameData(){games.destroy();}
+    ~GameData(){games.clear();}
 };

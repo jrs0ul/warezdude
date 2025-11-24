@@ -1,8 +1,8 @@
+#include "maplist.h"
 #include <cstdio>
 #include <cstring>
 #include <cwchar>
-#include "maplist.h"
-#include "Xml.h"
+#include <disarray/Xml.h>
 
 //----------------------
 #ifdef __ANDROID__

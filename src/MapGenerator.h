@@ -1,6 +1,6 @@
 #pragma once
 
-#include <DArray.h>
+#include <disarray/DArray.h>
 
 class Vector3D;
 
@@ -54,7 +54,7 @@ struct BSPTreeNode
     }
 };
 
-class CMap;
+class GameMap;
 
 class MapGenerator
 {
@@ -71,16 +71,16 @@ public:
 
     ~MapGenerator();
 
-    void generate(CMap* map);
+    void generate(GameMap* map);
     unsigned getRoomCount(){return roomList.count();}
     BSPTreeNode* getRoomNode(unsigned idx);
-    void makeWallsPretty(CMap* map);
+    void makeWallsPretty(GameMap* map);
 
 private:
     void divide(BSPTreeNode* parent);
-    void makeRoom(BSPTreeNode* node, CMap* map);
-    void connectRooms(BSPTreeNode* node, CMap* map);
-    void putDoorsToOutside(CMap* map);
+    void makeRoom(BSPTreeNode* node, GameMap* map);
+    void connectRooms(BSPTreeNode* node, GameMap* map);
+    void putDoorsToOutside(GameMap* map);
 
     int getDepth(BSPTreeNode* node);
 

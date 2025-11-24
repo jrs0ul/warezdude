@@ -1,7 +1,7 @@
-#include <SpriteBatcher.h>
-#include <SysConfig.h>
-#include <gui/Text.h>
 #include "Intro.h"
+#include <disarray/SpriteBatcher.h>
+#include <disarray/SysConfig.h>
+#include <disarray/gui/Text.h>
 
 Intro::Intro()
 {

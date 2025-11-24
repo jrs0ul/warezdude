@@ -1,15 +1,14 @@
 #ifndef DUDE_H
 #define DUDE_H
 
-#include <DArray.h>
-#include <Vectors.h>
-#include <Particles2D.h>
+#include <disarray/Vectors.h>
+#include <disarray/Particles2D.h>
 #include "Consts.h"
 #include "WeaponTypes.h"
 
 class CBulletContainer;
 class SpriteBatcher;
-class CMap;
+class GameMap;
 
 
 enum MonsterRaces
@@ -119,8 +118,8 @@ public:
         void update();
 
         void rotate(float angle);
-        bool move(float walkSpeed, float strifeSpeed, float radius, CMap& map, bool isCoop);
-        bool moveGamePad(const Vector3D& movementDir,float radius, CMap& map, bool isCoop);
+        bool move(float walkSpeed, float strifeSpeed, float radius, GameMap& map, bool isCoop);
+        bool moveGamePad(const Vector3D& movementDir,float radius, GameMap& map, bool isCoop);
         void respawn();
 
         void draw(SpriteBatcher& pics, unsigned index, float posx, float posy, int ScreenWidth, int ScreenHeight);
@@ -153,10 +152,10 @@ public:
         void setFrame(unsigned char newFrame){frame = newFrame;}
         unsigned char getFrame(){return frame;}
         int getCurrentWeapon(){return currentWeapon;}
-        void killShrinked(DArray<Dude>& dudes, unsigned yourIndex);
+        void killShrinked(std::vector<Dude>& dudes, unsigned yourIndex);
         void stopParticles(){ps.stop();}
         bool shrink();
-        bool isColideWithOthers(DArray<Dude>& chars, float newx, float newy, bool coop, unsigned monsterCount);
+        bool isColideWithOthers(std::vector<Dude>& chars, float newx, float newy, bool coop, unsigned monsterCount);
 
 private:
         bool movement(Vector3D dir,
@@ -164,7 +163,7 @@ private:
                       const bool** map,
                       int mapsizex,
                       int mapsizey,
-                      DArray<Dude>& chars,
+                      std::vector<Dude>& chars,
                       bool coop,
                       unsigned monsterCount);
 

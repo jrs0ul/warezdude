@@ -1,11 +1,11 @@
 #pragma once
 
-#include "DArray.h"
+#include <vector>
 
 
 class SaveGame
 {
 public:
-    static void save(const char* documentPath, DArray<int>* stash);
-    static bool load(const char* documentPath, DArray<int>* stash);
+    static void save(const char* documentPath, std::vector<int>* stash);
+    static bool load(const char* documentPath, std::vector<int>* stash);
 };

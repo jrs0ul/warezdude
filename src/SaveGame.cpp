@@ -1,18 +1,19 @@
 #include "SaveGame.h"
+#include <cstdio>
 
-void SaveGame::save(const char* documentPath, DArray<int>* stash)
+void SaveGame::save(const char* documentPath, std::vector<int>* stash)
 {
     FILE * f = NULL;
 
     char name[512];
     sprintf(name, "%s/save.sav", documentPath);
     f = fopen(name, "wb+");
-    unsigned long stashSize = stash->count();
+    unsigned long stashSize = stash->size();
     fwrite(&stashSize, sizeof(unsigned long), 1, f);
-    fwrite(stash->getData(), sizeof(int), stashSize, f);
+    fwrite(stash->data(), sizeof(int), stashSize, f);
 }
 
-bool SaveGame::load(const char* documentPath, DArray<int>* stash)
+bool SaveGame::load(const char* documentPath, std::vector<int>* stash)
 {
     FILE * f = NULL;
 
@@ -32,7 +33,7 @@ bool SaveGame::load(const char* documentPath, DArray<int>* stash)
     {
         int item = 0;
         fread(&item, sizeof(int), 1, f);
-        stash->add(item);
+        stash->push_back(item);
     }
 
     return true;

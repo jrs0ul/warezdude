@@ -1,8 +1,7 @@
 #ifndef BULLET_H
 #define BULLET_H
 
-
-#include "DArray.h"
+#include <vector>
 #include "WeaponTypes.h"
 
 class Dude;
@@ -48,7 +47,7 @@ public:
     }
 
     void update(const bool** map, int width, int height);
-    bool onHit(DArray<Dude>& dudes);
+    bool onHit(std::vector<Dude>& dudes);
 };
 
 

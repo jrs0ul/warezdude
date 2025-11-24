@@ -2,7 +2,7 @@
 #define DECAL_H
 
 
-#include "Colors.h"
+#include <disarray/Colors.h>
 
 class SpriteBatcher;
 

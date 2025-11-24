@@ -1,13 +1,13 @@
 #include "Inventory.h"
-#include "ActionKeys.h"
-#include "SpriteBatcher.h"
+#include <disarray/ActionKeys.h>
+#include <disarray/SpriteBatcher.h>
+#include <disarray/gui/Text.h>
+#include <disarray/TouchData.h>
 #include "Item.h"
 #include "Consts.h"
 #include "GameData.h"
-#include "gui/Text.h"
-#include "TouchData.h"
 
-void Inventory::draw(SpriteBatcher& pics, DArray<int>& loot, GameData& gd)
+void Inventory::draw(SpriteBatcher& pics, std::vector<int>& loot, GameData& gd)
 {
 
     pics.draw(-1, 20, 80, false, 0, 600, 200, 0, COLOR(1,1,1,0.5f), COLOR(1,1,1,0.5f));
@@ -18,7 +18,7 @@ void Inventory::draw(SpriteBatcher& pics, DArray<int>& loot, GameData& gd)
 
     int posY = 120;
 
-    for (unsigned i = 0; i < loot.count(); ++i)
+    for (unsigned i = 0; i < loot.size(); ++i)
     {
 
         const int posX = 30 + counter * 34;
@@ -38,7 +38,7 @@ void Inventory::draw(SpriteBatcher& pics, DArray<int>& loot, GameData& gd)
     }
 
 
-    if (loot.count())
+    if (loot.size())
     {
         GameDescription* game = gd.getGame(loot[state] - ITEM_GAME_NINJA_MAN);
         pics.draw(11, 240, 100, loot[state] - ITEM_GAME_NINJA_MAN, false, 2, 2);
@@ -54,7 +54,7 @@ void Inventory::draw(SpriteBatcher& pics, DArray<int>& loot, GameData& gd)
 void Inventory::getInput(const unsigned char* keys,
                          const unsigned char* oldKeys,
                          TouchData& touches,
-                         DArray<int>& loot)
+                         std::vector<int>& loot)
 {
 
     if (!touches.up.empty())
@@ -62,7 +62,7 @@ void Inventory::getInput(const unsigned char* keys,
         if (touches.up[0].x > 30 && touches.up[0].x < 30 + 6 * 34 && touches.up[0].y > 120 && touches.up[0].y < 120 + 34 * 3)
         {
             state = ((touches.up[0].y - 120 / 34) * 6) + (touches.up[0].x - 30) / 34;
-            state = (state >= (int)loot.count()) ? loot.count() - 1 : state;
+            state = (state >= (int)loot.size()) ? loot.size() - 1 : state;
             selected = true;
         }
     }
@@ -78,7 +78,7 @@ void Inventory::getInput(const unsigned char* keys,
 
         if (state < 0)
         {
-            state = loot.count() - 1;
+            state = loot.size() - 1;
         }
     }
 
@@ -86,7 +86,7 @@ void Inventory::getInput(const unsigned char* keys,
     {
         ++state;
 
-        if (state >= (int)loot.count() )
+        if (state >= (int)loot.size() )
         {
             state = 0;
         }

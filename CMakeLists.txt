@@ -24,7 +24,7 @@ add_executable(CartridgeQuest
                     src/BulletContainer.cpp
                     src/GameData.cpp
                     src/Collection.cpp
-                    src/map.cpp
+                    src/GameMap.cpp
                     src/maplist.cpp
                     src/Decal.cpp
                     src/MapGenerator.cpp

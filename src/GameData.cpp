@@ -1,6 +1,6 @@
 #include "GameData.h"
 #include <wchar.h>
-#include "Xml.h"
+#include <disarray/Xml.h>
 
 #ifdef __ANDROID__
 bool GameData::load(const char* path, AAssetManager* assman)
@@ -104,7 +104,7 @@ bool GameData::load(const char* path)
 
                 }
 
-                games.add(gd);
+                games.push_back(gd);
 
             }
         }
@@ -118,7 +118,7 @@ bool GameData::load(const char* path)
 
 GameDescription* GameData::getGame(unsigned index)
 {
-    if (index >= games.count())
+    if (index >= games.size())
     {
         return nullptr;
     }

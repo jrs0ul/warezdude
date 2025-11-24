@@ -1,10 +1,10 @@
 #include "Collection.h"
-#include "SpriteBatcher.h"
+#include <disarray/SpriteBatcher.h>
 #include "Item.h"
-#include "ActionKeys.h"
+#include <disarray/ActionKeys.h>
 
 
-void Collection::init(DArray<int>* lootptr)
+void Collection::init(std::vector<int>* lootptr)
 {
     loot = lootptr;
 }
@@ -34,7 +34,7 @@ void Collection::draw(SpriteBatcher& pics)
 
         bool found = false;
 
-        for (unsigned a = 0; a < loot->count(); ++a)
+        for (unsigned a = 0; a < loot->size(); ++a)
         {
             if ((*loot)[a] == i)
             {

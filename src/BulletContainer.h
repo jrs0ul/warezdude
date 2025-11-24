@@ -1,24 +1,22 @@
-#ifndef CBULL_CON_H
-#define CBULL_CON_H
+#pragma once
 
-#include "DArray.h"
+#include <vector>
+#include "bullet.h"
 
-
-class Bullet;
 class SpriteBatcher;
 class Dude;
 
 class CBulletContainer
 {
 public:
-    DArray<Bullet> buls;
+    std::vector<Bullet> buls;
 
 
     CBulletContainer(){}
-    int count(){return buls.count();};
+    int count(){return buls.size();};
     void add(Bullet& newbulet);
     void draw(SpriteBatcher& pics, float posx, float posy, int ScreenWidth, int ScreenHeight);
-    void update(const bool** colisionGrid, DArray<Dude>& dudes, int mapWidth, int mapHeight);
+    void update(const bool** colisionGrid, std::vector<Dude>& dudes, int mapWidth, int mapHeight);
     void destroy();
     ~CBulletContainer(){}
 private:
@@ -26,8 +24,4 @@ private:
 
 
 };
-
- 
-
-#endif // CBULL_CON_H
 
