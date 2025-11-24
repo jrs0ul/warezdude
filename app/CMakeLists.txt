@@ -11,8 +11,6 @@ set(SRCDIR ../src/)
 set(DISARRAY_DIR ../src/disarray/)
 find_package(game-activity REQUIRED CONFIG)
 
-set(OPENAL_DIR "/home/jrs0ul/libopenal")
-set(OGG_VORBIS_DIR "/home/jrs0ul/oggvorbis")
 include_directories("${OPENAL_DIR}/include")
 include_directories("${OGG_VORBIS_DIR}/inc")
 
@@ -44,6 +42,4 @@ set(CMAKE_SHARED_LINKER_FLAGS
 
 target_link_libraries(game PUBLIC
                        disarray
-                       android
-                       game-activity::game-activity_static
-                       log )
+                       game-activity::game-activity_static)

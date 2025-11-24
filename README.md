@@ -39,11 +39,3 @@ Project requires these libraries: OpenAL, SDL2, libogg/vorbis, Vulkan SDK(used 1
 
 To build the tests you will need GoogleTest.
 
-This tutorial can help you to build OpenAL for Android:
-
-https://digitalkarabela.com/how-to-compile-openal-library-for-android-with-oboe-library/
-
-Prebuilt Ogg/Vorbis for Android:
-
-https://github.com/mregnauld/ogg-vorbis-libraries-android
-

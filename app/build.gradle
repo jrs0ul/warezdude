@@ -19,7 +19,9 @@ android {
             cmake {
                 cppFlags ""
                 arguments '-DANDROID_STL=c++_shared',
-                        '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
+                          '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON',
+                          '-DOPENAL_DIR=/home/jrs0ul/libopenal',
+                          '-DOGG_VORBIS_DIR=/home/jrs0ul/oggvorbis'
             }
         }
     }
@@ -32,6 +34,7 @@ android {
     externalNativeBuild {
         cmake {
             path "CMakeLists.txt"
+
         }
     }
     ndkVersion '29.0.14206865'
