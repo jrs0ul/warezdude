@@ -27,7 +27,6 @@
 
 
 
-
 class MapList;
 class VulkanVideo;
 
@@ -84,9 +83,7 @@ class Game : public GameProto
     Client client;
     Server serveris;
 
-    SystemConfig sys;
     CBulletContainer bulbox;
-    SpriteBatcher pics;
 
 
     SelectMenu mainmenu;
@@ -186,7 +183,7 @@ public:
     void destroy();
     void loadConfig();
     void onBack(){};
-    SystemConfig* getSysConfig(){return &sys;}
+    SystemConfig* getSysConfig(){return sys;}
     EditBox* getIpEdit(){return &ipedit;}
 
 private:

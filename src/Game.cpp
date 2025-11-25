@@ -130,15 +130,15 @@ void Game::DrawSomeText()
     char buf[255];
 
     sprintf(buf,"FPS : %d DeltaTime %f", fps(), deltaTime);
-    WriteText(20,20, pics, 10, buf, 0.8f,0.6f);
+    WriteText(20,20, *pics, 10, buf, 0.8f,0.6f);
 
     sprintf(buf, "Map width %d height %d", mapas.width(), mapas.height());
-    WriteText(20, 40, pics, 10, buf, 0.8f,0.8f);
+    WriteText(20, 40, *pics, 10, buf, 0.8f,0.8f);
 
     if (netMode == NETMODE_SERVER)
     {
         sprintf(buf,"Client count : %d",serveris.clientCount());
-        WriteText(20, 60, pics, 10,buf, 0.8f, 1);
+        WriteText(20, 60, *pics, 10, buf, 0.8f, 1);
     }
 
     /*for (unsigned i = 0; i < mapas.mons.count(); ++i)
@@ -162,16 +162,15 @@ void Game::DrawSomeText()
 //------------------
 void Game::DrawMap(float r=1.0f,float g=1.0f, float b=1.0f)
 {
+    mapas.draw(*pics, r, g, b, sys->ScreenWidth, sys->ScreenHeight);
 
-    mapas.draw(pics, r, g, b, sys.ScreenWidth, sys.ScreenHeight);
+    bulbox.draw(*pics, mapas.getPos().x, mapas.getPos().y, sys->ScreenWidth, sys->ScreenHeight);
 
-    bulbox.draw(pics, mapas.getPos().x, mapas.getPos().y, sys.ScreenWidth, sys.ScreenHeight);
-
-    mapas.drawEntities(pics, sys.ScreenWidth, sys.ScreenHeight);
+    mapas.drawEntities(*pics, sys->ScreenWidth, sys->ScreenHeight);
 
     for (unsigned i = 0; i < mapas.mons.size(); ++i)
     {
-        mapas.mons[i].drawParticles(pics, mapas.getPos().x, mapas.getPos().y, sys.ScreenWidth, sys.ScreenHeight);
+        mapas.mons[i].drawParticles(*pics, mapas.getPos().x, mapas.getPos().y, sys->ScreenWidth, sys->ScreenHeight);
     }
 
 
@@ -183,7 +182,7 @@ void Game::DrawMiniMap(int x, int y)
 
     const int MINIMAP_TILESET = 12;
 
-    pics.draw(MINIMAP_TILESET, x, y, 0, false ,mapas.width(), mapas.height(), 0, COLOR(1,1,1, 0.6f), COLOR(1,1,1, 0.6f));
+    pics->draw(MINIMAP_TILESET, x, y, 0, false ,mapas.width(), mapas.height(), 0, COLOR(1,1,1, 0.6f), COLOR(1,1,1, 0.6f));
 
     for (unsigned i = 0; i < mapas.height(); i++)
     {
@@ -210,7 +209,7 @@ void Game::DrawMiniMap(int x, int y)
 
             if (frame)
             {
-                pics.draw(MINIMAP_TILESET,
+                pics->draw(MINIMAP_TILESET,
                           a * MINIMAP_TILE_WIDTH + x,
                           i * MINIMAP_TILE_WIDTH + y,
                           frame, false, 1.f, 1.f, 0.f, COLOR(1,1,1,0.6f), COLOR(1,1,1,0.6f));
@@ -220,7 +219,7 @@ void Game::DrawMiniMap(int x, int y)
 
     Dude* player = mapas.getPlayer((netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0);
 
-    pics.draw(MINIMAP_TILESET,
+    pics->draw(MINIMAP_TILESET,
               x + (round(player->x / TILE_WIDTH) * MINIMAP_TILE_WIDTH),
               y + (round(player->y / TILE_WIDTH) * MINIMAP_TILE_WIDTH),
               3,
@@ -228,7 +227,7 @@ void Game::DrawMiniMap(int x, int y)
 
     for (unsigned i = 0; i<mapas.items.count(); i++)
     {
-        pics.draw(MINIMAP_TILESET,
+        pics->draw(MINIMAP_TILESET,
                   x + (round(mapas.items[i].x / TILE_WIDTH) * MINIMAP_TILE_WIDTH),
                   y + (round(mapas.items[i].y / TILE_WIDTH) * MINIMAP_TILE_WIDTH),
                   2,
@@ -254,7 +253,7 @@ void Game::DrawNumber(int x, int y,int num)
 
     for (int a = 0; a < 3; a++)
     {
-        pics.draw(8, x + a*16, y, arr[a], false, 0.98f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
+        pics->draw(8, x + a*16, y, arr[a], false, 0.98f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
     }
 }
 //-------------------------------
@@ -359,35 +358,35 @@ void Game::DrawStats()
     Dude* player = mapas.getPlayer((netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0);
 
 
-    pics.draw(STAT_ICON,
+    pics->draw(STAT_ICON,
               30,
-              sys.ScreenHeight - 40,
+              sys->ScreenHeight - 40,
               2, false, 1.f, 1.f, 0.f, 
               COLOR(1.f, 1.f, 1.f, 0.6f), 
               COLOR(1.f, 1.f, 1.f, 0.6f));
     DrawNumber(58,
-            sys.ScreenHeight - 40,
+            sys->ScreenHeight - 40,
             player->getHP());
 
 
-    pics.draw(STAT_ICON,
+    pics->draw(STAT_ICON,
               120,
-              sys.ScreenHeight - 40,
+              sys->ScreenHeight - 40,
               0, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f)); 
     DrawNumber(155,
-            sys.ScreenHeight - 40,
+            sys->ScreenHeight - 40,
             player->ammo);
 
     if (netGameState == MPMODE_DEATHMATCH)
     {
-        pics.draw(STAT_ICON, 220, sys.ScreenHeight - 40, 3, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
-        DrawNumber(255, sys.ScreenHeight - 40, frags);
+        pics->draw(STAT_ICON, 220, sys->ScreenHeight - 40, 3, false, 1.f, 1.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.6f), COLOR(1.f, 1.f, 1.f, 0.6f));
+        DrawNumber(255, sys->ScreenHeight - 40, frags);
     }
 
     if (player->equipedGame)
     {
-        pics.draw(11, sys.ScreenWidth / 2 - 32,
-                      sys.ScreenHeight - 64, 
+        pics->draw(11, sys->ScreenWidth / 2 - 32,
+                      sys->ScreenHeight - 64, 
                       player->equipedGame - ITEM_GAME_NINJA_MAN, 
                       false, 2.f, 2.f, 0.f, COLOR(1.f, 1.f, 1.f, 0.9f), COLOR(1.f, 1.f, 1.f, 0.9f));
     }
@@ -399,7 +398,7 @@ void Game::DrawStats()
         int sec = timeleft - min * 60;
         char buf[50];
         sprintf(buf,"%d:%d",min,sec);
-        WriteText(450, 20, pics, 10, buf, 0.7f,1.5f, COLOR(1.0f,0.5f,0.5f, 1.f), COLOR(1.0f,0.5f,0.5f, 1.f));
+        WriteText(450, 20, *pics, 10, buf, 0.7f,1.5f, COLOR(1.0f,0.5f,0.5f, 1.f), COLOR(1.0f,0.5f,0.5f, 1.f));
     }
 
 }
@@ -458,8 +457,8 @@ void Game::AdaptMapView()
     int clientIndex = (netMode == NETMODE_CLIENT)? (clientMyIndex + 1) : 0;
     Dude* player = mapas.getPlayer(clientIndex);
 
-    const float HALF_SCREEN_W = sys.ScreenWidth / 2.f;
-    const float HALF_SCREEN_H = sys.ScreenHeight / 2.f;
+    const float HALF_SCREEN_W = sys->ScreenWidth / 2.f;
+    const float HALF_SCREEN_H = sys->ScreenHeight / 2.f;
 
     float posX = HALF_SCREEN_W - player->x;
 
@@ -467,9 +466,9 @@ void Game::AdaptMapView()
     {
         posX = HALF_TILE_WIDTH;
     }
-    else if (posX < -1.f * (mapas.width() * TILE_WIDTH - sys.ScreenWidth - HALF_TILE_WIDTH))
+    else if (posX < -1.f * (mapas.width() * TILE_WIDTH - sys->ScreenWidth - HALF_TILE_WIDTH))
     {
-        posX = -1.f * (mapas.width() * TILE_WIDTH - sys.ScreenWidth - HALF_TILE_WIDTH);
+        posX = -1.f * (mapas.width() * TILE_WIDTH - sys->ScreenWidth - HALF_TILE_WIDTH);
     }
 
 
@@ -479,19 +478,19 @@ void Game::AdaptMapView()
     {
         posY = HALF_TILE_WIDTH;
     }
-    else if (posY < -1.f * (mapas.height() * TILE_WIDTH - sys.ScreenHeight - HALF_TILE_WIDTH))
+    else if (posY < -1.f * (mapas.height() * TILE_WIDTH - sys->ScreenHeight - HALF_TILE_WIDTH))
     {
-        posY = -1.f * (mapas.height() * TILE_WIDTH - sys.ScreenHeight - HALF_TILE_WIDTH);
+        posY = -1.f * (mapas.height() * TILE_WIDTH - sys->ScreenHeight - HALF_TILE_WIDTH);
     }
 
 
 
-    if ((int)(mapas.width() * TILE_WIDTH) <= sys.ScreenWidth )
+    if ((int)(mapas.width() * TILE_WIDTH) <= sys->ScreenWidth )
     {
         posX = HALF_SCREEN_W - (mapas.width() * HALF_TILE_WIDTH - HALF_TILE_WIDTH);
     }
 
-    if ((int)(mapas.height() * TILE_WIDTH) <= sys.ScreenHeight)
+    if ((int)(mapas.height() * TILE_WIDTH) <= sys->ScreenHeight)
     {
         posY = HALF_SCREEN_H- (mapas.height() * HALF_TILE_WIDTH - HALF_TILE_WIDTH);
     }
@@ -1667,10 +1666,10 @@ void Game::ResetVolume()
 
     for (unsigned i = 0; i < maxwavs; i++)
     {
-        ss->setVolume(i, sys.soundFXVolume);
+        ss->setVolume(i, sys->soundFXVolume);
     }
 
-    music->setVolume(sys.musicVolume);
+    music->setVolume(sys->musicVolume);
 
 }
 
@@ -1910,8 +1909,8 @@ void Game::TitleMenuLogic()
             {
                 MusicVolumeC.deactivate();
                 options.activate();
-                sys.musicVolume = MusicVolumeC.state / 1000.f;
-                printf("new music volume %f\n", sys.musicVolume);
+                sys->musicVolume = MusicVolumeC.state / 1000.f;
+                printf("new music volume %f\n", sys->musicVolume);
                 ResetVolume();
                 MusicVolumeC.reset();
                 char buf[1024];
@@ -1919,7 +1918,7 @@ void Game::TitleMenuLogic()
                 sprintf(buf, "%s/settings.cfg", documentPath);
 #ifndef __ANDROID__
 
-                sys.write(buf);
+                sys->write(buf);
 #endif
             }
 
@@ -1940,7 +1939,7 @@ void Game::TitleMenuLogic()
             {
                 SfxVolumeC.deactivate();
                 options.activate();
-                sys.soundFXVolume = SfxVolumeC.state*-1;
+                sys->soundFXVolume = SfxVolumeC.state*-1;
                 ResetVolume();
                 SfxVolumeC.reset();
 
@@ -2696,23 +2695,23 @@ void Game::DrawHelp()
 
     const int ICON_POS = 20;
 
-    pics.draw(13, 320, 180, 0, true);
-    WriteShadedText(130, 40, pics, PICTURE_FONT, "Colect these:");
+    pics->draw(13, 320, 180, 0, true);
+    WriteShadedText(130, 40, *pics, PICTURE_FONT, "Colect these:");
 
-    pics.draw(11, 150, 60, mapas.itmframe, false);
-    pics.draw(11, 200, 60, mapas.itmframe + 4, false);
-    pics.draw(11, 250, 60, mapas.itmframe + 8, false);
+    pics->draw(11, 150, 60, mapas.itmframe, false);
+    pics->draw(11, 200, 60, mapas.itmframe + 4, false);
+    pics->draw(11, 250, 60, mapas.itmframe + 8, false);
 
-    pics.draw(7, ICON_POS, 110, 0, false);
-    pics.draw(7, ICON_POS, 130, 1, false);
-    WriteShadedText(ICON_POS + 40, 120, pics, PICTURE_FONT, "Ammo");
-    WriteShadedText(ICON_POS + 40, 140, pics, PICTURE_FONT, "Health Up");
+    pics->draw(7, ICON_POS, 110, 0, false);
+    pics->draw(7, ICON_POS, 130, 1, false);
+    WriteShadedText(ICON_POS + 40, 120, *pics, PICTURE_FONT, "Ammo");
+    WriteShadedText(ICON_POS + 40, 140, *pics, PICTURE_FONT, "Health Up");
 
-    WriteShadedText(ICON_POS + 40, 220, pics, PICTURE_FONT, "Controls:");
-    WriteShadedText(ICON_POS + 40, 240, pics, PICTURE_FONT, "Aim with the mouse, and move with arrows");
-    WriteShadedText(ICON_POS + 40, 255, pics, PICTURE_FONT, "Tab: minimap");
-    WriteShadedText(ICON_POS + 40, 270, pics, PICTURE_FONT, "CTRL: fire");
-    WriteShadedText(ICON_POS + 40, 285, pics, PICTURE_FONT, "SPACE: opens door");
+    WriteShadedText(ICON_POS + 40, 220, *pics, PICTURE_FONT, "Controls:");
+    WriteShadedText(ICON_POS + 40, 240, *pics, PICTURE_FONT, "Aim with the mouse, and move with arrows");
+    WriteShadedText(ICON_POS + 40, 255, *pics, PICTURE_FONT, "Tab: minimap");
+    WriteShadedText(ICON_POS + 40, 270, *pics, PICTURE_FONT, "CTRL: fire");
+    WriteShadedText(ICON_POS + 40, 285, *pics, PICTURE_FONT, "SPACE: opens door");
 
     int monframe = mapas.itmframe;
 
@@ -2721,11 +2720,11 @@ void Game::DrawHelp()
         monframe = 0;
     }
 
-    pics.draw(3, ICON_POS, 170, monframe, false);
-    WriteShadedText(ICON_POS + 40, 170, pics, PICTURE_FONT, "These monsters can eat items");
-    WriteShadedText(ICON_POS + 40, 190, pics, PICTURE_FONT, "kill them to retrieve items back.");
+    pics->draw(3, ICON_POS, 170, monframe, false);
+    WriteShadedText(ICON_POS + 40, 170, *pics, PICTURE_FONT, "These monsters can eat items");
+    WriteShadedText(ICON_POS + 40, 190, *pics, PICTURE_FONT, "kill them to retrieve items back.");
 
-    WriteShadedText(20, sys.ScreenHeight - 20, pics, PICTURE_FONT, "hit RETURN to play...");
+    WriteShadedText(20, sys->ScreenHeight - 20, *pics, PICTURE_FONT, "hit RETURN to play...");
 
 
 }
@@ -2736,9 +2735,9 @@ void Game::DrawMissionObjectives()
     char buf[50];
 
     sprintf(buf, "Time remaining:%d:%d", mapas.timeToComplete / 60, mapas.timeToComplete - 60 * (mapas.timeToComplete / 60));
-    WriteText(sys.ScreenWidth / 2 - 100, 
-              sys.ScreenHeight / 2 + 50,
-              pics,
+    WriteText(sys->ScreenWidth / 2 - 100, 
+              sys->ScreenHeight / 2 + 50,
+              *pics,
               10,
               buf,
               1.f, 1.f,
@@ -2818,17 +2817,17 @@ void Game::renderToFBO(bool useVulkan)
     switch(state)
     {
         case GAMESTATE_TITLE  : DrawTitleScreen();      break;
-        case GAMESTATE_INTRO  : intro.draw(pics, sys);  break;
+        case GAMESTATE_INTRO  : intro.draw(*pics, *sys);  break;
         case GAMESTATE_HELP   : DrawHelp();             break;
         case GAMESTATE_ENDING : DrawEndScreen();        break;
         case GAMESTATE_GAME   : DrawGameplay();         break;
     }
 
 #ifndef __ANDROID__
-    pics.draw(18, MouseX, MouseY, (state == GAMESTATE_GAME) ? 0 : 1, (state == GAMESTATE_GAME) ? true : false);
+    pics->draw(18, MouseX, MouseY, (state == GAMESTATE_GAME) ? 0 : 1, (state == GAMESTATE_GAME) ? true : false);
 #endif
 
-    pics.drawBatch(&shaders->shaders[1], &shaders->shaders[0], 666, useVulkan, vkCmd);
+    pics->drawBatch(&shaders->shaders[1], &shaders->shaders[0], 666, useVulkan, vkCmd);
 
     if (!useVulkan)
     {
@@ -2845,19 +2844,19 @@ void Game::renderFBO(bool useVulkan)
     {
         glViewport(0, 0, screenWidth, screenHeight);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        pics.draw(fboTextureIndex, 0, 0, 0, false, sys.screenScaleX, sys.screenScaleY);
+        pics->draw(fboTextureIndex, 0, 0, 0, false, sys->screenScaleX, sys->screenScaleY);
 #ifdef __ANDROID__
-        pics.drawBatch(&shaders->shaders[1], &shaders->shaders[0], 666, false);
+        pics->drawBatch(&shaders->shaders[1], &shaders->shaders[0], 666, false);
 #else
-        pics.drawBatch(&shaders->shaders[1], &shaders->shaders[2], 666, false);
+        pics->drawBatch(&shaders->shaders[1], &shaders->shaders[2], 666, false);
 #endif
         glEnable(GL_BLEND);
     }
     else
     {
         VkCommandBuffer* vkCmd = vk->getCommandBuffer();
-        pics.draw(fboTextureIndex, 0, screenHeight, 0, false, sys.screenScaleX, -sys.screenScaleY);
-        pics.drawBatch(&shaders->shaders[1], &shaders->shaders[2], 666, true, vkCmd);
+        pics->draw(fboTextureIndex, 0, screenHeight, 0, false, sys->screenScaleX, -sys->screenScaleY);
+        pics->drawBatch(&shaders->shaders[1], &shaders->shaders[2], 666, true, vkCmd);
 
     }
 
@@ -2865,103 +2864,103 @@ void Game::renderFBO(bool useVulkan)
 //-------------------------------------
 void Game::DrawTitleScreen()
 {
-    pics.draw(0, 320, 180, 0, true);
-    pics.draw(16, 0, 0, 0, false, 1.f, 1.f, 0.f, COLOR(1.f, 1, 1, 1.f), COLOR(1.f, 1.f, 1.f, 1.f));
+    pics->draw(0, 320, 180, 0, true);
+    pics->draw(16, 0, 0, 0, false, 1.f, 1.f, 0.f, COLOR(1.f, 1, 1, 1.f), COLOR(1.f, 1.f, 1.f, 1.f));
 
     char buf[80];
 
     sprintf(buf,"Jrs%dul",0);
-    WriteText(sys.ScreenWidth - 50, 10, pics, 10, buf, 0.5f, 0.5f);
+    WriteText(sys->ScreenWidth - 50, 10, *pics, 10, buf, 0.5f, 0.5f);
     sprintf(buf,"%d",2025);
-    WriteText(sys.ScreenWidth - 40, 25, pics, 10, buf, 0.5f, 0.5f);
+    WriteText(sys->ScreenWidth - 40, 25, *pics, 10, buf, 0.5f, 0.5f);
 
     sprintf(buf, "%s", (hasVulkan) ? "VULKAN" : "OPENGL");
-    WriteText(sys.ScreenWidth - 60, 40, pics, 10, buf, 0.8, 0.8);
+    WriteText(sys->ScreenWidth - 60, 40, *pics, 10, buf, 0.8, 0.8);
 
     if (mainmenu.active())
     {
-        mainmenu.draw(pics,
-                pics.findByName("pics/pointer.tga"),
-                pics.findByName("pics/charai.tga"));
+        mainmenu.draw(*pics,
+                pics->findByName("pics/pointer.tga"),
+                pics->findByName("pics/charai.tga"));
     }
 
     if (netmenu.active())
     {
-        netmenu.draw(pics,
-                pics.findByName("pics/pointer.tga"),
-                pics.findByName("pics/charai.tga")
+        netmenu.draw(*pics,
+                pics->findByName("pics/pointer.tga"),
+                pics->findByName("pics/charai.tga")
                 );
     }
 
     if (netgame.active())
     {
-        netgame.draw(pics,
-                pics.findByName("pics/pointer.tga"),
-                pics.findByName("pics/charai.tga")
+        netgame.draw(*pics,
+                pics->findByName("pics/pointer.tga"),
+                pics->findByName("pics/charai.tga")
                 );
     }
 
     if (mapmenu.active())
     {
-        mapmenu.draw(pics,
-                     pics.findByName("pics/pointer.tga"),
-                     pics.findByName("pics/charai.tga")
+        mapmenu.draw(*pics,
+                     pics->findByName("pics/pointer.tga"),
+                     pics->findByName("pics/charai.tga")
                     );
     }
 
     if (options.active())
     {
-        options.draw(pics,
-                pics.findByName("pics/pointer.tga"),
-                pics.findByName("pics/charai.tga")
+        options.draw(*pics,
+                pics->findByName("pics/pointer.tga"),
+                pics->findByName("pics/charai.tga")
                 );
     }
 
     if (ipedit.active())
     {
-        ipedit.draw(pics, pics.findByName("pics/charai.tga"));
+        ipedit.draw(*pics, pics->findByName("pics/charai.tga"));
     }
 
     if (SfxVolumeC.active())
     {
-        SfxVolumeC.draw(pics, 
-                pics.findByName("pics/pointer.tga"),
-                pics.findByName("pics/pointer.tga"),
-                pics.findByName("pics/charai.tga")
+        SfxVolumeC.draw(*pics,
+                pics->findByName("pics/pointer.tga"),
+                pics->findByName("pics/pointer.tga"),
+                pics->findByName("pics/charai.tga")
                 );
     }
 
     if (MusicVolumeC.active())
     {
-        MusicVolumeC.draw(pics,
-                pics.findByName("pics/pointer.tga"),
-                pics.findByName("pics/pointer.tga"),
-                pics.findByName("pics/charai.tga")
+        MusicVolumeC.draw(*pics,
+                pics->findByName("pics/pointer.tga"),
+                pics->findByName("pics/pointer.tga"),
+                pics->findByName("pics/charai.tga")
                 );
     }
 
     if (cartridgeCollection.active())
     {
-        cartridgeCollection.draw(pics);
+        cartridgeCollection.draw(*pics);
     }
 }
 //------------------------------------
 void Game::DrawEndScreen()
 {
-    pics.draw(14, 320, 180, 0, true);
+    pics->draw(14, 320, 180, 0, true);
     char levelstr[255];
 
     if (netGameState == MPMODE_DEATHMATCH)
     {
         sprintf(levelstr, "your frags: %d", frags);
-        WriteShadedText(20, 40, pics, 10, levelstr);
+        WriteShadedText(20, 40, *pics, 10, levelstr);
 
     }
     else
     {
         sprintf(levelstr, "Levels completed: %d", mapai->current);
-        WriteShadedText(20, 40, pics, 10, levelstr);
-        WriteShadedText(20, 80, pics, 10, "Your loot:");
+        WriteShadedText(20, 40, *pics, 10, levelstr);
+        WriteShadedText(20, 80, *pics, 10, "Your loot:");
 
 
         int itemY = 100;
@@ -2969,11 +2968,11 @@ void Game::DrawEndScreen()
 
         for (unsigned i = 0; i < loot.size(); ++i)
         {
-            pics.draw(11, itemX, itemY, loot[i] - ITEM_GAME_NINJA_MAN, false);
+            pics->draw(11, itemX, itemY, loot[i] - ITEM_GAME_NINJA_MAN, false);
 
             itemX += 32;
 
-            if (itemX > sys.ScreenWidth - 20)
+            if (itemX > sys->ScreenWidth - 20)
             {
                 itemY += 32;
                 itemX = 20;
@@ -2982,7 +2981,7 @@ void Game::DrawEndScreen()
         }
     }
 
-    WriteShadedText(260, sys.ScreenHeight - 30, pics, 10, "Press SPACE to continue...");
+    WriteShadedText(260, sys->ScreenHeight - 30, *pics, 10, "Press SPACE to continue...");
 }
 //------------------------------------
 void Game::DrawGameplay()
@@ -3005,9 +3004,9 @@ void Game::DrawGameplay()
 
     if (doFadein)
     {
-        WriteText(sys.ScreenWidth / 2-150, 
-                sys.ScreenHeight/2-64,
-                pics, 10, "Get Ready!", 2,2);
+        WriteText(sys->ScreenWidth / 2 - 150,
+                  sys->ScreenHeight / 2 - 64,
+                  *pics, 10, "Get Ready!", 2,2);
     }
 
     if (objectivetim && netGameState == MPMODE_COOP)
@@ -3022,19 +3021,19 @@ void Game::DrawGameplay()
 
     if (inventory.active())
     {
-        inventory.draw(pics, loot, gameData);
+        inventory.draw(*pics, loot, gameData);
     }
 
 
 
     if (showMiniMap)
     {
-        DrawMiniMap(sys.ScreenWidth - mapas.width() * 4, sys.ScreenHeight - mapas.height() * 4);
+        DrawMiniMap(sys->ScreenWidth - mapas.width() * 4, sys->ScreenHeight - mapas.height() * 4);
     }
 
     if (gameOver)
     {
-        pics.draw(19, sys.ScreenWidth / 2, sys.ScreenHeight / 2, 0, true);
+        pics->draw(19, sys->ScreenWidth / 2, sys->ScreenHeight / 2, 0, true);
     }
 
 
@@ -4119,15 +4118,15 @@ void Game::loadConfig()
     char buf[1024];
     printf("Document path: %s\n", documentPath);
     sprintf(buf, "%s/settings.cfg", documentPath);
-    sys.load(buf);
+    sys->load(buf);
 #endif
-    screenWidth = sys.ScreenWidth * sys.screenScaleX;
-    screenHeight = sys.ScreenHeight * sys.screenScaleY;
+    screenWidth = sys->ScreenWidth * sys->screenScaleX;
+    screenHeight = sys->ScreenHeight * sys->screenScaleY;
 #ifndef __ANDROID__
-    windowed = sys.useWindowed;
-    renderer = sys.renderIdx;
+    windowed = sys->useWindowed;
+    renderer = sys->renderIdx;
 
-    sys.write(buf);
+    sys->write(buf);
 #endif
 }
 
@@ -4154,8 +4153,6 @@ void Game::init(bool useVulkan)
 #endif
     }
 
-
-
     screenTexture.create(screenWidth,
                          screenHeight,
                          0,
@@ -4164,16 +4161,16 @@ void Game::init(bool useVulkan)
                          vkPhysicalDevice);
 
 #ifdef __ANDROID__
-    pics.load("pics/imagesToLoad.xml", AssetManager, useVulkan, vulkanDevice, vkPhysicalDevice, vkCommandPool, vkGraphicsQueue);
+    pics->load("pics/imagesToLoad.xml", AssetManager, useVulkan, vulkanDevice, vkPhysicalDevice, vkCommandPool, vkGraphicsQueue);
 #else
-    pics.load("pics/imagesToLoad.xml", useVulkan, vulkanDevice, vkPhysicalDevice, vkCommandPool, vkGraphicsQueue);
+    pics->load("pics/imagesToLoad.xml", useVulkan, vulkanDevice, vkPhysicalDevice, vkCommandPool, vkGraphicsQueue);
 #endif
 
-    fboTextureIndex = pics.getTextureCount();
+    fboTextureIndex = pics->getTextureCount();
 
     if (!useVulkan)
     {
-        pics.attachTexture(screenTexture.getGLTexture(),
+        pics->attachTexture(screenTexture.getGLTexture(),
                            fboTextureIndex,
                            screenWidth,
                            screenHeight,
@@ -4185,7 +4182,7 @@ void Game::init(bool useVulkan)
     {
         VulkanTexture t;
         screenTexture.getVulkanTexture(t);
-        pics.attachTexture(t,
+        pics->attachTexture(t,
                            fboTextureIndex,
                            screenWidth,
                            screenHeight,
@@ -4194,14 +4191,14 @@ void Game::init(bool useVulkan)
                            vulkanDevice);
     }
 
-    shaders->init(useVulkan, vk, &pics);
+    shaders->init(useVulkan, vk, pics);
 
 #ifdef __ANDROID__
     shaders->load("shaders", "list.xml", assetManager);
     shaders->addShaderManualy("default", true, false, assetManager);
 #else
     shaders->load("shaders", "list.xml");
-    shaders->addShaderManualy(sys.postShader, true, false);
+    shaders->addShaderManualy(sys->postShader, true, false);
 #endif
 
     if (!useVulkan)
@@ -4230,18 +4227,18 @@ void Game::init(bool useVulkan)
 #ifndef __ANDROID__
     menu.push_back({"Exit", 0, 4});
 #endif
-    mainmenu.init(0, sys.ScreenHeight - 150, "", menu, 0);
+    mainmenu.init(0, sys->ScreenHeight - 150, "", menu, 0);
     mainmenu.activate();
 
     menu.clear();
     menu.push_back({"Start server", 0, 0});
     menu.push_back({"Join server", 0, 1});
-    netmenu.init(0, sys.ScreenHeight-100, "Network Game:", menu, 0);
+    netmenu.init(0, sys->ScreenHeight-100, "Network Game:", menu, 0);
 
     menu.clear();
     menu.push_back({"Coop", 0, 0});
     menu.push_back({"DeathMatch", 0, 1});
-    netgame.init(0, sys.ScreenHeight-100, "Game Type:", menu, 0);
+    netgame.init(0, sys->ScreenHeight-100, "Game Type:", menu, 0);
 
     menu.clear();
     for (int i = 0; i < mapai->count(); ++i)
@@ -4251,17 +4248,17 @@ void Game::init(bool useVulkan)
         menu.push_back(tmp);
     }
 
-    mapmenu.init(0, sys.ScreenHeight - mapai->count() * 20 - 32, "Select map:", menu, 0);
+    mapmenu.init(0, sys->ScreenHeight - mapai->count() * 20 - 32, "Select map:", menu, 0);
 
     menu.clear();
     menu.push_back({"Music Volume", 0, 0});
     menu.push_back({"Sound fx Volume", 0, 1});
-    options.init(0,sys.ScreenHeight-100,"Options:", menu, 0);
+    options.init(0, sys->ScreenHeight - 100, "Options:", menu, 0);
 
-    ipedit.init(sys.ScreenWidth / 2 - 50, 10, "Enter Server's IP", 20);
+    ipedit.init(sys->ScreenWidth / 2 - 50, 10, "Enter Server's IP", 20);
 
-    SfxVolumeC.init(20,sys.ScreenHeight-100,"Sfx Volume:",0,10000,100);
-    MusicVolumeC.init(20, sys.ScreenHeight-100, "Music Volume:", (long)(sys.musicVolume * 1000), 1000, 10);
+    SfxVolumeC.init(20, sys->ScreenHeight - 100, "Sfx Volume:", 0, 10000,100);
+    MusicVolumeC.init(20, sys->ScreenHeight - 100, "Music Volume:", (long)(sys->musicVolume * 1000), 1000, 10);
 
 #ifdef __ANDROID__
     intro.load("data/intro.itf", AssetManager);
@@ -4288,9 +4285,6 @@ void Game::init(bool useVulkan)
 //--------------------------------
 void Game::destroy()
 {
-
-    VkDevice* vulkanDevice = vk->getDevice();
-
     switch(netMode)
     {
         case NETMODE_NONE: break;
@@ -4306,11 +4300,9 @@ void Game::destroy()
     mapas.destroy();
     mapai->Destroy();
     delete mapai;
-    pics.destroy(vulkanDevice);
 
     screenTexture.destroy();
 
     bulbox.destroy();
 
-    shaders->destroy();
 }
