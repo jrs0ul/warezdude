@@ -10,7 +10,7 @@
         #pragma comment(lib,"Crypt32.lib")
         #pragma comment(lib,"Wldap32.lib")
         #pragma comment(lib,"Normaliz.lib")
-        
+
         #ifdef _DEBUG
             #pragma comment(lib,"libogg_d.lib")
             #pragma comment(lib,"libvorbis_d.lib")
@@ -37,6 +37,7 @@
 #include <string>
 #include <thread>
 #include <disarray/VulkanVideo.h>
+#include <disarray/disarray.h>
 
 
 SDLVideo SDL;
@@ -65,37 +66,9 @@ void ConfigureGraphicsLib(bool useVulkan)
     game.init(useVulkan);
 }
 //-----------------
-void RenderScreen(bool useVulkan)
+static void  process_events()
 {
-    VulkanVideo* vk = SDL.getVkVideo();
 
-    if (useVulkan)
-    {
-        vk->getNextSwapImage();
-        vk->resetCommandBuffer();
-        vk->beginCommandBuffer();
-    }
-
-    game.renderToFBO(useVulkan);
-
-    if (useVulkan)
-    {
-        vk->beginRenderPass({0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0});
-        vk->setViewportAndScissor(0, 0, game.screenWidth, game.screenHeight);
-    }
-
-    game.renderFBO(useVulkan);
-
-    SDL.swap(useVulkan);
-}
-//-----------------
-void Logic()
-{
-    game.logic();
-}
-//-----------------
-static void  process_events(){
-    
     SDL_Event event;
     float scaleX = 1.f;
     float scaleY = 1.f;
@@ -128,13 +101,11 @@ static void  process_events(){
         } break;
         case SDL_MOUSEBUTTONUP:{
             Vector3D pos(event.button.x * scaleX, event.button.y * scaleY, 0);
-            //printf("up x:%f y:%f\n", pos.x() , pos.y());
             game.touches->up.push_back(pos);
             game.touches->allfingersup = true;
         } break;
         case SDL_MOUSEBUTTONDOWN:{
             Vector3D pos(event.button.x * scaleX, event.button.y * scaleY, 0);
-            //printf("down x:%f y:%f\n", pos.x() , pos.y());
             game.touches->down.push_back(pos);
             game.touches->allfingersup = false;
 
@@ -142,7 +113,7 @@ static void  process_events(){
 
         case SDL_MOUSEWHEEL:
         {
-            game.Keys[7] = 1;
+            game.keys[7] = 1;
         } break;
 
         case SDL_MOUSEMOTION:{
@@ -159,131 +130,24 @@ static void  process_events(){
         {
             game.works = false;
         }break;
-    
+
         }
 
     }
 }
-//--------------------
-void CheckKeys()
+//----------
+void DoNetwork()
 {
-    const Uint8* keys = SDL_GetKeyboardState(NULL);
-
-    SDL_GetRelativeMouseState ( &MouseX, &MouseY );
-    SDL_GetMouseState(&_MouseX, &_MouseY);
-
-
-    game.RelativeMouseX = MouseX;
-    game.RelativeMouseY = MouseY;
-
-    game.MouseX = _MouseX;
-    game.MouseY = _MouseY;
-
-
-    memcpy(game.OldKeys, game.Keys, Game::GameKeyCount);
-    memset(game.Keys, 0, Game::GameKeyCount);
-
-    if ( keys[SDL_SCANCODE_W] )     game.Keys[0] = 1;
-    if ( keys[SDL_SCANCODE_S] )     game.Keys[1] = 1;
-    if ( keys[SDL_SCANCODE_A] )     game.Keys[3] = 1;
-    if ( keys[SDL_SCANCODE_D] )     game.Keys[2] = 1;
-
-    if ( keys[SDL_SCANCODE_UP] )    game.Keys[0] = 1;
-    if ( keys[SDL_SCANCODE_DOWN])   game.Keys[1] = 1;
-    if ( keys[SDL_SCANCODE_LEFT])   game.Keys[3] = 1;
-    if ( keys[SDL_SCANCODE_RIGHT])  game.Keys[2] = 1;
-
-    if ( keys[SDL_SCANCODE_SPACE])  game.Keys[4] = 1;
-    if ( keys[SDL_SCANCODE_RETURN]) game.Keys[4] = 1;
-    if ( keys[SDL_SCANCODE_ESCAPE]) game.Keys[5] = 1;
-    if ( keys[SDL_SCANCODE_LCTRL])  game.Keys[6] = 1;
-    if ( keys[SDL_SCANCODE_TAB])    game.Keys[8] = 1;
-    if ( keys[SDL_SCANCODE_I])      game.Keys[9] = 1;
-
-
-    if (gamepad)
-    {
-        const int DEADZONE = 10;
-
-        SDL_GameControllerUpdate();
-
-        game.gamepadLAxis.x = SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_LEFTX) / 1000;
-
-        if (game.gamepadLAxis.x > 0 && game.gamepadLAxis.x < DEADZONE)
-        {
-            game.gamepadLAxis.x = 0;
-        }
-
-        if (game.gamepadLAxis.x < 0 && game.gamepadLAxis.x > -DEADZONE)
-        {
-            game.gamepadLAxis.x = 0;
-        }
-
-
-        game.gamepadLAxis.y = SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_LEFTY) / 1000;
-
-        if (game.gamepadLAxis.y > 0 && game.gamepadLAxis.y < DEADZONE)
-        {
-            game.gamepadLAxis.y = 0;
-        }
-
-        if (game.gamepadLAxis.y < 0 && game.gamepadLAxis.y > -DEADZONE)
-        {
-            game.gamepadLAxis.y = 0;
-        }
-
-
-        game.gamepadRAxis.x = SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_RIGHTX) / 1000;
-
-        if (game.gamepadRAxis.x > 0 && game.gamepadRAxis.x < DEADZONE)
-        {
-            game.gamepadRAxis.x = 0;
-        }
-
-        if (game.gamepadRAxis.x < 0 && game.gamepadRAxis.x > -DEADZONE)
-        {
-            game.gamepadRAxis.x = 0;
-        }
-
-
-
-        game.gamepadRAxis.y = SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_RIGHTY) / 1000;
-
-        if (game.gamepadRAxis.y > 0 && game.gamepadRAxis.y < DEADZONE)
-        {
-            game.gamepadRAxis.y = 0;
-        }
-
-        if (game.gamepadRAxis.y < 0 && game.gamepadRAxis.y > -DEADZONE)
-        {
-            game.gamepadRAxis.y = 0;
-        }
-
-
-        if (game.doRumble)
-        {
-            SDL_GameControllerRumble(gamepad, 0x8888, 0x8888, 250);
-            game.doRumble = false;
-        }
-
-        if (SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / 1000 > 0) game.Keys[6] = 1;
-        if (SDL_GameControllerGetAxis(gamepad, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / 1000 > 0) game.Keys[6] = 1;
-
-        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_A))             game.Keys[4] = 1;
-        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_B))             game.Keys[5] = 1;
-
-        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_LEFTSHOULDER))  game.Keys[7] = 1;
-        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER)) game.Keys[7] = 1;
-
-        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_DPAD_UP))       game.Keys[0] = 1;
-        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_DPAD_DOWN))     game.Keys[1] = 1;
-        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_DPAD_RIGHT))    game.Keys[2] = 1;
-        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_DPAD_LEFT))     game.Keys[3] = 1;
-        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_START))         game.Keys[8] = 1;
-        if (SDL_GameControllerGetButton(gamepad, SDL_CONTROLLER_BUTTON_X))             game.Keys[9] = 1;
-
-    }
+    game.network();
 }
+//-----------
+
+class DS : public disarray
+{
+public:
+    DS(GameProto* game, _SDL_GameController* gamepad) : disarray(game, gamepad){}
+    void otherWhileLoopActivities() override { process_events(); DoNetwork();}
+};
 
 //--------------------
 int main(int argc, char* argv[])
@@ -341,41 +205,12 @@ int main(int argc, char* argv[])
 
     SDL_ShowCursor(false);
 
+    DS ds(&game, gamepad);
+    ds.whileLoopPC(&SDL);
 
-    while (game.works)
-    {
-        if ((SDL_GetTicks() > tick))
-        {
-
-            game.deltaTime = (SDL_GetTicks() - game.timeTicks) / 1000.0f;
-            game.timeTicks = SDL_GetTicks();
-
-            game.accumulator += game.deltaTime;
-
-            while (game.accumulator >= game.dT)
-            {
-                Logic();
-                game.accumulator -= game.dT;
-            }
-
-            CheckKeys();
-            RenderScreen(USE_VULKAN);
-
-            tick = SDL_GetTicks() + 1000 / 61;
-        }
-
-        game.network();
-
-        SDL_Delay(0.6);
-
-        process_events();
-
-    }
     printf("QUITING!\n");
 
     game.destroy();
-
-
 
     SDL.quit(USE_VULKAN);
 

@@ -412,27 +412,27 @@ void Game::MoveDude()
 
     const float SPEED = (player->equipedGame == ITEM_GAME_SPEEDBALL) ? ENTITY_SPEEDBALL_SPEED : 1.f;
 
-    if ((Keys[0]) || (Keys[1]) || (Keys[2]) || (Keys[3]))
+    if ((keys[0]) || (keys[1]) || (keys[2]) || (keys[3]))
     {
         float walkSpeed = 0.f;
         float strifeSpeed = 0.f;
 
-        if (Keys[1])
+        if (keys[1])
         {
             walkSpeed = -SPEED;
         }
 
-        if (Keys[0])
+        if (keys[0])
         {
             walkSpeed = SPEED;
         }
 
-        if (Keys[2])
+        if (keys[2])
         {
             strifeSpeed = -SPEED;
         }
 
-        if (Keys[3])
+        if (keys[3])
         {
             strifeSpeed = SPEED;
         }
@@ -443,8 +443,6 @@ void Game::MoveDude()
         AdaptMapView();
 
     }
-
-    
 
 }
 
@@ -972,7 +970,6 @@ void Game::SendServerDoorState(unsigned int clientIndex, int doorx,int doory, un
 //--------------------------------
 void Game::DoorsInteraction()
 {
-
     int clientIndex = (netMode == NETMODE_CLIENT)? (clientMyIndex + 1) : 0;
     Dude* player = mapas.getPlayer(clientIndex);
 
@@ -985,7 +982,7 @@ void Game::DoorsInteraction()
 
         SoundSystem* ss = SoundSystem::getInstance();
 
-        if (Keys[ACTION_OPEN])
+        if (keys[ACTION_OPEN])
         {
             //  opening
             if ((mapas.tiles[dry][drx] == 67) ||
@@ -1053,7 +1050,7 @@ void Game::HandleInteractionsWithDeadPlayers()
     if (netGameState == MPMODE_COOP)
     {
 
-        if (Keys[ACTION_OPEN])
+        if (keys[ACTION_OPEN])
         {
             const int clientIdx = (netMode == NETMODE_CLIENT) ? (clientMyIndex + 1) : 0;
             Dude* player = mapas.getPlayer(clientIdx);
@@ -1681,7 +1678,7 @@ void Game::TitleMenuLogic()
     if (cartridgeCollection.active())
     {
 
-        cartridgeCollection.getInput(Keys, OldKeys);
+        cartridgeCollection.getInput(keys, oldKeys);
 
         if (cartridgeCollection.isCanceled())
         {
@@ -1703,7 +1700,7 @@ void Game::TitleMenuLogic()
 
         if (!mainmenu.selected)
         {
-            mainmenu.getInput(Keys, OldKeys, *touches);
+            mainmenu.getInput(keys, oldKeys, *touches);
         }
         else
         {
@@ -1746,7 +1743,7 @@ void Game::TitleMenuLogic()
     {
         if (!netmenu.selected)
         {
-            netmenu.getInput(Keys, OldKeys, *touches);
+            netmenu.getInput(keys, oldKeys, *touches);
         }
         else{
             switch(netmenu.state)
@@ -1786,7 +1783,7 @@ void Game::TitleMenuLogic()
         {
             if (!ipedit.entered)
             {
-                ipedit.getInput(EditText, globalKEY, Keys, OldKeys);
+                ipedit.getInput(EditText, globalKEY, keys, oldKeys);
             }
             else
             {
@@ -1810,7 +1807,7 @@ void Game::TitleMenuLogic()
         {
             if (!netgame.selected)
             {
-                netgame.getInput(Keys, OldKeys, *touches);
+                netgame.getInput(keys, oldKeys, *touches);
 
                 if (netgame.canceled)
                 {
@@ -1848,7 +1845,7 @@ void Game::TitleMenuLogic()
         {
             if (!mapmenu.selected)
             {
-                mapmenu.getInput(Keys, OldKeys, *touches);
+                mapmenu.getInput(keys, oldKeys, *touches);
 
                 if (mapmenu.canceled)
                 {
@@ -1874,7 +1871,7 @@ void Game::TitleMenuLogic()
         {
             if (!options.selected)
             {
-                options.getInput(Keys, OldKeys, *touches);
+                options.getInput(keys, oldKeys, *touches);
             }
             else
             {
@@ -1903,7 +1900,7 @@ void Game::TitleMenuLogic()
         {
             if (!MusicVolumeC.selected)
             {
-                MusicVolumeC.getInput(Keys, OldKeys);
+                MusicVolumeC.getInput(keys, oldKeys);
             }
             else
             {
@@ -1934,7 +1931,7 @@ void Game::TitleMenuLogic()
         if (SfxVolumeC.active())
         {
             if (!SfxVolumeC.selected)
-                SfxVolumeC.getInput(Keys, OldKeys);
+                SfxVolumeC.getInput(keys, oldKeys);
             else
             {
                 SfxVolumeC.deactivate();
@@ -1959,7 +1956,7 @@ void Game::TitleMenuLogic()
 //---------------------------------------------------------
 void Game::IntroScreenLogic()
 {
-    if (((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])) || (!touches->up.empty()) || (!FirstTime))
+    if (((keys[ACTION_OPEN] && !oldKeys[ACTION_OPEN])) || (!touches->up.empty()) || (!FirstTime))
     {
         state = GAMESTATE_HELP;
         intro.reset();
@@ -1983,7 +1980,7 @@ void Game::HelpScreenLogic()
         itmtim = 0;
     }
 
-    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!touches->up.empty()) ||(!FirstTime))
+    if ((keys[ACTION_OPEN] && !oldKeys[ACTION_OPEN]) || (!touches->up.empty()) ||(!FirstTime))
     {
 
         if (FirstTime)
@@ -2016,7 +2013,7 @@ void Game::EndingLogic()
     }
 
 
-    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!touches->up.empty()))
+    if ((keys[ACTION_OPEN] && !oldKeys[ACTION_OPEN]) || (!touches->up.empty()))
     {
         state = GAMESTATE_TITLE;
         intro.reset();
@@ -2173,8 +2170,8 @@ void Game::logic()
 
     touches->move.clear();
 
-    OldMouseX = MouseX;
-    OldMouseY = MouseY;
+    OldMouseX = mouseX;
+    OldMouseY = mouseY;
 
     OldGamepadLAxis = gamepadLAxis;
     OldGamepadRAxis = gamepadRAxis;
@@ -2305,7 +2302,7 @@ void Game::CoreGameLogic()
 
     if (!inventory.active())
     {
-        if (Keys[ACTION_MAP] && !OldKeys[ACTION_MAP])
+        if (keys[ACTION_MAP] && !oldKeys[ACTION_MAP])
         {
             showMiniMap = !showMiniMap;
         }
@@ -2313,7 +2310,7 @@ void Game::CoreGameLogic()
 
     if (inventory.active())
     {
-        inventory.getInput(Keys, OldKeys, *touches, loot);
+        inventory.getInput(keys, oldKeys, *touches, loot);
 
         if (inventory.isCanceled())
         {
@@ -2346,7 +2343,7 @@ void Game::CoreGameLogic()
         }
     }
 
-    if (Keys[ACTION_INVENTORY] && !OldKeys[ACTION_INVENTORY] && !gameOver)
+    if (keys[ACTION_INVENTORY] && !oldKeys[ACTION_INVENTORY] && !gameOver)
     {
         inventory.activate();
     }
@@ -2375,7 +2372,7 @@ void Game::CoreGameLogic()
 
     if (gameOver)
     {
-        if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!touches->up.empty()))
+        if ((keys[ACTION_OPEN] && !oldKeys[ACTION_OPEN]) || (!touches->up.empty()))
         {
             goToEnding();
             doFadein = true;
@@ -2477,14 +2474,14 @@ void Game::CoreGameLogic()
     }
 
 
-    if ((((int)MouseX != (int)OldMouseX) || ((int)MouseY != (int)OldMouseY)) &&
+    if ((((int)mouseX != (int)OldMouseX) || ((int)mouseY != (int)OldMouseY)) &&
             (!player->shot) && (!player->spawn))
     {
 
         Vector3D dudePosOnScreen(player->x + mapas.getPos().x,
                                  player->y + mapas.getPos().y, 0);
 
-        Vector3D mouse(MouseX, MouseY, 0);
+        Vector3D mouse(mouseX, mouseY, 0);
 
         Vector3D fv = mouse - dudePosOnScreen;
         fv.normalize();
@@ -2495,7 +2492,7 @@ void Game::CoreGameLogic()
     if (!player->shot && !player->spawn && player->canAtack && !inventory.active())
     {
 
-        if ((Keys[ACTION_NEXT_WEAPON]) && (!Keys[ACTION_FIRE]) && (!OldKeys[ACTION_NEXT_WEAPON]))
+        if ((keys[ACTION_NEXT_WEAPON]) && (!keys[ACTION_FIRE]) && (!oldKeys[ACTION_NEXT_WEAPON]))
         {
             player->chageNextWeapon();
         }
@@ -2519,7 +2516,7 @@ void Game::CoreGameLogic()
         player->moveGamePad(mov, PLAYER_RADIUS, mapas, (netGameState == MPMODE_COOP));
         AdaptMapView();
 
-        if ((Keys[0] || Keys[1] || Keys[2] || Keys[3]) && !movedWithGamepad)
+        if ((keys[0] || keys[1] || keys[2] || keys[3]) && !movedWithGamepad)
         {
             MoveDude();
         }
@@ -2546,12 +2543,12 @@ void Game::CoreGameLogic()
 #else
     if (!touches->up.empty())
     {
-        Keys[ACTION_FIRE] = 1;
+        keys[ACTION_FIRE] = 1;
     }
 #endif
 
     //shooting
-    if ((Keys[ACTION_FIRE]) && (!player->shot) && (!player->spawn) && (!inventory.active()))
+    if ((keys[ACTION_FIRE]) && (!player->shot) && (!player->spawn) && (!inventory.active()))
     {
         HandlePlayerAttacks(player, clientIndex);
     }
@@ -2824,7 +2821,7 @@ void Game::renderToFBO(bool useVulkan)
     }
 
 #ifndef __ANDROID__
-    pics->draw(18, MouseX, MouseY, (state == GAMESTATE_GAME) ? 0 : 1, (state == GAMESTATE_GAME) ? true : false);
+    pics->draw(18, mouseX, mouseY, (state == GAMESTATE_GAME) ? 0 : 1, (state == GAMESTATE_GAME) ? true : false);
 #endif
 
     pics->drawBatch(&shaders->shaders[1], &shaders->shaders[0], 666, useVulkan, vkCmd);
@@ -4129,7 +4126,28 @@ void Game::loadConfig()
     sys->write(buf);
 #endif
 }
+//----------------
 
+void Game::render()
+{
+    if (hasVulkan)
+    {
+        vk->getNextSwapImage();
+        vk->resetCommandBuffer();
+        vk->beginCommandBuffer();
+    }
+
+    renderToFBO(hasVulkan);
+
+    if (hasVulkan)
+    {
+        vk->beginRenderPass({0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0});
+        vk->setViewportAndScissor(0, 0, screenWidth, screenHeight);
+    }
+
+    renderFBO(hasVulkan);
+
+}
 
 //-----------------------------------------
 void Game::init(bool useVulkan)

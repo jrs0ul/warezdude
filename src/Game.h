@@ -26,7 +26,6 @@
 #include "GameMap.h"
 
 
-
 class MapList;
 class VulkanVideo;
 
@@ -95,7 +94,6 @@ class Game : public GameProto
     unsigned int imgCount;
     unsigned int maxwavs;
 
-
     int frags; //frags of current player
     DArray<int> fragTable;
     int timeleft;
@@ -116,7 +114,7 @@ class Game : public GameProto
 
     int clientInfoSendCounter;
 
-    int  clientMyIndex;
+    int clientMyIndex;
     int door_tim;
     int objectivetim;
 
@@ -131,13 +129,6 @@ class Game : public GameProto
 
 
 public:
-
-    static const int GameKeyCount = 20;
-
-#ifdef __ANDROID__
-    AAssetManager* AssetManager;
-#endif
-
     GameState state;
     MultiplayerModes netGameState;
 
@@ -145,26 +136,14 @@ public:
     DArray<int> clientIds; // how it is in server, info for the new client
 
     int DebugMode;
-    Vector3D gamepadLAxis;
     Vector3D OldGamepadLAxis;
-
-    Vector3D gamepadRAxis;
     Vector3D OldGamepadRAxis;
-
-    bool doRumble;
-
-    float MouseX;
-    float MouseY;
 
     float OldMouseX;
     float OldMouseY;
 
-    float RelativeMouseX;
-    float RelativeMouseY;
     unsigned char globalKEY;
     unsigned char globalKeyUp;
-    unsigned char OldKeys[GameKeyCount]; //  old game keys
-    unsigned char Keys[GameKeyCount]; //  game keys
     bool windowed;
     int renderer; //renderer index from the config file
 
@@ -175,12 +154,12 @@ public:
     Game();
 
     void init(bool useVulkan);
-    void render(){}
+    void render();
     void renderToFBO(bool useVulkan);
     void renderFBO(bool useVulkan);
     void network();
     void logic();
-    void destroy();
+    void destroy() override;
     void loadConfig();
     void onBack(){};
     SystemConfig* getSysConfig(){return sys;}
@@ -197,9 +176,9 @@ private:
     void goToEnding();
     void GoToLevel(int currentHp, int currentAmmo, int level, int otherplayer);
     void SendItemSRemove(int ItemIndex, int clientIndex, bool playerTaked);
-    //mapo pavadinimas, klientu skaicius
+    //map name, client count
     void SendMapInfo(int clientIndex, GameMap& map);
-    //monster races amd item positions
+    //monster races and item positions
     void SendMapData(int clientIndex, GameMap& map);
     void InitServer();
     void StopServer();
@@ -250,7 +229,6 @@ private:
     void DrawMap(float r,float g, float b);
     void GetDoorInfo(const unsigned char* bufer, unsigned * index, int* dx, int* dy, unsigned char* frame);
     void KillEnemy(unsigned ID);
-    int FPS();
     void DrawSomeText();
     void ServerParseClientGameEquip(const unsigned char* buffer, unsigned* bufferindex, int clientIndex);
     void ServerParseCharacterData(const unsigned char* bufer, unsigned * buferindex, int clientIndex);
