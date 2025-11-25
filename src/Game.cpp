@@ -92,7 +92,7 @@ bool Game::InitAudio()
 
     SoundSystem::getInstance()->init(0);
 #ifdef __ANDROID__
-    SoundSystem::getInstance()->loadFiles("sfx/", "list.xml", AssetManager);
+    SoundSystem::getInstance()->loadFiles("sfx/", "list.xml", androidAssetManager);
 #else
     SoundSystem::getInstance()->loadFiles("sfx/", "list.xml");
 #endif
@@ -113,7 +113,7 @@ void Game::PlayNewSong(const char* songName)
     char buf[255];
     sprintf(buf,"music/%s",songName);
 #ifdef __ANDROID__
-    music->open(buf, AssetManager);
+    music->open(buf, androidAssetManager);
 #else
     music->open(buf);
 #endif
@@ -1612,7 +1612,7 @@ void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers, int 
     bulbox.destroy();
     mapas.destroy();
 #ifdef __ANDROID__
-    if (!mapas.load(name, AssetManager, createItems, otherPlayers))
+    if (!mapas.load(name, androidAssetManager, createItems, otherPlayers))
 #else
     if (!mapas.load(name, createItems, otherPlayers))
 #endif
@@ -2533,11 +2533,11 @@ void Game::CoreGameLogic()
     {
         if (!touches->allfingersup)
         {
-            Keys[ACTION_FIRE] = 1;
+            keys[ACTION_FIRE] = 1;
         }
         else if (!inventory.active())
         {
-            Keys[ACTION_OPEN] = 1;
+            keys[ACTION_OPEN] = 1;
         }
     }
 #else
@@ -4179,7 +4179,7 @@ void Game::init(bool useVulkan)
                          vkPhysicalDevice);
 
 #ifdef __ANDROID__
-    pics->load("pics/imagesToLoad.xml", AssetManager, useVulkan, vulkanDevice, vkPhysicalDevice, vkCommandPool, vkGraphicsQueue);
+    pics->load("pics/imagesToLoad.xml", androidAssetManager, useVulkan, vulkanDevice, vkPhysicalDevice, vkCommandPool, vkGraphicsQueue);
 #else
     pics->load("pics/imagesToLoad.xml", useVulkan, vulkanDevice, vkPhysicalDevice, vkCommandPool, vkGraphicsQueue);
 #endif
@@ -4212,8 +4212,8 @@ void Game::init(bool useVulkan)
     shaders->init(useVulkan, vk, pics);
 
 #ifdef __ANDROID__
-    shaders->load("shaders", "list.xml", AssetManager);
-    shaders->addShaderManualy("default", true, false, AssetManager);
+    shaders->load("shaders", "list.xml", androidAssetManager);
+    shaders->addShaderManualy("default", true, false, androidAssetManager);
 #else
     shaders->load("shaders", "list.xml");
     shaders->addShaderManualy(sys->postShader, true, false);
@@ -4232,7 +4232,7 @@ void Game::init(bool useVulkan)
     MatrixOrtho(0.0, screenWidth, screenHeight, 0.0, -400, 400, orthoMatrix);
 
 #ifdef __ANDROID__
-    mapai = new MapList(AssetManager);
+    mapai = new MapList(androidAssetManager);
 #else
     mapai = new MapList();
 #endif
@@ -4279,7 +4279,7 @@ void Game::init(bool useVulkan)
     MusicVolumeC.init(20, sys->ScreenHeight - 100, "Music Volume:", (long)(sys->musicVolume * 1000), 1000, 10);
 
 #ifdef __ANDROID__
-    intro.load("data/intro.itf", AssetManager);
+    intro.load("data/intro.itf", androidAssetManager);
 #else
     intro.load("data/intro.itf");
 #endif
@@ -4288,7 +4288,7 @@ void Game::init(bool useVulkan)
     ResetVolume();
 
 #ifdef __ANDROID__
-    gameData.load("data/gameData.xml", AssetManager);
+    gameData.load("data/gameData.xml", androidAssetManager);
 #else
     gameData.load("data/gameData.xml");
 #endif

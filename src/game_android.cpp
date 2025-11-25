@@ -141,7 +141,7 @@ static int engine_init_display(struct engine* engine) {
                 engine->game->init(false);
                 engine->game->timeTicks = (float) getTicks();
                 engine->loaded = true;
-                memset(engine->game->Keys, 0, Game::GameKeyCount);
+                memset(engine->game->keys, 0, Game::GAME_KEY_COUNT);
             }
         }
 
@@ -190,7 +190,7 @@ static int engine_init_display(struct engine* engine) {
         engine->game->init(USE_VULKAN);
         engine->game->timeTicks = (float) getTicks();
         engine->loaded = true;
-        memset(engine->game->Keys, 0, Game::GameKeyCount);
+        memset(engine->game->keys, 0, Game::GAME_KEY_COUNT);
 
         engine->animating = 1;
     }
@@ -212,13 +212,13 @@ static void engine_draw_frame(struct engine* engine)
             engine->game->deltaTime = (getTicks() - engine->game->timeTicks) / 1000.0f;
             engine->game->timeTicks = getTicks();
 
-            memcpy(engine->game->OldKeys, engine->game->Keys, Game::GameKeyCount);
-            memset(engine->game->Keys, 0, Game::GameKeyCount);
+            memcpy(engine->game->oldKeys, engine->game->keys, Game::GAME_KEY_COUNT);
+            memset(engine->game->keys, 0, Game::GAME_KEY_COUNT);
 
             if (engine->backPressed)
             {
                 engine->backPressed = false;
-                engine->game->Keys[5] = 1;
+                engine->game->keys[5] = 1;
             }
 
 
@@ -487,9 +487,9 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
         case APP_CMD_INIT_WINDOW:
             // The window is being shown, get it ready.
-            if (engine->app->window != NULL) {
-
-                engine->game->AssetManager = app->activity->assetManager;
+            if (engine->app->window != NULL)
+            {
+                engine->game->androidAssetManager = app->activity->assetManager;
                 int res = engine_init_display(engine);
                 if (res == -1)
                 {

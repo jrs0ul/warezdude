@@ -153,12 +153,12 @@ public:
 
     Game();
 
-    void init(bool useVulkan);
-    void render();
+    void init(bool useVulkan) override;
+    void render() override;
     void renderToFBO(bool useVulkan);
     void renderFBO(bool useVulkan);
     void network();
-    void logic();
+    void logic() override;
     void destroy() override;
     void loadConfig();
     void onBack(){};
