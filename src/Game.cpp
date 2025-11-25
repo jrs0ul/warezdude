@@ -2532,9 +2532,9 @@ void Game::CoreGameLogic()
 
 
 #ifdef __ANDROID__
-    if (!touches.up.empty())
+    if (!touches->up.empty())
     {
-        if (!touches.allfingersup)
+        if (!touches->allfingersup)
         {
             Keys[ACTION_FIRE] = 1;
         }
@@ -4194,8 +4194,8 @@ void Game::init(bool useVulkan)
     shaders->init(useVulkan, vk, pics);
 
 #ifdef __ANDROID__
-    shaders->load("shaders", "list.xml", assetManager);
-    shaders->addShaderManualy("default", true, false, assetManager);
+    shaders->load("shaders", "list.xml", AssetManager);
+    shaders->addShaderManualy("default", true, false, AssetManager);
 #else
     shaders->load("shaders", "list.xml");
     shaders->addShaderManualy(sys->postShader, true, false);

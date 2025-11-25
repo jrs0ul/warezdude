@@ -8,7 +8,7 @@
 #include <android/log.h>
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 
-#include "VulkanVideo.h"
+#include <disarray/VulkanVideo.h>
 #include "Game.h"
 
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "native-activity", __VA_ARGS__))
@@ -130,16 +130,16 @@ static int engine_init_display(struct engine* engine) {
                 if (sys->ScreenWidth * sys->screenScaleX > engine->width) {
                     sys->screenScaleX = engine->width / sys->ScreenWidth;
                     sys->screenScaleY = sys->screenScaleX;
-                    engine->game->ScreenHeight = sys->ScreenHeight * sys->screenScaleY;
-                    engine->game->ScreenWidth = sys->ScreenWidth * sys->screenScaleX;
+                    engine->game->screenHeight = sys->ScreenHeight * sys->screenScaleY;
+                    engine->game->screenWidth = sys->ScreenWidth * sys->screenScaleX;
                 }
                 else
                 {
-                    engine->gamePosX = (int32_t)(engine->width / 2 - engine->game->ScreenWidth / 2);
+                    engine->gamePosX = (int32_t)(engine->width / 2 - engine->game->screenWidth / 2);
                 }
 
                 engine->game->init(false);
-                engine->game->TimeTicks = (float) getTicks();
+                engine->game->timeTicks = (float) getTicks();
                 engine->loaded = true;
                 memset(engine->game->Keys, 0, Game::GameKeyCount);
             }
@@ -178,7 +178,7 @@ static int engine_init_display(struct engine* engine) {
 
         vkCreateAndroidSurfaceKHR(*instance, &create_info, nullptr, &surface);
 
-        engine->gamePosX = (int32_t)(engine->width / 2 - engine->game->ScreenWidth / 2);
+        engine->gamePosX = (int32_t)(engine->width / 2 - engine->game->screenWidth / 2);
 
         if (!engine->vk->init(surface))
         {
@@ -188,7 +188,7 @@ static int engine_init_display(struct engine* engine) {
         }
 
         engine->game->init(USE_VULKAN);
-        engine->game->TimeTicks = (float) getTicks();
+        engine->game->timeTicks = (float) getTicks();
         engine->loaded = true;
         memset(engine->game->Keys, 0, Game::GameKeyCount);
 
@@ -209,8 +209,8 @@ static void engine_draw_frame(struct engine* engine)
     if (engine->game) {
         if (getTicks() > engine->game->tick) {
 
-            engine->game->DeltaTime = (getTicks() - engine->game->TimeTicks) / 1000.0f;
-            engine->game->TimeTicks = getTicks();
+            engine->game->deltaTime = (getTicks() - engine->game->timeTicks) / 1000.0f;
+            engine->game->timeTicks = getTicks();
 
             memcpy(engine->game->OldKeys, engine->game->Keys, Game::GameKeyCount);
             memset(engine->game->Keys, 0, Game::GameKeyCount);
@@ -223,18 +223,18 @@ static void engine_draw_frame(struct engine* engine)
 
 
 
-            if (engine->game->touches.allfingersup)
+            if (engine->game->touches->allfingersup)
             {
                 engine->game->gamepadLAxis.x = 0;
                 engine->game->gamepadLAxis.y = 0;
                 engine->resetMovement = true;
             }
 
-            if (!engine->game->touches.down.empty())
+            if (!engine->game->touches->down.empty())
             {
                 if (engine->resetMovement)
                 {
-                    engine->oldDown = engine->game->touches.down[0];
+                    engine->oldDown = engine->game->touches->down[0];
                     engine->resetMovement = false;
                 }
 
@@ -246,9 +246,9 @@ static void engine_draw_frame(struct engine* engine)
                 //}
             }
 
-            if (!engine->game->touches.move.empty()) {
+            if (!engine->game->touches->move.empty()) {
 
-                Vector3D diff = engine->game->touches.move[0] - engine->oldDown;
+                Vector3D diff = engine->game->touches->move[0] - engine->oldDown;
 
                 engine->game->gamepadLAxis.x = diff.x;
                 engine->game->gamepadLAxis.y = diff.y;
@@ -262,13 +262,13 @@ static void engine_draw_frame(struct engine* engine)
                 //}
             }
 
-            engine->game->Accumulator += engine->game->DeltaTime;
+            engine->game->accumulator += engine->game->deltaTime;
 
 
-            while (engine->game->Accumulator >= engine->game->DT)
+            while (engine->game->accumulator >= engine->game->dT)
             {
                 engine->game->logic();
-                engine->game->Accumulator -= engine->game->DT;
+                engine->game->accumulator -= engine->game->dT;
             }
 
             if (!USE_VULKAN) //opemgl
@@ -288,8 +288,8 @@ static void engine_draw_frame(struct engine* engine)
                 engine->vk->beginRenderPass({0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0});
 
                 engine->vk->setViewportAndScissor(engine->gamePosX, 0,
-                                                  engine->game->ScreenWidth,
-                                                  engine->game->ScreenHeight);
+                                                  engine->game->screenWidth,
+                                                  engine->game->screenHeight);
                 engine->game->renderFBO(true);
 
 
@@ -342,8 +342,8 @@ static int32_t engine_handle_input(struct android_app* app) {
             auto *event = &ib->motionEvents[i];
             int32_t ptrIdx = 0;
 
-            const float widthFactor = (float)engine->game->ScreenWidth / (float)engine->game->getSysConfig()->ScreenWidth;
-            const float heightFactor = (float)engine->game->ScreenHeight / (float)engine->game->getSysConfig()->ScreenHeight;
+            const float widthFactor = (float)engine->game->screenWidth / (float)engine->game->getSysConfig()->ScreenWidth;
+            const float heightFactor = (float)engine->game->screenHeight / (float)engine->game->getSysConfig()->ScreenHeight;
 
             switch (event->action & AMOTION_EVENT_ACTION_MASK) {
 
@@ -358,7 +358,7 @@ static int32_t engine_handle_input(struct android_app* app) {
                                                   &event->pointers[ptrIdx],
                                                   AMOTION_EVENT_AXIS_Y) / heightFactor,
                                           0);
-                    engine->game->touches.down.push_back(v);
+                    engine->game->touches->down.push_back(v);
                 } break;
                 case AMOTION_EVENT_ACTION_POINTER_UP:
                 {
@@ -371,13 +371,13 @@ static int32_t engine_handle_input(struct android_app* app) {
                                                   &event->pointers[ptrIdx],
                                                   AMOTION_EVENT_AXIS_Y) / heightFactor,
                                           0);
-                    engine->game->touches.up.push_back(v);
+                    engine->game->touches->up.push_back(v);
                 } break;
 
 
                 case AMOTION_EVENT_ACTION_UP:
                 {
-                    engine->game->touches.allfingersup = true;
+                    engine->game->touches->allfingersup = true;
 
                     Vector3D v = Vector3D((GameActivityPointerAxes_getAxisValue(
                                                   &event->pointers[ptrIdx],
@@ -386,11 +386,11 @@ static int32_t engine_handle_input(struct android_app* app) {
                                                   &event->pointers[ptrIdx],
                                                   AMOTION_EVENT_AXIS_Y) / heightFactor,
                                           0);
-                    engine->game->touches.up.push_back(v);
+                    engine->game->touches->up.push_back(v);
                 }
                     break;
                 case AMOTION_EVENT_ACTION_DOWN : {
-                    engine->game->touches.allfingersup = false;
+                    engine->game->touches->allfingersup = false;
                     Vector3D v = Vector3D((GameActivityPointerAxes_getAxisValue(
                                                   &event->pointers[ptrIdx],
                                                   AMOTION_EVENT_AXIS_X) - engine->gamePosX) / widthFactor,
@@ -398,12 +398,12 @@ static int32_t engine_handle_input(struct android_app* app) {
                                                   &event->pointers[ptrIdx],
                                                   AMOTION_EVENT_AXIS_Y) / heightFactor,
                                           0);
-                    engine->game->touches.down.push_back(v);
+                    engine->game->touches->down.push_back(v);
                 }
                     break;
                 case AMOTION_EVENT_ACTION_MOVE: {
 
-                    engine->game->touches.allfingersup = false;
+                    engine->game->touches->allfingersup = false;
                     for (int j = 0; j < event->pointerCount; ++j)
                     {
                         Vector3D v = Vector3D((GameActivityPointerAxes_getAxisValue(
@@ -413,7 +413,7 @@ static int32_t engine_handle_input(struct android_app* app) {
                                                       &event->pointers[j],
                                                       AMOTION_EVENT_AXIS_Y) /heightFactor,
                                               0);
-                        engine->game->touches.move.push_back(v);
+                        engine->game->touches->move.push_back(v);
                     }
 
                 }

@@ -22,7 +22,7 @@ add_library(game SHARED
              ${SRCDIR}Game.cpp
              ${SRCDIR}Dude.cpp
              ${SRCDIR}MapGenerator.cpp
-             ${SRCDIR}map.cpp
+             ${SRCDIR}GameMap.cpp
              ${SRCDIR}bullet.cpp
              ${SRCDIR}Decal.cpp
              ${SRCDIR}Intro.cpp
