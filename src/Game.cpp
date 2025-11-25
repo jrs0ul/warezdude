@@ -19,6 +19,7 @@
 #include "maplist.h"
 #include <disarray/VulkanVideo.h>
 #include <disarray/audio/SoundSystem.h>
+#include <disarray/ShaderLoader.h>
 #ifndef _WIN32
 #include <arpa/inet.h>
 #endif
@@ -28,12 +29,6 @@
 Game::Game()
 : imgCount(0)
 {
-    Accumulator = 0;
-    DT = 1000.0f / 60.0f / 1000.0f;
-    Works = true;
-    TimeTicks = 0;
-    tick = 0;
-
     DebugMode = 0;
 
     state = GAMESTATE_TITLE;
@@ -82,26 +77,13 @@ void AdaptSoundPos(int soundIndex, float soundx,float soundy)
     Vector3D v = Vector3D(soundx, 0, soundy);
     ss->setSoundPos(soundIndex, v.v);
 }
-//-----------------------------------------------------------
-int Game::FPS()
-{
-    static int ctime = 0, FPS = 0, frames = 0, frames0 = 0;
-    if ((int)TimeTicks >= ctime) {
-        FPS = frames - frames0;
-        ctime = (int)TimeTicks + 1000;
-        frames0 = frames;
-    }
-    frames = frames+1;
-    return FPS;
-}
-
 
 //-------------------------------------------
 
 void Game::DeleteAudio()
 {
-    music.stop();
-    music.release();
+    music->stop();
+    music->release();
 }
 
 //----------------------------------
@@ -122,21 +104,20 @@ bool Game::InitAudio()
 void Game::PlayNewSong(const char* songName)
 {
 
-    if (music.playing())
+    if (music->playing())
     {
-        music.stop();
-        music.release();
+        music->stop();
+        music->release();
     }
 
     char buf[255];
     sprintf(buf,"music/%s",songName);
 #ifdef __ANDROID__
-    music.open(buf, AssetManager);
+    music->open(buf, AssetManager);
 #else
-    music.open(buf);
+    music->open(buf);
 #endif
-    //music.setVolume(sys.musicVolume);
-    music.playback();
+    music->playback();
 
 }
 
@@ -148,7 +129,7 @@ void Game::DrawSomeText()
 
     char buf[255];
 
-    sprintf(buf,"FPS : %d DeltaTime %f",FPS(), DeltaTime);
+    sprintf(buf,"FPS : %d DeltaTime %f", fps(), deltaTime);
     WriteText(20,20, pics, 10, buf, 0.8f,0.6f);
 
     sprintf(buf, "Map width %d height %d", mapas.width(), mapas.height());
@@ -1643,7 +1624,7 @@ void Game::LoadTheMap(const char* name, bool createItems, int otherPlayers, int 
         mapas.destroy();
         mapai->Destroy();
         printf("Can't find first map!\n");
-        Works = false;
+        works = false;
     }
 
     if (netGameState != MPMODE_DEATHMATCH)
@@ -1689,7 +1670,7 @@ void Game::ResetVolume()
         ss->setVolume(i, sys.soundFXVolume);
     }
 
-    music.setVolume(sys.musicVolume);
+    music->setVolume(sys.musicVolume);
 
 }
 
@@ -1723,7 +1704,7 @@ void Game::TitleMenuLogic()
 
         if (!mainmenu.selected)
         {
-            mainmenu.getInput(Keys, OldKeys, touches);
+            mainmenu.getInput(Keys, OldKeys, *touches);
         }
         else
         {
@@ -1755,7 +1736,7 @@ void Game::TitleMenuLogic()
                     }break;
                 case 4:
                     {
-                        Works = false;
+                        works = false;
                         mainmenu.reset();
                     }break;
             }
@@ -1766,7 +1747,7 @@ void Game::TitleMenuLogic()
     {
         if (!netmenu.selected)
         {
-            netmenu.getInput(Keys, OldKeys, touches);
+            netmenu.getInput(Keys, OldKeys, *touches);
         }
         else{
             switch(netmenu.state)
@@ -1830,7 +1811,7 @@ void Game::TitleMenuLogic()
         {
             if (!netgame.selected)
             {
-                netgame.getInput(Keys, OldKeys, touches);
+                netgame.getInput(Keys, OldKeys, *touches);
 
                 if (netgame.canceled)
                 {
@@ -1868,7 +1849,7 @@ void Game::TitleMenuLogic()
         {
             if (!mapmenu.selected)
             {
-                mapmenu.getInput(Keys, OldKeys, touches);
+                mapmenu.getInput(Keys, OldKeys, *touches);
 
                 if (mapmenu.canceled)
                 {
@@ -1894,7 +1875,7 @@ void Game::TitleMenuLogic()
         {
             if (!options.selected)
             {
-                options.getInput(Keys, OldKeys, touches);
+                options.getInput(Keys, OldKeys, *touches);
             }
             else
             {
@@ -1925,7 +1906,8 @@ void Game::TitleMenuLogic()
             {
                 MusicVolumeC.getInput(Keys, OldKeys);
             }
-            else{
+            else
+            {
                 MusicVolumeC.deactivate();
                 options.activate();
                 sys.musicVolume = MusicVolumeC.state / 1000.f;
@@ -1933,8 +1915,8 @@ void Game::TitleMenuLogic()
                 ResetVolume();
                 MusicVolumeC.reset();
                 char buf[1024];
-                printf("Document path: %s\n", DocumentPath);
-                sprintf(buf, "%s/settings.cfg", DocumentPath);
+                printf("Document path: %s\n", documentPath);
+                sprintf(buf, "%s/settings.cfg", documentPath);
 #ifndef __ANDROID__
 
                 sys.write(buf);
@@ -1954,16 +1936,18 @@ void Game::TitleMenuLogic()
         {
             if (!SfxVolumeC.selected)
                 SfxVolumeC.getInput(Keys, OldKeys);
-            else{
+            else
+            {
                 SfxVolumeC.deactivate();
                 options.activate();
-                sys.soundFXVolume=SfxVolumeC.state*-1;
+                sys.soundFXVolume = SfxVolumeC.state*-1;
                 ResetVolume();
                 SfxVolumeC.reset();
 
             }
 
-            if (SfxVolumeC.canceled){
+            if (SfxVolumeC.canceled)
+            {
                 SfxVolumeC.deactivate();
                 options.activate();
                 SfxVolumeC.reset();
@@ -1976,7 +1960,7 @@ void Game::TitleMenuLogic()
 //---------------------------------------------------------
 void Game::IntroScreenLogic()
 {
-    if (((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])) || (!touches.up.empty()) || (!FirstTime))
+    if (((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN])) || (!touches->up.empty()) || (!FirstTime))
     {
         state = GAMESTATE_HELP;
         intro.reset();
@@ -2000,7 +1984,7 @@ void Game::HelpScreenLogic()
         itmtim = 0;
     }
 
-    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!touches.up.empty()) ||(!FirstTime))
+    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!touches->up.empty()) ||(!FirstTime))
     {
 
         if (FirstTime)
@@ -2033,7 +2017,7 @@ void Game::EndingLogic()
     }
 
 
-    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!touches.up.empty()))
+    if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!touches->up.empty()))
     {
         state = GAMESTATE_TITLE;
         intro.reset();
@@ -2153,9 +2137,9 @@ void Game::logic()
         }
     }
 
-    if (music.playing())
+    if (music->playing())
     {
-        music.update();
+        music->update();
     }
 
     switch(state)
@@ -2179,15 +2163,16 @@ void Game::logic()
 
     }
 
-    if (!touches.up.empty())
+    if (!touches->up.empty())
     {
-        touches.up.clear();
+        touches->up.clear();
     }
-    if (!touches.down.empty())
+    if (!touches->down.empty())
     {
-        touches.down.clear();
+        touches->down.clear();
     }
-    touches.move.clear();
+
+    touches->move.clear();
 
     OldMouseX = MouseX;
     OldMouseY = MouseY;
@@ -2329,7 +2314,7 @@ void Game::CoreGameLogic()
 
     if (inventory.active())
     {
-        inventory.getInput(Keys, OldKeys, touches, loot);
+        inventory.getInput(Keys, OldKeys, *touches, loot);
 
         if (inventory.isCanceled())
         {
@@ -2391,7 +2376,7 @@ void Game::CoreGameLogic()
 
     if (gameOver)
     {
-        if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!touches.up.empty()))
+        if ((Keys[ACTION_OPEN] && !OldKeys[ACTION_OPEN]) || (!touches->up.empty()))
         {
             goToEnding();
             doFadein = true;
@@ -2560,7 +2545,7 @@ void Game::CoreGameLogic()
         }
     }
 #else
-    if (!touches.up.empty())
+    if (!touches->up.empty())
     {
         Keys[ACTION_FIRE] = 1;
     }
@@ -2774,56 +2759,56 @@ void Game::renderToFBO(bool useVulkan)
     FlatMatrix identity;
     MatrixIdentity(identity.m);
 
-    FlatMatrix finalM = identity * OrthoMatrix;
-    defaultShader.use(vkCmd);
+    FlatMatrix finalM = identity * orthoMatrix;
+    shaders->shaders[0].use(vkCmd);
 
     if (!useVulkan)
     {
-        int MatrixID = defaultShader.getUniformID("ModelViewProjection");
+        int MatrixID = shaders->shaders[0].getUniformID("ModelViewProjection");
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, finalM.m);
     }
     else // VULKAN
     {
         vkCmdPushConstants(*vkCmd,
-                           *defaultShader.getVkPipelineLayout(),
+                           *shaders->shaders[0].getVkPipelineLayout(),
                            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(finalM.m), &finalM.m);
     }
 
-    colorShader.use(vkCmd);
+    shaders->shaders[1].use(vkCmd);
     if (!useVulkan)
     {
-        int MatrixIDColor = colorShader.getUniformID("ModelViewProjection");
+        int MatrixIDColor = shaders->shaders[1].getUniformID("ModelViewProjection");
         glUniformMatrix4fv(MatrixIDColor, 1, GL_FALSE, finalM.m);
     }
     else //VULKAN
     {
         vkCmdPushConstants(*vkCmd,
-                           *colorShader.getVkPipelineLayout(),
+                           *shaders->shaders[1].getVkPipelineLayout(),
                            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(finalM.m), &finalM.m);
     }
 
 #ifndef __ANDROID__
-    coolShader.use(vkCmd);
+    shaders->shaders[2].use(vkCmd);
     if (!useVulkan)
     {
-        int MatrixIDCool = coolShader.getUniformID("ModelViewProjection");
+        int MatrixIDCool = shaders->shaders[2].getUniformID("ModelViewProjection");
         glUniformMatrix4fv(MatrixIDCool, 1, GL_FALSE, finalM.m);
-        int timeID = coolShader.getUniformID("uTime");
-        glUniform1f(timeID, TimeTicks / 1000.f);
-        int syID = coolShader.getUniformID("uScreenHeight");
-        float sy = (float)ScreenHeight;
+        int timeID = shaders->shaders[2].getUniformID("uTime");
+        glUniform1f(timeID, timeTicks / 1000.f);
+        int syID = shaders->shaders[2].getUniformID("uScreenHeight");
+        float sy = (float)screenHeight;
         glUniform1f(syID, sy);
     }
     else //VULKAN
     {
         float buffer[18];
-        float time = TimeTicks / 1000.f;
-        float screenH = (float)ScreenHeight;
+        float time = timeTicks / 1000.f;
+        float screenH = (float)screenHeight;
         memcpy(buffer, finalM.m, sizeof(float) * 16);
         memcpy(&buffer[16], &time, sizeof(float));
         memcpy(&buffer[17], &screenH, sizeof(float));
         vkCmdPushConstants(*vkCmd,
-                *coolShader.getVkPipelineLayout(),
+                *shaders->shaders[2].getVkPipelineLayout(),
                 VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(float) * 18, &buffer);
 
     }
@@ -2843,7 +2828,7 @@ void Game::renderToFBO(bool useVulkan)
     pics.draw(18, MouseX, MouseY, (state == GAMESTATE_GAME) ? 0 : 1, (state == GAMESTATE_GAME) ? true : false);
 #endif
 
-    pics.drawBatch(&colorShader, &defaultShader, 666, useVulkan, vkCmd);
+    pics.drawBatch(&shaders->shaders[1], &shaders->shaders[0], 666, useVulkan, vkCmd);
 
     if (!useVulkan)
     {
@@ -2858,21 +2843,21 @@ void Game::renderFBO(bool useVulkan)
 {
     if (!useVulkan)
     {
-        glViewport(0, 0, ScreenWidth, ScreenHeight);
+        glViewport(0, 0, screenWidth, screenHeight);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         pics.draw(fboTextureIndex, 0, 0, 0, false, sys.screenScaleX, sys.screenScaleY);
 #ifdef __ANDROID__
-        pics.drawBatch(&colorShader, &defaultShader, 666, false);
+        pics.drawBatch(&shaders->shaders[1], &shaders->shaders[0], 666, false);
 #else
-        pics.drawBatch(&colorShader, &coolShader, 666, false);
+        pics.drawBatch(&shaders->shaders[1], &shaders->shaders[2], 666, false);
 #endif
         glEnable(GL_BLEND);
     }
     else
     {
         VkCommandBuffer* vkCmd = vk->getCommandBuffer();
-        pics.draw(fboTextureIndex, 0, ScreenHeight, 0, false, sys.screenScaleX, -sys.screenScaleY);
-        pics.drawBatch(&colorShader, &coolShader, 666, true, vkCmd);
+        pics.draw(fboTextureIndex, 0, screenHeight, 0, false, sys.screenScaleX, -sys.screenScaleY);
+        pics.drawBatch(&shaders->shaders[1], &shaders->shaders[2], 666, true, vkCmd);
 
     }
 
@@ -4126,108 +4111,18 @@ void Game::ParseMessagesClientGot()
 }
 
 
-//---------------------------------------
-void Game::LoadShader(ShaderProgram* shader,
-                      const char* name,
-                      bool useVulkan,
-                      bool useUVS,
-                      SpriteBatcher* pics,
-                      bool needAlphaBlend)
-{
-    shader->create(useVulkan);
-
-    char error[1024];
-    char buf[512];
-
-    if (!useVulkan)
-    {
-        Shader vert;
-        Shader frag;
-
-        sprintf(buf, "shaders/%s.vert", name);
-        printf("Loading vertex shader %s...\n", buf);
-
-#ifdef __ANDROID__
-        vert.loadGL(VERTEX_SHADER, buf, AssetManager);
-#else
-        vert.loadGL(VERTEX_SHADER, buf);
-#endif
-
-        sprintf(buf, "shaders/%s.frag", name);
-        printf("Loading fragment shader %s...\n", buf);
-#ifdef __ANDROID__
-        frag.loadGL(FRAGMENT_SHADER, buf, AssetManager);
-#else
-        frag.loadGL(FRAGMENT_SHADER, buf);
-#endif
-
-        shader->attach(vert);
-        shader->attach(frag);
-        shader->link();
-
-        shader->getLog(error, 1024);
-        if (strlen(error)) 
-        {
-#ifdef __ANDROID__
-            LOGI("--%s--", buf);
-            LOGI("%s", error);
-        }
-        LOGI("---------------");
-#else
-            printf("--%s--\n", buf);
-            puts(error);
-        }
-        puts("-----------");
-#endif
-    }
-    else //VULKAN
-    {
-        VkDevice*         vulkanDevice = vk->getDevice();
-        VkPhysicalDevice* vkPhysicalDevice = vk->getPhysicalDevice();
-        VkRenderPass*     vkRenderPass = vk->getRenderPass();
-
-        Shader vert;
-        Shader frag;
-
-        sprintf(buf, "shaders/%s_vert.spv", name);
-#ifdef __ANDROID__
-        vert.loadVK(VERTEX_SHADER, buf, vulkanDevice, AssetManager);
-#else
-        vert.loadVK(VERTEX_SHADER, buf, vulkanDevice);
-#endif
-
-        shader->attach(vert);
-
-        sprintf(buf, "shaders/%s_frag.spv", name);
-#ifdef __ANDROID__
-        frag.loadVK(FRAGMENT_SHADER, buf, vulkanDevice, AssetManager);
-#else
-        frag.loadVK(FRAGMENT_SHADER, buf, vulkanDevice);
-#endif
-
-        shader->attach(frag);
-        shader->buildVkPipeline(vulkanDevice,
-                                vkPhysicalDevice,
-                                vkRenderPass,
-                                (pics) ? pics->getVkDSL() : nullptr,
-                                useUVS,
-                                needAlphaBlend);
-    }
-
-}
-
 //----------------------
 void Game::loadConfig()
 {
 #ifndef __ANDROID__
 
     char buf[1024];
-    printf("Document path: %s\n", DocumentPath);
-    sprintf(buf, "%s/settings.cfg", DocumentPath);
+    printf("Document path: %s\n", documentPath);
+    sprintf(buf, "%s/settings.cfg", documentPath);
     sys.load(buf);
 #endif
-    ScreenWidth = sys.ScreenWidth * sys.screenScaleX;
-    ScreenHeight = sys.ScreenHeight * sys.screenScaleY;
+    screenWidth = sys.ScreenWidth * sys.screenScaleX;
+    screenHeight = sys.ScreenHeight * sys.screenScaleY;
 #ifndef __ANDROID__
     windowed = sys.useWindowed;
     renderer = sys.renderIdx;
@@ -4261,8 +4156,8 @@ void Game::init(bool useVulkan)
 
 
 
-    screenTexture.create(ScreenWidth,
-                         ScreenHeight,
+    screenTexture.create(screenWidth,
+                         screenHeight,
                          0,
                          useVulkan,
                          vulkanDevice,
@@ -4280,10 +4175,10 @@ void Game::init(bool useVulkan)
     {
         pics.attachTexture(screenTexture.getGLTexture(),
                            fboTextureIndex,
-                           ScreenWidth,
-                           ScreenHeight,
-                           ScreenWidth,
-                           ScreenHeight,
+                           screenWidth,
+                           screenHeight,
+                           screenWidth,
+                           screenHeight,
                            0);
     }
     else
@@ -4292,27 +4187,26 @@ void Game::init(bool useVulkan)
         screenTexture.getVulkanTexture(t);
         pics.attachTexture(t,
                            fboTextureIndex,
-                           ScreenWidth,
-                           ScreenHeight,
-                           ScreenWidth,
-                           ScreenHeight,
+                           screenWidth,
+                           screenHeight,
+                           screenWidth,
+                           screenHeight,
                            vulkanDevice);
     }
 
+    shaders->init(useVulkan, vk, &pics);
 
-
-
-    LoadShader(&defaultShader, "default", useVulkan, true, &pics, true);
-    LoadShader(&colorShader, "justcolor", useVulkan, false, nullptr, true);
 #ifdef __ANDROID__
-    LoadShader(&coolShader, "default", useVulkan, true, &pics, false);
+    shaders->load("shaders", "list.xml", assetManager);
+    shaders->addShaderManualy("default", true, false, assetManager);
 #else
-    LoadShader(&coolShader, sys.postShader, useVulkan, true, &pics, false);
+    shaders->load("shaders", "list.xml");
+    shaders->addShaderManualy(sys.postShader, true, false);
 #endif
 
     if (!useVulkan)
     {
-        colorShader.use(vkCmd);
+        shaders->shaders[1].use(vkCmd);
         glDepthFunc(GL_LEQUAL);
 
         glEnable (GL_BLEND);
@@ -4320,11 +4214,8 @@ void Game::init(bool useVulkan)
     }
 
 
+    MatrixOrtho(0.0, screenWidth, screenHeight, 0.0, -400, 400, orthoMatrix);
 
-    MatrixOrtho(0.0, ScreenWidth, ScreenHeight, 0.0, -400, 400, OrthoMatrix);
-
-
-    
 #ifdef __ANDROID__
     mapai = new MapList(AssetManager);
 #else
@@ -4387,16 +4278,17 @@ void Game::init(bool useVulkan)
     gameData.load("data/gameData.xml");
 #endif
 
-    SaveGame::load(DocumentPath, &stash);
+    SaveGame::load(documentPath, &stash);
     cartridgeCollection.init(&stash);
 
     PlayNewSong("evil.ogg");
 
-    Works = true;
+    works = true;
 }
 //--------------------------------
 void Game::destroy()
 {
+
     VkDevice* vulkanDevice = vk->getDevice();
 
     switch(netMode)
@@ -4406,11 +4298,9 @@ void Game::destroy()
         case NETMODE_CLIENT: QuitServer(); break;
     }
 
-    SaveGame::save(DocumentPath, &stash);
+    SaveGame::save(documentPath, &stash);
 
-    music.release();
-
-    SoundSystem::getInstance()->exit();
+    GameProto::destroy();
 
 
     mapas.destroy();
@@ -4422,7 +4312,5 @@ void Game::destroy()
 
     bulbox.destroy();
 
-    coolShader.destroy(vulkanDevice);
-    defaultShader.destroy(vulkanDevice);
-    colorShader.destroy(vulkanDevice);
+    shaders->destroy();
 }

@@ -13,6 +13,7 @@
 #include <disarray/gui/SelectMenu.h>
 #include <disarray/gui/Slider.h>
 #include <disarray/gui/EditBox.h>
+#include <disarray/GameProto.h>
 #include "Intro.h"
 #include <disarray/network/Server.h>
 #include <disarray/network/Client.h>
@@ -58,16 +59,8 @@ struct ClientLoot
     DArray<int> cartridges;
 };
 
-class Game
+class Game : public GameProto
 {
-
-    float   OrthoMatrix[16];
-    float   ViewMatrix[16];
-
-    ShaderProgram        coolShader;
-    ShaderProgram        defaultShader;
-    ShaderProgram        colorShader;
-
     MapList* mapai;
     GameMap mapas;
 
@@ -92,7 +85,6 @@ class Game
     Server serveris;
 
     SystemConfig sys;
-    OggStream music;
     CBulletContainer bulbox;
     SpriteBatcher pics;
 
@@ -139,7 +131,6 @@ class Game
     bool doFadein;
     bool godmode;
     bool slimeswap;
-    bool hasVulkan;
 
 
 public:
@@ -156,8 +147,6 @@ public:
     char EditText[255];
     DArray<int> clientIds; // how it is in server, info for the new client
 
-    TouchData   touches;
-
     int DebugMode;
     Vector3D gamepadLAxis;
     Vector3D OldGamepadLAxis;
@@ -166,8 +155,6 @@ public:
     Vector3D OldGamepadRAxis;
 
     bool doRumble;
-
-    VulkanVideo* vk;
 
     float MouseX;
     float MouseY;
@@ -181,17 +168,8 @@ public:
     unsigned char globalKeyUp;
     unsigned char OldKeys[GameKeyCount]; //  old game keys
     unsigned char Keys[GameKeyCount]; //  game keys
-    char DocumentPath[255];
-    bool Works;
     bool windowed;
     int renderer; //renderer index from the config file
-    unsigned ScreenWidth;
-    unsigned ScreenHeight;
-    float TimeTicks;
-    float DeltaTime;
-    float DT;
-    float Accumulator;
-    long tick;
 
     bool showTextInput;
 
@@ -200,6 +178,7 @@ public:
     Game();
 
     void init(bool useVulkan);
+    void render(){}
     void renderToFBO(bool useVulkan);
     void renderFBO(bool useVulkan);
     void network();

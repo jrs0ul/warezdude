@@ -81,7 +81,7 @@ void RenderScreen(bool useVulkan)
     if (useVulkan)
     {
         vk->beginRenderPass({0.0f, 0.0f, 0.0f, 0.0f}, {1.0f, 0});
-        vk->setViewportAndScissor(0, 0, game.ScreenWidth, game.ScreenHeight);
+        vk->setViewportAndScissor(0, 0, game.screenWidth, game.screenHeight);
     }
 
     game.renderFBO(useVulkan);
@@ -129,14 +129,14 @@ static void  process_events(){
         case SDL_MOUSEBUTTONUP:{
             Vector3D pos(event.button.x * scaleX, event.button.y * scaleY, 0);
             //printf("up x:%f y:%f\n", pos.x() , pos.y());
-            game.touches.up.push_back(pos);
-            game.touches.allfingersup = true;
+            game.touches->up.push_back(pos);
+            game.touches->allfingersup = true;
         } break;
         case SDL_MOUSEBUTTONDOWN:{
             Vector3D pos(event.button.x * scaleX, event.button.y * scaleY, 0);
             //printf("down x:%f y:%f\n", pos.x() , pos.y());
-            game.touches.down.push_back(pos);
-            game.touches.allfingersup = false;
+            game.touches->down.push_back(pos);
+            game.touches->allfingersup = false;
 
         } break;
 
@@ -149,14 +149,15 @@ static void  process_events(){
             if(SDL_GetMouseState(0, 0)&SDL_BUTTON_LMASK){
                 Vector3D pos(event.button.x * scaleX, event.button.y * scaleY, 0);
                 //printf("motion x:%f y:%f\n", pos.x() , pos.y());
-                game.touches.move.push_back(pos);
-                game.touches.allfingersup = false;
+                game.touches->move.push_back(pos);
+                game.touches->allfingersup = false;
             }
         }break;
 
 
-        case SDL_QUIT:{
-            game.Works = false;
+        case SDL_QUIT:
+        {
+            game.works = false;
         }break;
     
         }
@@ -297,12 +298,12 @@ int main(int argc, char* argv[])
 
     char buf[128];
     GetHomePath(buf);
-    sprintf(game.DocumentPath, "%s.CartridgeQuest", buf);
-    MakeDir(game.DocumentPath);
+    sprintf(game.documentPath, "%s.CartridgeQuest", buf);
+    MakeDir(game.documentPath);
     game.loadConfig();
 
-    printf("%d %d\n", game.ScreenWidth, game.ScreenHeight);
-    SDL.setMetrics(game.ScreenWidth, game.ScreenHeight);
+    printf("%d %d\n", game.screenWidth, game.screenHeight);
+    SDL.setMetrics(game.screenWidth, game.screenHeight);
 
 
     const char* title = "CARTRIDGE QUEST";
@@ -311,7 +312,7 @@ int main(int argc, char* argv[])
 
     if (!SDL.initWindow(title, "icon1.bmp", game.windowed, USE_VULKAN))
     {
-        game.Works = false;
+        game.works = false;
     }
 
     game.vk = SDL.getVkVideo();
@@ -336,25 +337,25 @@ int main(int argc, char* argv[])
 
     ConfigureGraphicsLib(USE_VULKAN);
 
-    game.TimeTicks = SDL_GetTicks();
+    game.timeTicks = SDL_GetTicks();
 
     SDL_ShowCursor(false);
 
 
-    while (game.Works)
+    while (game.works)
     {
         if ((SDL_GetTicks() > tick))
         {
 
-            game.DeltaTime = (SDL_GetTicks() - game.TimeTicks) / 1000.0f;
-            game.TimeTicks = SDL_GetTicks();
+            game.deltaTime = (SDL_GetTicks() - game.timeTicks) / 1000.0f;
+            game.timeTicks = SDL_GetTicks();
 
-            game.Accumulator += game.DeltaTime;
+            game.accumulator += game.deltaTime;
 
-            while (game.Accumulator >= game.DT)
+            while (game.accumulator >= game.dT)
             {
                 Logic();
-                game.Accumulator -= game.DT;
+                game.accumulator -= game.dT;
             }
 
             CheckKeys();

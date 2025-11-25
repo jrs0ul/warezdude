@@ -1,0 +1,5 @@
+<xml>
+<Shaders>
+<Shader name="default" useUvs="1" useAlphaBlend="1" />
+<Shader name="justcolor" useUvs="0" useAlphaBlend="1" />
+</Shaders>
