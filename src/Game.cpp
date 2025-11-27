@@ -24,7 +24,12 @@
 #include <arpa/inet.h>
 #endif
 
-
+enum ShaderEnum
+{
+    SH_UVCOLOR = 0,
+    SH_COLOR,
+    SH_SPECIAL
+};
 
 Game::Game()
 : imgCount(0)
@@ -2752,61 +2757,59 @@ void Game::renderToFBO(bool useVulkan)
 
     screenTexture.bind(vkCmd);
 
-    FlatMatrix identity;
-    MatrixIdentity(identity.m);
+    shaders->shaders[SH_UVCOLOR].use(vkCmd);
 
-    FlatMatrix finalM = identity * orthoMatrix;
-    shaders->shaders[0].use(vkCmd);
+    std::vector<DUniform> uni;
+    DUniform u = {};
+    strcpy(u.name, "ModelViewProjection");
+    memcpy(u.data, orthoMatrix, sizeof(float) * 16);
+    u.size = sizeof(float) * 16;
+    uni.push_back(u);
 
     if (!useVulkan)
     {
-        int MatrixID = shaders->shaders[0].getUniformID("ModelViewProjection");
-        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, finalM.m);
+        shaders->shaders[SH_UVCOLOR].updateUniforms(uni);
     }
     else // VULKAN
     {
-        vkCmdPushConstants(*vkCmd,
-                           *shaders->shaders[0].getVkPipelineLayout(),
-                           VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(finalM.m), &finalM.m);
+        shaders->shaders[SH_UVCOLOR].pushConstants(uni, vkCmd);
     }
 
-    shaders->shaders[1].use(vkCmd);
+    shaders->shaders[SH_COLOR].use(vkCmd);
+
     if (!useVulkan)
     {
-        int MatrixIDColor = shaders->shaders[1].getUniformID("ModelViewProjection");
-        glUniformMatrix4fv(MatrixIDColor, 1, GL_FALSE, finalM.m);
+        shaders->shaders[SH_COLOR].updateUniforms(uni);
     }
     else //VULKAN
     {
-        vkCmdPushConstants(*vkCmd,
-                           *shaders->shaders[1].getVkPipelineLayout(),
-                           VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(finalM.m), &finalM.m);
+        shaders->shaders[SH_COLOR].pushConstants(uni, vkCmd);
     }
 
 #ifndef __ANDROID__
-    shaders->shaders[2].use(vkCmd);
+    shaders->shaders[SH_SPECIAL].use(vkCmd);
+
+    DUniform ut = {};
+    strcpy(ut.name, "uTime");
+    float tim = timeTicks / 1000.f;
+    memcpy(ut.data, &tim, sizeof(float));
+    ut.size = sizeof(float);
+    uni.push_back(ut);
+
+    DUniform sh = {};
+    strcpy(sh.name, "uScreenHeight");
+    float height = (float)screenHeight;
+    memcpy(sh.data, &height, sizeof(float));
+    sh.size = sizeof(float);
+    uni.push_back(sh);
+
     if (!useVulkan)
     {
-        int MatrixIDCool = shaders->shaders[2].getUniformID("ModelViewProjection");
-        glUniformMatrix4fv(MatrixIDCool, 1, GL_FALSE, finalM.m);
-        int timeID = shaders->shaders[2].getUniformID("uTime");
-        glUniform1f(timeID, timeTicks / 1000.f);
-        int syID = shaders->shaders[2].getUniformID("uScreenHeight");
-        float sy = (float)screenHeight;
-        glUniform1f(syID, sy);
+        shaders->shaders[SH_SPECIAL].updateUniforms(uni);
     }
     else //VULKAN
     {
-        float buffer[18];
-        float time = timeTicks / 1000.f;
-        float screenH = (float)screenHeight;
-        memcpy(buffer, finalM.m, sizeof(float) * 16);
-        memcpy(&buffer[16], &time, sizeof(float));
-        memcpy(&buffer[17], &screenH, sizeof(float));
-        vkCmdPushConstants(*vkCmd,
-                *shaders->shaders[2].getVkPipelineLayout(),
-                VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(float) * 18, &buffer);
-
+        shaders->shaders[SH_SPECIAL].pushConstants(uni, vkCmd);
     }
 #endif
 
@@ -2824,7 +2827,7 @@ void Game::renderToFBO(bool useVulkan)
     pics->draw(18, mouseX, mouseY, (state == GAMESTATE_GAME) ? 0 : 1, (state == GAMESTATE_GAME) ? true : false);
 #endif
 
-    pics->drawBatch(&shaders->shaders[1], &shaders->shaders[0], 666, useVulkan, vkCmd);
+    pics->drawBatch(&shaders->shaders[SH_COLOR], &shaders->shaders[SH_UVCOLOR], 666, useVulkan, vkCmd);
 
     if (!useVulkan)
     {
@@ -2843,9 +2846,9 @@ void Game::renderFBO(bool useVulkan)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         pics->draw(fboTextureIndex, 0, 0, 0, false, sys->screenScaleX, sys->screenScaleY);
 #ifdef __ANDROID__
-        pics->drawBatch(&shaders->shaders[1], &shaders->shaders[0], 666, false);
+        pics->drawBatch(&shaders->shaders[SH_COLOR], &shaders->shaders[SH_UVCOLOR], 666, false);
 #else
-        pics->drawBatch(&shaders->shaders[1], &shaders->shaders[2], 666, false);
+        pics->drawBatch(&shaders->shaders[SH_COLOR], &shaders->shaders[SH_SPECIAL], 666, false);
 #endif
         glEnable(GL_BLEND);
     }
@@ -2853,7 +2856,7 @@ void Game::renderFBO(bool useVulkan)
     {
         VkCommandBuffer* vkCmd = vk->getCommandBuffer();
         pics->draw(fboTextureIndex, 0, screenHeight, 0, false, sys->screenScaleX, -sys->screenScaleY);
-        pics->drawBatch(&shaders->shaders[1], &shaders->shaders[2], 666, true, vkCmd);
+        pics->drawBatch(&shaders->shaders[SH_COLOR], &shaders->shaders[SH_SPECIAL], 666, true, vkCmd);
 
     }
 
@@ -4221,7 +4224,7 @@ void Game::init(bool useVulkan)
 
     if (!useVulkan)
     {
-        shaders->shaders[1].use(vkCmd);
+        shaders->shaders[SH_COLOR].use(vkCmd);
         glDepthFunc(GL_LEQUAL);
 
         glEnable (GL_BLEND);
