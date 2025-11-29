@@ -156,7 +156,7 @@ public:
     void logic() override;
     void destroy() override;
     void loadConfig(const char* path, uint32_t initialWidth, uint32_t initialHeight, bool initialFullscreen, int initialRenderIdx) override;
-    void onBack(){};
+    void onBack() override {};
     SystemConfig* getSysConfig(){return sys;}
     EditBox* getIpEdit(){return &ipedit;}
 

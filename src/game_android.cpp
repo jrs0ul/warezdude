@@ -124,7 +124,7 @@ static int engine_init_display(struct engine* engine) {
         {
             if (engine->game)
             {
-                engine->game->loadConfig();
+                engine->game->loadConfig("settings.xml", 640, 360, true, 0);
                 auto *sys = engine->game->getSysConfig();
                 engine->gamePosX = 0;
                 if (sys->ScreenWidth * sys->screenScaleX > engine->width) {
@@ -152,7 +152,7 @@ static int engine_init_display(struct engine* engine) {
         engine->vk = new VulkanVideo();
         engine->game->vk = engine->vk;
 
-        engine->game->loadConfig();
+        engine->game->loadConfig("settings.xml", 640, 360, true, 0);
 
         std::vector<const char *> extensions;
         extensions.push_back("VK_KHR_surface");
