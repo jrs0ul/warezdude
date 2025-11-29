@@ -18,15 +18,17 @@ void Inventory::draw(SpriteBatcher& pics, std::vector<int>& loot, GameData& gd)
 
     int posY = 120;
 
-    for (unsigned i = 0; i < loot.size(); ++i)
+    for (unsigned i = 0; i < 24; ++i)
     {
 
         const int posX = 30 + counter * 34;
-
         const COLOR c = (i == (unsigned)state) ? COLOR(1, 0, 0, 0.5f) : COLOR(1, 1, 1, 0.5f);
-
         pics.draw(-1, posX, posY, 0, false, 32, 32, 0, c, c);
-        pics.draw(11, posX, posY, loot[i] - ITEM_GAME_NINJA_MAN, false);
+
+        if (i < loot.size())
+        {
+            pics.draw(11, posX, posY, loot[i] - ITEM_GAME_NINJA_MAN, false);
+        }
 
         ++counter;
 
@@ -51,19 +53,69 @@ void Inventory::draw(SpriteBatcher& pics, std::vector<int>& loot, GameData& gd)
 
 }
 
+
+bool isPointerOnItems(Vector3D& pointer)
+{
+    if (pointer.x > 30 && pointer.x < (30 + 6 * 34) && pointer.y > 120 && pointer.y < 120 + 34 * 4)
+    {
+        return true;
+    }
+
+    return false;
+
+}
+
+int calcState(Vector3D& pointer)
+{
+    const int row = (int)((pointer.y - 120) / 34);
+    return row * 6 + (pointer.x - 30) / 34;
+}
+
+
 void Inventory::getInput(const unsigned char* keys,
                          const unsigned char* oldKeys,
                          TouchData& touches,
                          std::vector<int>& loot)
 {
 
+    if (state >= (int)loot.size())
+    {
+        state = loot.size() - 1;
+    }
+
+
     if (!touches.up.empty())
     {
-        if (touches.up[0].x > 30 && touches.up[0].x < 30 + 6 * 34 && touches.up[0].y > 120 && touches.up[0].y < 120 + 34 * 3)
+        if (isPointerOnItems(touches.up[0]))
         {
-            state = ((touches.up[0].y - 120 / 34) * 6) + (touches.up[0].x - 30) / 34;
-            state = (state >= (int)loot.size()) ? loot.size() - 1 : state;
-            selected = true;
+            if (calcState(touches.up[0]) < (int)loot.size())
+            {
+                state = calcState(touches.up[0]);
+                selected = true;
+            }
+        }
+    }
+
+    if (!touches.move.empty())
+    {
+        if (isPointerOnItems(touches.move[0]))
+        {
+            if (calcState(touches.move[0]) < (int)loot.size())
+            {
+                state = calcState(touches.move[0]);
+            }
+        }
+    }
+
+    if (!touches.down.empty())
+    {
+        if (isPointerOnItems(touches.down[0]))
+        {
+            if (calcState(touches.down[0]) < (int)loot.size())
+            {
+                state = calcState(touches.down[0]);
+            }
+
         }
     }
 
