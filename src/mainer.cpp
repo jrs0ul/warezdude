@@ -1,16 +1,9 @@
 #ifdef _WIN32
     #ifdef  _MSC_VER
         #define _CRT_SECURE_NO_DEPRECATE 1
-        #pragma comment(lib,"SDL2.lib")
-        #pragma comment(lib,"vulkan-1.lib")
-        #pragma comment(lib,"SDL2main.lib")
-        #pragma comment(lib,"OpenGl32.lib")
-        #pragma comment(lib,"openal32.lib")
-        #pragma comment(lib,"Ws2_32.lib") 
-        #pragma comment(lib,"Crypt32.lib")
-        #pragma comment(lib,"Wldap32.lib")
-        #pragma comment(lib,"Normaliz.lib")
-
+        
+        #pragma comment(lib,"disarray.lib")
+       
         #ifdef _DEBUG
             #pragma comment(lib,"libogg_d.lib")
             #pragma comment(lib,"libvorbis_d.lib")
@@ -50,13 +43,13 @@ public:
 };
 
 //--------------------
-int main()//int argc, char* argv[])
+int main(int argc, char* argv[])
 {
 
-    /*if (argc)
+    if (argc)
     {
         printf("arg: %s/n", argv[0]);
-    }*/
+    }
 
     srand(time(0));
 
