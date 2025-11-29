@@ -132,19 +132,14 @@ public:
     GameState state;
     MultiplayerModes netGameState;
 
-    char EditText[255];
     DArray<int> clientIds; // how it is in server, info for the new client
 
-    int DebugMode;
     Vector3D OldGamepadLAxis;
     Vector3D OldGamepadRAxis;
 
     float OldMouseX;
     float OldMouseY;
 
-    unsigned char globalKEY;
-    unsigned char globalKeyUp;
-    bool windowed;
     int renderer; //renderer index from the config file
 
     bool showTextInput;
@@ -160,7 +155,7 @@ public:
     void network();
     void logic() override;
     void destroy() override;
-    void loadConfig();
+    void loadConfig(const char* path, uint32_t initialWidth, uint32_t initialHeight, int initialRenderIdx) override;
     void onBack(){};
     SystemConfig* getSysConfig(){return sys;}
     EditBox* getIpEdit(){return &ipedit;}

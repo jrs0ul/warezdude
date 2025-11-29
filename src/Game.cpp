@@ -34,7 +34,7 @@ enum ShaderEnum
 Game::Game()
 : imgCount(0)
 {
-    DebugMode = 0;
+    debugMode = 0;
 
     state = GAMESTATE_TITLE;
     netGameState = MPMODE_COOP;
@@ -1768,7 +1768,7 @@ void Game::TitleMenuLogic()
 
                     netmenu.reset();
                     ipedit.activate();
-                    EditText[0] = 0;
+                    editText[0] = 0;
                     showTextInput = true;
                 }
             }
@@ -1788,7 +1788,7 @@ void Game::TitleMenuLogic()
         {
             if (!ipedit.entered)
             {
-                ipedit.getInput(EditText, globalKEY, keys, oldKeys);
+                ipedit.getInput(editText, globalKEY, keys, oldKeys);
             }
             else
             {
@@ -2760,10 +2760,7 @@ void Game::renderToFBO(bool useVulkan)
     shaders->shaders[SH_UVCOLOR].use(vkCmd);
 
     std::vector<DUniform> uni;
-    DUniform u = {};
-    strcpy(u.name, "ModelViewProjection");
-    memcpy(u.data, orthoMatrix, sizeof(float) * 16);
-    u.size = sizeof(float) * 16;
+    DUniform u("ModelViewProjection", (void*)orthoMatrix, sizeof(float) * 16);
     uni.push_back(u);
 
     if (!useVulkan)
@@ -2789,18 +2786,12 @@ void Game::renderToFBO(bool useVulkan)
 #ifndef __ANDROID__
     shaders->shaders[SH_SPECIAL].use(vkCmd);
 
-    DUniform ut = {};
-    strcpy(ut.name, "uTime");
     float tim = timeTicks / 1000.f;
-    memcpy(ut.data, &tim, sizeof(float));
-    ut.size = sizeof(float);
+    DUniform ut("uTime", (void*)&tim, sizeof(float));
     uni.push_back(ut);
 
-    DUniform sh = {};
-    strcpy(sh.name, "uScreenHeight");
     float height = (float)screenHeight;
-    memcpy(sh.data, &height, sizeof(float));
-    sh.size = sizeof(float);
+    DUniform sh("uScreenHeight", (void*)&height, sizeof(float));
     uni.push_back(sh);
 
     if (!useVulkan)
@@ -3038,7 +3029,7 @@ void Game::DrawGameplay()
 
 
 
-    if (DebugMode == 1)
+    if (debugMode == 1)
     {
         DrawSomeText();
     }
@@ -4111,22 +4102,17 @@ void Game::ParseMessagesClientGot()
 
 
 //----------------------
-void Game::loadConfig()
+void Game::loadConfig(const char* path, uint32_t initialWidth, uint32_t initialHeight, int initialRenderIdx)
 {
-#ifndef __ANDROID__
+    GameProto::loadConfig(path, initialWidth, initialHeight, initialRenderIdx);
 
-    char buf[1024];
-    printf("Document path: %s\n", documentPath);
-    sprintf(buf, "%s/settings.cfg", documentPath);
-    sys->load(buf);
-#endif
     screenWidth = sys->ScreenWidth * sys->screenScaleX;
     screenHeight = sys->ScreenHeight * sys->screenScaleY;
 #ifndef __ANDROID__
     windowed = sys->useWindowed;
     renderer = sys->renderIdx;
 
-    sys->write(buf);
+    sys->write(path);
 #endif
 }
 //----------------
@@ -4160,7 +4146,6 @@ void Game::init(bool useVulkan)
 
    hasVulkan = useVulkan;
 
-   VkCommandBuffer*  vkCmd = vk->getCommandBuffer();
    VkDevice*         vulkanDevice = vk->getDevice();
    VkPhysicalDevice* vkPhysicalDevice = vk->getPhysicalDevice();
    VkCommandPool*    vkCommandPool = vk->getCommandPool();
@@ -4221,15 +4206,6 @@ void Game::init(bool useVulkan)
     shaders->load("shaders", "list.xml");
     shaders->addShaderManualy(sys->postShader, true, false);
 #endif
-
-    if (!useVulkan)
-    {
-        shaders->shaders[SH_COLOR].use(vkCmd);
-        glDepthFunc(GL_LEQUAL);
-
-        glEnable (GL_BLEND);
-        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    }
 
 
     MatrixOrtho(0.0, screenWidth, screenHeight, 0.0, -400, 400, orthoMatrix);
