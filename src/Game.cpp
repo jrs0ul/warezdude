@@ -4102,9 +4102,9 @@ void Game::ParseMessagesClientGot()
 
 
 //----------------------
-void Game::loadConfig(const char* path, uint32_t initialWidth, uint32_t initialHeight, int initialRenderIdx)
+void Game::loadConfig(const char* path, uint32_t initialWidth, uint32_t initialHeight, bool initialFullscreen, int initialRenderIdx)
 {
-    GameProto::loadConfig(path, initialWidth, initialHeight, initialRenderIdx);
+    GameProto::loadConfig(path, initialWidth, initialHeight, initialFullscreen, initialRenderIdx);
 
     screenWidth = sys->ScreenWidth * sys->screenScaleX;
     screenHeight = sys->ScreenHeight * sys->screenScaleY;

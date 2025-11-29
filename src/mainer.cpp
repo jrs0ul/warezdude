@@ -71,7 +71,7 @@ int main()//int argc, char* argv[])
 
 
     DS ds(&game);
-    ds.setupPC(&SDL, 640, 360, buf, "CARTRIDGE QUEST", true);
+    ds.setupPC(&SDL, 640, 360, false, buf, "CARTRIDGE QUEST", true);
     SDL_ShowCursor(false);
 
     ds.runGamePC(&SDL);
